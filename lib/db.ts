@@ -4,6 +4,12 @@ import { unstable_noStore as noStore } from 'next/cache';
 // データベース接続チェック
 async function checkDatabaseConnection() {
   try {
+    // 環境変数の存在をチェック
+    if (!process.env.POSTGRES_URL) {
+      console.log('POSTGRES_URL environment variable is not set');
+      return false;
+    }
+    
     await sql`SELECT 1`;
     return true;
   } catch (error) {
@@ -18,7 +24,7 @@ export async function initDatabase() {
   
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -110,7 +116,7 @@ export async function getAnnouncements() {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -129,7 +135,7 @@ export async function createAnnouncement(title: string, content: string, author:
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -149,7 +155,7 @@ export async function updateAnnouncement(id: number, title: string, content: str
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -170,7 +176,7 @@ export async function deleteAnnouncement(id: number) {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -188,7 +194,7 @@ export async function getUserByEmail(email: string) {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -207,7 +213,7 @@ export async function getProfiles() {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -234,7 +240,7 @@ export async function createProfile(profileData: {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -265,7 +271,7 @@ export async function getDocuments() {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -283,7 +289,7 @@ export async function createDocument(name: string, fileName: string, fileUrl: st
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -304,7 +310,7 @@ export async function getCertificates() {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
@@ -322,7 +328,7 @@ export async function createCertificate(studentId: string, fileName: string, fil
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
-    throw new Error('Database connection failed');
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
   }
   
   try {
