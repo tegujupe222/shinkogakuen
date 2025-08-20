@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import Logo from './Logo';
 
 interface MobileMenuProps {
     tabs: Array<{
@@ -37,7 +38,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ tabs, activeTab, onTabChange })
             <div className="fixed top-4 right-4 z-50">
                 <button
                     onClick={toggleMenu}
-                    className="bg-white rounded-lg shadow-lg p-3 border border-gray-200"
+                    className="bg-white rounded-lg shadow-lg p-3 border border-gray-200 hover:shadow-xl transition-shadow duration-200"
                     aria-label="メニューを開く"
                 >
                     <div className="w-6 h-6 flex flex-col justify-center items-center">
@@ -61,10 +62,13 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ tabs, activeTab, onTabChange })
                 <div className="flex flex-col h-full">
                     {/* ヘッダー */}
                     <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900">メニュー</h2>
+                        <div className="flex items-center">
+                            <Logo size="sm" />
+                            <h2 className="text-lg font-semibold text-gray-900 ml-3">メニュー</h2>
+                        </div>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="p-2 rounded-lg hover:bg-gray-100"
+                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                         >
                             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -101,7 +105,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ tabs, activeTab, onTabChange })
                     <div className="p-4 border-t border-gray-200">
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center justify-center p-4 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors border border-red-200"
+                            className="w-full flex items-center justify-center p-4 rounded-lg bg-gradient-to-r from-red-50 to-red-100 text-red-700 hover:from-red-100 hover:to-red-200 transition-all duration-200 border border-red-200"
                         >
                             <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import Logo from '../shared/Logo';
 
 const LoginScreen: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -13,10 +14,15 @@ const LoginScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
-                <div className="bg-white rounded-lg shadow-md p-8">
+                <div className="bg-white rounded-xl shadow-xl p-8 border border-gray-200">
                     <div className="text-center mb-8">
+                        {/* ロゴ */}
+                        <div className="flex justify-center mb-6">
+                            <Logo size="lg" />
+                        </div>
+                        
                         <h1 className="text-2xl font-bold text-gray-900 mb-2">
                             神港学園高等学校
                         </h1>
@@ -39,7 +45,7 @@ const LoginScreen: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                                 placeholder="example@email.com"
                             />
                         </div>
@@ -54,14 +60,14 @@ const LoginScreen: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                                 placeholder="パスワードを入力"
                             />
                         </div>
                         
                         <button
                             type="submit"
-                            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
                         >
                             ログイン
                         </button>
