@@ -43,7 +43,7 @@ const StudentDashboard: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* モバイル用ヘッダー */}
-            <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 sm:hidden">
+            <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 md:hidden">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-semibold text-gray-900">合格者向け情報</h1>
                     <div className="text-sm text-gray-500">
@@ -53,7 +53,7 @@ const StudentDashboard: React.FC = () => {
             </div>
 
             {/* デスクトップ用タブ */}
-            <div className="hidden sm:block border-b border-gray-200 bg-white">
+            <div className="hidden md:block border-b border-gray-200 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <nav className="-mb-px flex space-x-8">
                         {tabs.map((tab) => (

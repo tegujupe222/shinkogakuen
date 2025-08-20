@@ -22,8 +22,8 @@ const Header: React.FC<HeaderProps> = ({ title = '合格者お知らせサイト
                         )}
                     </div>
                     
-                    {/* デスクトップ用ログアウトボタン（モバイルでは非表示） */}
-                    <div className="hidden sm:block">
+                    {/* デスクトップ用ログアウトボタン（モバイルでは完全に非表示） */}
+                    <div className="hidden md:block">
                         <button
                             onClick={logout}
                             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"

@@ -66,7 +66,7 @@ const AdminDashboard: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* モバイル用ヘッダー */}
-            <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 sm:hidden">
+            <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 md:hidden">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-semibold text-gray-900">管理者ダッシュボード</h1>
                     <div className="text-sm text-gray-500">
@@ -76,7 +76,7 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* デスクトップ用タブ */}
-            <div className="hidden sm:block border-b border-gray-200 bg-white">
+            <div className="hidden md:block border-b border-gray-200 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <nav className="-mb-px flex space-x-8">
                         {tabs.map((tab) => (
@@ -104,7 +104,7 @@ const AdminDashboard: React.FC = () => {
             />
 
             {/* データベース管理ボタン（デスクトップのみ） */}
-            <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">データベース管理</h3>
                     <div className="flex space-x-4">

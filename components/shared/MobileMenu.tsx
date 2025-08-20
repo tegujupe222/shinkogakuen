@@ -32,7 +32,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ tabs, activeTab, onTabChange })
     };
 
     return (
-        <div className="sm:hidden">
+        <div className="md:hidden">
             {/* ハンバーガーボタン */}
             <div className="fixed top-4 right-4 z-50">
                 <button
