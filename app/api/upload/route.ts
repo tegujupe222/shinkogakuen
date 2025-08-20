@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 
 export async function POST(request: NextRequest) {
     try {
@@ -31,30 +29,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // アップロードディレクトリを作成
-        const uploadDir = join(process.cwd(), 'public', 'uploads');
-        if (!existsSync(uploadDir)) {
-            await mkdir(uploadDir, { recursive: true });
-        }
-
         // ファイル名を安全にする
         const timestamp = Date.now();
         const safeFileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const filePath = join(uploadDir, safeFileName);
 
-        // ファイルを保存
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        await writeFile(filePath, buffer);
-
-        // 公開URLを返す
-        const publicUrl = `/uploads/${safeFileName}`;
+        // Vercel Blobにアップロード
+        const blob = await put(safeFileName, file, {
+            access: 'public',
+            addRandomSuffix: false,
+        });
 
         return NextResponse.json({
             success: true,
             message: 'ファイルをアップロードしました',
             fileName: file.name,
-            fileUrl: publicUrl,
+            fileUrl: blob.url,
             fileSize: file.size
         });
 
