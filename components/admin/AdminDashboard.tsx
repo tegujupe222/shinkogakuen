@@ -4,117 +4,136 @@ import AdminAnnouncements from './AdminAnnouncements';
 import AdminDocuments from './AdminDocuments';
 import AdminCertificates from './AdminCertificates';
 import AdminProfiles from './AdminProfiles';
+import MobileMenu from '../shared/MobileMenu';
 
 type Tab = 'announcements' | 'documents' | 'certificates' | 'profiles';
 
 const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('announcements');
-    const [dbStatus, setDbStatus] = useState<'idle' | 'testing' | 'initializing' | 'success' | 'error'>('idle');
-    const [dbMessage, setDbMessage] = useState('');
+    const [dbStatus, setDbStatus] = useState<string>('');
 
     const tabs = [
-        { id: 'announcements', name: 'お知らせ管理', component: AdminAnnouncements },
-        { id: 'profiles', name: '学生プロフィール', component: AdminProfiles },
-        { id: 'documents', name: '書類管理', component: AdminDocuments },
-        { id: 'certificates', name: '合格証書管理', component: AdminCertificates },
+        { 
+            id: 'announcements', 
+            name: 'お知らせ管理', 
+            icon: '📢',
+            component: AdminAnnouncements 
+        },
+        { 
+            id: 'documents', 
+            name: '書類管理', 
+            icon: '📄',
+            component: AdminDocuments 
+        },
+        { 
+            id: 'certificates', 
+            name: '合格証書管理', 
+            icon: '🏆',
+            component: AdminCertificates 
+        },
+        { 
+            id: 'profiles', 
+            name: '学生情報管理', 
+            icon: '👥',
+            component: AdminProfiles 
+        },
     ];
-
-    const testDatabase = async () => {
-        setDbStatus('testing');
-        setDbMessage('データベース接続をテスト中...');
-        
-        try {
-            const response = await fetch('/api/db-test');
-            const data = await response.json();
-            
-            if (data.success) {
-                setDbStatus('success');
-                setDbMessage('データベース接続が正常です');
-            } else {
-                setDbStatus('error');
-                setDbMessage(`接続エラー: ${data.error}`);
-            }
-        } catch (error) {
-            setDbStatus('error');
-            setDbMessage('接続テストに失敗しました');
-        }
-    };
-
-    const initializeDatabase = async () => {
-        setDbStatus('initializing');
-        setDbMessage('データベースを初期化中...');
-        
-        try {
-            const response = await fetch('/api/init', { method: 'POST' });
-            const data = await response.json();
-            
-            if (data.success) {
-                setDbStatus('success');
-                setDbMessage('データベースが正常に初期化されました');
-            } else {
-                setDbStatus('error');
-                setDbMessage(`初期化エラー: ${data.error}`);
-            }
-        } catch (error) {
-            setDbStatus('error');
-            setDbMessage('初期化に失敗しました');
-        }
-    };
 
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || AdminAnnouncements;
 
+    const testDatabase = async () => {
+        setDbStatus('テスト中...');
+        try {
+            const response = await fetch('/api/db-test');
+            const data = await response.json();
+            setDbStatus(data.message);
+        } catch (error) {
+            setDbStatus('エラー: データベース接続に失敗しました');
+        }
+    };
+
+    const initDatabase = async () => {
+        setDbStatus('初期化中...');
+        try {
+            const response = await fetch('/api/init', { method: 'POST' });
+            const data = await response.json();
+            setDbStatus(data.message);
+        } catch (error) {
+            setDbStatus('エラー: データベース初期化に失敗しました');
+        }
+    };
+
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900">管理者ダッシュボード</h1>
-                <div className="flex space-x-2">
-                    <button
-                        onClick={testDatabase}
-                        disabled={dbStatus === 'testing' || dbStatus === 'initializing'}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
-                    >
-                        {dbStatus === 'testing' ? 'テスト中...' : 'DB接続テスト'}
-                    </button>
-                    <button
-                        onClick={initializeDatabase}
-                        disabled={dbStatus === 'testing' || dbStatus === 'initializing'}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
-                    >
-                        {dbStatus === 'initializing' ? '初期化中...' : 'DB初期化'}
-                    </button>
+        <div className="min-h-screen bg-gray-50">
+            {/* モバイル用ヘッダー */}
+            <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 sm:hidden">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-lg font-semibold text-gray-900">管理者ダッシュボード</h1>
+                    <div className="text-sm text-gray-500">
+                        {tabs.find(tab => tab.id === activeTab)?.name}
+                    </div>
                 </div>
             </div>
 
-            {dbMessage && (
-                <div className={`p-4 rounded-md ${
-                    dbStatus === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
-                    dbStatus === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
-                    'bg-blue-50 border border-blue-200 text-blue-800'
-                }`}>
-                    {dbMessage}
+            {/* デスクトップ用タブ */}
+            <div className="hidden sm:block border-b border-gray-200 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <nav className="-mb-px flex space-x-8">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as Tab)}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                    activeTab === tab.id
+                                        ? 'border-blue-500 text-blue-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                            >
+                                {tab.name}
+                            </button>
+                        ))}
+                    </nav>
                 </div>
-            )}
+            </div>
 
-            <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8">
-                    {tabs.map((tab) => (
+            {/* ハンバーガーメニュー */}
+            <MobileMenu 
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as Tab)}
+            />
+
+            {/* データベース管理ボタン（デスクトップのみ） */}
+            <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">データベース管理</h3>
+                    <div className="flex space-x-4">
                         <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as Tab)}
-                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                                activeTab === tab.id
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                            }`}
+                            onClick={testDatabase}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                         >
-                            {tab.name}
+                            DB接続テスト
                         </button>
-                    ))}
-                </nav>
+                        <button
+                            onClick={initDatabase}
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            DB初期化
+                        </button>
+                    </div>
+                    {dbStatus && (
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-700">{dbStatus}</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            <div className="mt-6">
-                <ActiveComponent />
+            {/* コンテンツエリア */}
+            <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <ActiveComponent />
+                </div>
             </div>
         </div>
     );

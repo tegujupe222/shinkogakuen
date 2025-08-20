@@ -4,6 +4,7 @@ import AnnouncementsView from './AnnouncementsView';
 import DocumentsView from './DocumentsView';
 import CertificateView from './CertificateView';
 import ProfileFormView from './ProfileFormView';
+import MobileMenu from '../shared/MobileMenu';
 
 type Tab = 'announcements' | 'documents' | 'certificate' | 'profile';
 
@@ -42,8 +43,13 @@ const StudentDashboard: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* モバイル用ヘッダー */}
-            <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 sm:hidden">
-                <h1 className="text-lg font-semibold text-gray-900">合格者向け情報</h1>
+            <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 sm:hidden">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-lg font-semibold text-gray-900">合格者向け情報</h1>
+                    <div className="text-sm text-gray-500">
+                        {tabs.find(tab => tab.id === activeTab)?.name}
+                    </div>
+                </div>
             </div>
 
             {/* デスクトップ用タブ */}
@@ -67,27 +73,12 @@ const StudentDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* モバイル用タブ */}
-            <div className="sm:hidden bg-white border-b border-gray-200">
-                <div className="px-4 py-2">
-                    <nav className="flex space-x-1">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id as Tab)}
-                                className={`flex-1 py-3 px-2 text-center text-xs font-medium rounded-lg transition-colors ${
-                                    activeTab === tab.id
-                                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                                        : 'text-gray-600 hover:bg-gray-100'
-                                }`}
-                            >
-                                <div className="text-lg mb-1">{tab.icon}</div>
-                                <div>{tab.name}</div>
-                            </button>
-                        ))}
-                    </nav>
-                </div>
-            </div>
+            {/* ハンバーガーメニュー */}
+            <MobileMenu 
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as Tab)}
+            />
 
             {/* コンテンツエリア */}
             <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
