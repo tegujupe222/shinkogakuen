@@ -1,9 +1,25 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
 
+// データベース接続チェック
+async function checkDatabaseConnection() {
+  try {
+    await sql`SELECT 1`;
+    return true;
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    return false;
+  }
+}
+
 // データベース初期化（テーブル作成）
 export async function initDatabase() {
   noStore();
+  
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
   
   try {
     // お知らせテーブル
@@ -92,6 +108,11 @@ export async function initDatabase() {
 // お知らせ関連の関数
 export async function getAnnouncements() {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       SELECT * FROM announcements 
@@ -106,6 +127,11 @@ export async function getAnnouncements() {
 
 export async function createAnnouncement(title: string, content: string, author: string) {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       INSERT INTO announcements (title, content, author)
@@ -121,6 +147,11 @@ export async function createAnnouncement(title: string, content: string, author:
 
 export async function updateAnnouncement(id: number, title: string, content: string) {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       UPDATE announcements 
@@ -137,6 +168,11 @@ export async function updateAnnouncement(id: number, title: string, content: str
 
 export async function deleteAnnouncement(id: number) {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     await sql`
       DELETE FROM announcements WHERE id = ${id}
@@ -150,6 +186,11 @@ export async function deleteAnnouncement(id: number) {
 // ユーザー認証関連の関数
 export async function getUserByEmail(email: string) {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       SELECT * FROM users WHERE email = ${email}
@@ -164,6 +205,11 @@ export async function getUserByEmail(email: string) {
 // プロフィール関連の関数
 export async function getProfiles() {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       SELECT * FROM profiles ORDER BY created_at DESC
@@ -186,6 +232,11 @@ export async function createProfile(profileData: {
   email: string;
 }) {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       INSERT INTO profiles (student_id, full_name, kana, postal_code, address, guardian_name, phone, email)
@@ -212,6 +263,11 @@ export async function createProfile(profileData: {
 // 書類関連の関数
 export async function getDocuments() {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       SELECT * FROM documents ORDER BY uploaded_at DESC
@@ -225,6 +281,11 @@ export async function getDocuments() {
 
 export async function createDocument(name: string, fileName: string, fileUrl: string) {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       INSERT INTO documents (name, file_name, file_url)
@@ -241,6 +302,11 @@ export async function createDocument(name: string, fileName: string, fileUrl: st
 // 合格証書関連の関数
 export async function getCertificates() {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       SELECT * FROM certificates ORDER BY issued_at DESC
@@ -254,6 +320,11 @@ export async function getCertificates() {
 
 export async function createCertificate(studentId: string, fileName: string, fileUrl: string) {
   noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed');
+  }
+  
   try {
     const result = await sql`
       INSERT INTO certificates (student_id, file_name, file_url)
