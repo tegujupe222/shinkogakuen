@@ -6,11 +6,14 @@ import AdminCertificates from './AdminCertificates';
 import AdminProfiles from './AdminProfiles';
 import MobileMenu from '../shared/MobileMenu';
 
-type Tab = 'announcements' | 'documents' | 'certificates' | 'profiles';
+type Tab = 'announcements' | 'documents' | 'certificates' | 'profiles' | 'students';
 
 const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('announcements');
     const [dbStatus, setDbStatus] = useState<string>('');
+    const [uploadStatus, setUploadStatus] = useState<string>('');
+    const [uploadResults, setUploadResults] = useState<any>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const tabs = [
         { 
@@ -37,6 +40,12 @@ const AdminDashboard: React.FC = () => {
             icon: '👥',
             component: AdminProfiles 
         },
+        { 
+            id: 'students', 
+            name: '学生アカウント管理', 
+            icon: '👨‍🎓',
+            component: null 
+        },
     ];
 
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || AdminAnnouncements;
@@ -62,6 +71,140 @@ const AdminDashboard: React.FC = () => {
             setDbStatus('エラー: データベース初期化に失敗しました');
         }
     };
+
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        setUploadStatus('アップロード中...');
+        setUploadResults(null);
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/upload-students', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setUploadStatus('アップロード完了');
+                setUploadResults(data);
+            } else {
+                setUploadStatus(`エラー: ${data.error}`);
+            }
+        } catch (error) {
+            setUploadStatus('アップロード中にエラーが発生しました');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const StudentAccountManagement = () => (
+        <div className="p-4 sm:p-6">
+            <div className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">学生アカウント管理</h2>
+                <p className="mt-1 text-sm text-gray-600">CSVファイルで学生のログイン情報を一括登録・更新</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">CSVファイルアップロード</h3>
+                    
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h4 className="font-medium text-blue-900 mb-2">CSVファイル形式</h4>
+                        <div className="text-sm text-blue-800 space-y-1">
+                            <p>• A列: 受験番号（4桁の数字）</p>
+                            <p>• B列: 電話番号</p>
+                            <p>• 1行目はヘッダー行として扱われます</p>
+                            <p>• ログインID: 受験番号そのまま</p>
+                            <p>• パスワード: 電話番号の下4桁</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                        <label className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                            <input
+                                type="file"
+                                accept=".csv"
+                                onChange={handleFileUpload}
+                                disabled={isUploading}
+                                className="hidden"
+                            />
+                            {isUploading ? 'アップロード中...' : 'CSVファイルを選択'}
+                        </label>
+                        
+                        {isUploading && (
+                            <div className="flex items-center">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                <span className="ml-2 text-sm text-gray-600">処理中...</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {uploadStatus && (
+                    <div className={`p-4 rounded-lg border ${
+                        uploadStatus.includes('エラー') 
+                            ? 'bg-red-50 border-red-200 text-red-800' 
+                            : 'bg-green-50 border-green-200 text-green-800'
+                    }`}>
+                        <p className="font-medium">{uploadStatus}</p>
+                    </div>
+                )}
+
+                {uploadResults && (
+                    <div className="mt-6">
+                        <h4 className="font-medium text-gray-900 mb-3">処理結果</h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                                <p className="text-sm text-gray-600">総件数</p>
+                                <p className="text-lg font-semibold">{uploadResults.summary.total}</p>
+                            </div>
+                            <div className="bg-green-50 p-3 rounded-lg">
+                                <p className="text-sm text-green-600">成功</p>
+                                <p className="text-lg font-semibold text-green-700">{uploadResults.summary.success}</p>
+                            </div>
+                            <div className="bg-red-50 p-3 rounded-lg">
+                                <p className="text-sm text-red-600">エラー</p>
+                                <p className="text-lg font-semibold text-red-700">{uploadResults.summary.errors}</p>
+                            </div>
+                        </div>
+
+                        {uploadResults.errors.length > 0 && (
+                            <div className="mt-4">
+                                <h5 className="font-medium text-red-700 mb-2">エラー詳細</h5>
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                                    {uploadResults.errors.map((error: string, index: number) => (
+                                        <p key={index} className="text-sm text-red-700 mb-1">{error}</p>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {uploadResults.results.length > 0 && (
+                            <div className="mt-4">
+                                <h5 className="font-medium text-green-700 mb-2">成功した処理</h5>
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                                    {uploadResults.results.slice(0, 10).map((result: string, index: number) => (
+                                        <p key={index} className="text-sm text-green-700 mb-1">{result}</p>
+                                    ))}
+                                    {uploadResults.results.length > 10 && (
+                                        <p className="text-sm text-green-600">... 他 {uploadResults.results.length - 10}件</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -132,7 +275,7 @@ const AdminDashboard: React.FC = () => {
             {/* コンテンツエリア */}
             <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <ActiveComponent />
+                    {activeTab === 'students' ? <StudentAccountManagement /> : <ActiveComponent />}
                 </div>
             </div>
         </div>
