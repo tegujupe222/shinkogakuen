@@ -52,7 +52,7 @@ const AnnouncementsView: React.FC = () => {
                                         {ann.title}
                                     </h3>
                                     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
-                                        {new Date(ann.created_at).toLocaleDateString('ja-JP', {
+                                        {new Date(ann.createdAt).toLocaleDateString('ja-JP', {
                                             year: 'numeric',
                                             month: 'short',
                                             day: 'numeric'
