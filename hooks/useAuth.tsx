@@ -18,19 +18,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // 初期化時にローカルストレージからユーザー情報を復元
     useEffect(() => {
-        const savedUser = localStorage.getItem('user');
-        const savedToken = localStorage.getItem('token');
-        
-        if (savedUser && savedToken) {
-            try {
-                setUser(JSON.parse(savedUser));
-            } catch (error) {
-                console.error('Failed to parse saved user:', error);
-                localStorage.removeItem('user');
-                localStorage.removeItem('token');
+        try {
+            const savedUser = localStorage.getItem('user');
+            const savedToken = localStorage.getItem('token');
+            
+            if (savedUser && savedToken) {
+                try {
+                    setUser(JSON.parse(savedUser));
+                } catch (error) {
+                    console.error('Failed to parse saved user:', error);
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('token');
+                }
             }
+        } catch (error) {
+            console.error('Error during auth initialization:', error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }, []);
 
     const login = useCallback(async (email: string, password: string): Promise<boolean> => {
@@ -69,9 +74,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     const logout = useCallback(() => {
-        setUser(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+        try {
+            setUser(null);
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     }, []);
 
     return (
