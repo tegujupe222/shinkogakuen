@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
 interface MobileMenuProps {
     tabs: Array<{
@@ -14,6 +15,7 @@ interface MobileMenuProps {
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ tabs, activeTab, onTabChange }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const { logout } = useAuth();
 
     const toggleMenu = () => {
         setIsOpen(!isOpen);
@@ -21,6 +23,11 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ tabs, activeTab, onTabChange })
 
     const handleTabClick = (tabId: string) => {
         onTabChange(tabId);
+        setIsOpen(false);
+    };
+
+    const handleLogout = () => {
+        logout();
         setIsOpen(false);
     };
 
@@ -90,11 +97,17 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ tabs, activeTab, onTabChange })
                         </div>
                     </nav>
 
-                    {/* フッター */}
+                    {/* ログアウトボタン */}
                     <div className="p-4 border-t border-gray-200">
-                        <div className="text-center text-sm text-gray-500">
-                            <p>合格者向け情報</p>
-                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center justify-center p-4 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors border border-red-200"
+                        >
+                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span className="font-medium">ログアウト</span>
+                        </button>
                     </div>
                 </div>
             </div>
