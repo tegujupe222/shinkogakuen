@@ -1,29 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// 簡易的なお知らせデータ（実際の運用ではデータベースを使用）
-let announcements = [
-  {
-    id: '1',
-    title: '合格発表について',
-    content: '合格者の発表は3月15日に予定されています。',
-    createdAt: '2024-03-01T10:00:00Z',
-    updatedAt: '2024-03-01T10:00:00Z',
-    author: '管理者'
-  },
-  {
-    id: '2',
-    title: '入学手続きについて',
-    content: '入学手続きの詳細は後日お知らせいたします。',
-    createdAt: '2024-03-02T14:30:00Z',
-    updatedAt: '2024-03-02T14:30:00Z',
-    author: '管理者'
-  }
-]
+import { getAnnouncements, createAnnouncement } from '@/lib/db'
 
 export async function GET() {
   try {
+    const announcements = await getAnnouncements()
     return NextResponse.json(announcements)
   } catch (error) {
+    console.error('Failed to fetch announcements:', error)
     return NextResponse.json(
       { error: 'サーバーエラーが発生しました' },
       { status: 500 }
@@ -42,19 +25,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const newAnnouncement = {
-      id: Date.now().toString(),
-      title,
-      content,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      author: '管理者'
-    }
-
-    announcements.unshift(newAnnouncement)
+    const newAnnouncement = await createAnnouncement(title, content, '管理者')
 
     return NextResponse.json(newAnnouncement, { status: 201 })
   } catch (error) {
+    console.error('Failed to create announcement:', error)
     return NextResponse.json(
       { error: 'サーバーエラーが発生しました' },
       { status: 500 }

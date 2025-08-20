@@ -17,12 +17,33 @@ const ProfileFormView: React.FC = () => {
         updatedAt: new Date().toISOString()
     });
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // 実際の運用ではAPIに送信
-        console.log('Profile submitted:', profile);
-        setIsSubmitted(true);
+        setIsLoading(true);
+        
+        try {
+            const response = await fetch('/api/profiles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(profile),
+            });
+
+            if (response.ok) {
+                setIsSubmitted(true);
+            } else {
+                const error = await response.json();
+                alert(`エラー: ${error.error}`);
+            }
+        } catch (error) {
+            console.error('Failed to submit profile:', error);
+            alert('プロフィールの送信に失敗しました');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleChange = (field: keyof Profile, value: string) => {
@@ -132,9 +153,10 @@ const ProfileFormView: React.FC = () => {
                 <div className="flex justify-end">
                     <button
                         type="submit"
-                        className="bg-blue-600 text-white py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled={isLoading}
+                        className="bg-blue-600 text-white py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
                     >
-                        提出する
+                        {isLoading ? '送信中...' : '提出する'}
                     </button>
                 </div>
             </form>

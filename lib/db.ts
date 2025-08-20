@@ -1,0 +1,273 @@
+import { sql } from '@vercel/postgres';
+import { unstable_noStore as noStore } from 'next/cache';
+
+// データベース初期化（テーブル作成）
+export async function initDatabase() {
+  noStore();
+  
+  try {
+    // お知らせテーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS announcements (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        author VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // ユーザーテーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) NOT NULL DEFAULT 'student',
+        name VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // プロフィールテーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS profiles (
+        id SERIAL PRIMARY KEY,
+        student_id VARCHAR(50) UNIQUE NOT NULL,
+        full_name VARCHAR(100) NOT NULL,
+        kana VARCHAR(100) NOT NULL,
+        postal_code VARCHAR(10) NOT NULL,
+        address TEXT NOT NULL,
+        guardian_name VARCHAR(100) NOT NULL,
+        phone VARCHAR(20) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // 書類テーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS documents (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        file_name VARCHAR(255) NOT NULL,
+        file_url TEXT NOT NULL,
+        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // 合格証書テーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS certificates (
+        id SERIAL PRIMARY KEY,
+        student_id VARCHAR(50) NOT NULL,
+        file_name VARCHAR(255) NOT NULL,
+        file_url TEXT NOT NULL,
+        issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // 初期データの挿入（管理者アカウント）
+    await sql`
+      INSERT INTO users (email, password_hash, role, name)
+      VALUES ('admin@example.com', 'admin123', 'admin', '管理者')
+      ON CONFLICT (email) DO NOTHING
+    `;
+
+    await sql`
+      INSERT INTO users (email, password_hash, role, name)
+      VALUES ('student@example.com', 'student123', 'student', '学生')
+      ON CONFLICT (email) DO NOTHING
+    `;
+
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+    throw error;
+  }
+}
+
+// お知らせ関連の関数
+export async function getAnnouncements() {
+  noStore();
+  try {
+    const result = await sql`
+      SELECT * FROM announcements 
+      ORDER BY created_at DESC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Failed to fetch announcements:', error);
+    throw error;
+  }
+}
+
+export async function createAnnouncement(title: string, content: string, author: string) {
+  noStore();
+  try {
+    const result = await sql`
+      INSERT INTO announcements (title, content, author)
+      VALUES (${title}, ${content}, ${author})
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to create announcement:', error);
+    throw error;
+  }
+}
+
+export async function updateAnnouncement(id: number, title: string, content: string) {
+  noStore();
+  try {
+    const result = await sql`
+      UPDATE announcements 
+      SET title = ${title}, content = ${content}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to update announcement:', error);
+    throw error;
+  }
+}
+
+export async function deleteAnnouncement(id: number) {
+  noStore();
+  try {
+    await sql`
+      DELETE FROM announcements WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error('Failed to delete announcement:', error);
+    throw error;
+  }
+}
+
+// ユーザー認証関連の関数
+export async function getUserByEmail(email: string) {
+  noStore();
+  try {
+    const result = await sql`
+      SELECT * FROM users WHERE email = ${email}
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to fetch user:', error);
+    throw error;
+  }
+}
+
+// プロフィール関連の関数
+export async function getProfiles() {
+  noStore();
+  try {
+    const result = await sql`
+      SELECT * FROM profiles ORDER BY created_at DESC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Failed to fetch profiles:', error);
+    throw error;
+  }
+}
+
+export async function createProfile(profileData: {
+  studentId: string;
+  fullName: string;
+  kana: string;
+  postalCode: string;
+  address: string;
+  guardianName: string;
+  phone: string;
+  email: string;
+}) {
+  noStore();
+  try {
+    const result = await sql`
+      INSERT INTO profiles (student_id, full_name, kana, postal_code, address, guardian_name, phone, email)
+      VALUES (${profileData.studentId}, ${profileData.fullName}, ${profileData.kana}, ${profileData.postalCode}, ${profileData.address}, ${profileData.guardianName}, ${profileData.phone}, ${profileData.email})
+      ON CONFLICT (student_id) 
+      DO UPDATE SET 
+        full_name = EXCLUDED.full_name,
+        kana = EXCLUDED.kana,
+        postal_code = EXCLUDED.postal_code,
+        address = EXCLUDED.address,
+        guardian_name = EXCLUDED.guardian_name,
+        phone = EXCLUDED.phone,
+        email = EXCLUDED.email,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to create/update profile:', error);
+    throw error;
+  }
+}
+
+// 書類関連の関数
+export async function getDocuments() {
+  noStore();
+  try {
+    const result = await sql`
+      SELECT * FROM documents ORDER BY uploaded_at DESC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Failed to fetch documents:', error);
+    throw error;
+  }
+}
+
+export async function createDocument(name: string, fileName: string, fileUrl: string) {
+  noStore();
+  try {
+    const result = await sql`
+      INSERT INTO documents (name, file_name, file_url)
+      VALUES (${name}, ${fileName}, ${fileUrl})
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to create document:', error);
+    throw error;
+  }
+}
+
+// 合格証書関連の関数
+export async function getCertificates() {
+  noStore();
+  try {
+    const result = await sql`
+      SELECT * FROM certificates ORDER BY issued_at DESC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Failed to fetch certificates:', error);
+    throw error;
+  }
+}
+
+export async function createCertificate(studentId: string, fileName: string, fileUrl: string) {
+  noStore();
+  try {
+    const result = await sql`
+      INSERT INTO certificates (student_id, file_name, file_url)
+      VALUES (${studentId}, ${fileName}, ${fileUrl})
+      ON CONFLICT (student_id) 
+      DO UPDATE SET 
+        file_name = EXCLUDED.file_name,
+        file_url = EXCLUDED.file_url,
+        issued_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to create certificate:', error);
+    throw error;
+  }
+}
