@@ -76,7 +76,10 @@ export async function initDatabase() {
         name VARCHAR(255) NOT NULL,
         file_name VARCHAR(255) NOT NULL,
         file_url TEXT NOT NULL,
-        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        description TEXT,
+        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
@@ -285,7 +288,7 @@ export async function getDocuments() {
   }
 }
 
-export async function createDocument(name: string, fileName: string, fileUrl: string) {
+export async function createDocument(name: string, fileName: string, fileUrl: string, description?: string) {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
@@ -294,8 +297,8 @@ export async function createDocument(name: string, fileName: string, fileUrl: st
   
   try {
     const result = await sql`
-      INSERT INTO documents (name, file_name, file_url)
-      VALUES (${name}, ${fileName}, ${fileUrl})
+      INSERT INTO documents (name, file_name, file_url, description)
+      VALUES (${name}, ${fileName}, ${fileUrl}, ${description || null})
       RETURNING *
     `;
     return result.rows[0];

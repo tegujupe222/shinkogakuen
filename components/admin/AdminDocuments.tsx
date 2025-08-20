@@ -8,18 +8,14 @@ interface Document {
     name: string;
     file_name: string;
     file_url: string;
-    description: string;
     uploaded_at: string;
-    created_at: string;
-    updated_at: string;
 }
 
 const AdminDocuments: React.FC = () => {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);
     const [newDocument, setNewDocument] = useState({
-        name: '',
-        description: ''
+        name: ''
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,8 +95,7 @@ const AdminDocuments: React.FC = () => {
             const documentData = {
                 name: newDocument.name,
                 fileName: uploadResult.fileName,
-                fileUrl: uploadResult.fileUrl,
-                description: newDocument.description
+                fileUrl: uploadResult.fileUrl
             };
 
             const response = await fetch('/api/documents', {
@@ -116,8 +111,7 @@ const AdminDocuments: React.FC = () => {
             if (response.ok) {
                 setMessage(data.message);
                 setNewDocument({
-                    name: '',
-                    description: ''
+                    name: ''
                 });
                 setSelectedFile(null);
                 if (fileInputRef.current) {
@@ -216,19 +210,7 @@ const AdminDocuments: React.FC = () => {
                         </div>
                     </div>
                     
-                    <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                            説明
-                        </label>
-                        <textarea
-                            id="description"
-                            value={newDocument.description}
-                            onChange={(e) => setNewDocument(prev => ({ ...prev, description: e.target.value }))}
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="書類の説明を入力してください"
-                        />
-                    </div>
+
 
                     {selectedFile && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -275,9 +257,7 @@ const AdminDocuments: React.FC = () => {
                                         <div className="flex-1">
                                             <h4 className="text-lg font-medium text-blue-600">{document.name}</h4>
                                             <p className="text-sm text-gray-600">{document.file_name}</p>
-                                            {document.description && (
-                                                <p className="text-sm text-gray-500 mt-1">{document.description}</p>
-                                            )}
+
                                             <p className="text-xs text-gray-500 mt-1">
                                                 アップロード日: {new Date(document.uploaded_at).toLocaleDateString('ja-JP')}
                                             </p>

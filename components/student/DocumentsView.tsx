@@ -7,10 +7,7 @@ interface Document {
     name: string;
     file_name: string;
     file_url: string;
-    description: string;
     uploaded_at: string;
-    created_at: string;
-    updated_at: string;
 }
 
 const DocumentsView: React.FC = () => {
@@ -87,11 +84,7 @@ const DocumentsView: React.FC = () => {
                                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
                                             {doc.name}
                                         </h3>
-                                        {doc.description && (
-                                            <p className="text-sm text-gray-600 mb-2">
-                                                {doc.description}
-                                            </p>
-                                        )}
+                                        {/* doc.description is removed as per new schema */}
                                         <p className="text-xs text-gray-500">
                                             アップロード日: {new Date(doc.uploaded_at).toLocaleDateString('ja-JP')}
                                         </p>

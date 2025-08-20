@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 新規書類を作成
+        // 新規書類を作成（既存のカラムのみ使用）
         const result = await sql`
-            INSERT INTO documents (name, file_name, file_url, description, uploaded_at, created_at, updated_at)
-            VALUES (${name}, ${fileName}, ${fileUrl || null}, ${description || null}, NOW(), NOW(), NOW())
+            INSERT INTO documents (name, file_name, file_url, uploaded_at)
+            VALUES (${name}, ${fileName}, ${fileUrl || null}, NOW())
             RETURNING id
         `;
         
