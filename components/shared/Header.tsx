@@ -6,7 +6,7 @@ interface HeaderProps {
     title?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ title = '合格者お知らせサイト' }) => {
+const Header: React.FC<HeaderProps> = ({ title }) => {
     const { user, logout } = useAuth();
 
     return (
@@ -14,9 +14,16 @@ const Header: React.FC<HeaderProps> = ({ title = '合格者お知らせサイト
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center py-4">
                     <div className="flex items-center">
-                        <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+                        <div>
+                            <h1 className="text-lg font-semibold text-gray-900 leading-tight">
+                                神港学園高等学校
+                            </h1>
+                            <h2 className="text-sm text-gray-600 leading-tight">
+                                {title || '合格者お知らせサイト'}
+                            </h2>
+                        </div>
                         {user && (
-                            <span className="ml-4 text-sm text-gray-600">
+                            <span className="ml-6 text-sm text-gray-600">
                                 ようこそ、{user.name}さん
                             </span>
                         )}

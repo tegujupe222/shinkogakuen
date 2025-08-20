@@ -6,8 +6,8 @@ import { AuthProvider } from '@/hooks/useAuth'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: '合格者お知らせサイト',
-  description: '合格者へのお知らせを管理するサイト',
+  title: '神港学園高等学校 合格者お知らせサイト',
+  description: '神港学園高等学校の合格者へのお知らせを管理するサイト',
 }
 
 export default function RootLayout({
