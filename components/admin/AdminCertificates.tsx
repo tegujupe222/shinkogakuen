@@ -1,106 +1,243 @@
-import React, { useState, useCallback } from 'react';
-import { Certificate } from '../../types';
-import UploadIcon from '../icons/UploadIcon';
-import TrashIcon from '../icons/TrashIcon';
+import React, { useState, useEffect } from 'react';
+
+interface Certificate {
+    id: string;
+    student_id: string;
+    file_name: string;
+    file_url: string;
+    issued_at: string;
+    created_at: string;
+    updated_at: string;
+}
 
 const AdminCertificates: React.FC = () => {
     const [certificates, setCertificates] = useState<Certificate[]>([]);
-    const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' }[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [newCertificate, setNewCertificate] = useState({
+        studentId: '',
+        fileName: '',
+        fileUrl: '',
+        issuedAt: new Date().toISOString().split('T')[0]
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [message, setMessage] = useState('');
 
-    // 仮のユーザーデータ（実際の運用ではAPIから取得）
-    const mockUsers = [
-        { id: '1', role: 'admin' },
-        { id: '2', role: 'student' }
-    ];
-
-    const findUserById = (id: string) => mockUsers.find(user => user.id === id);
-
-    const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files) return;
-
-        const newCertificates: Certificate[] = [];
-        const newFeedback: { message: string; type: 'success' | 'error' }[] = [];
-
-        Array.from(files).forEach((file: File) => {
-            const match = file.name.match(/^(\d{4})\.pdf$/i);
-            if (match) {
-                const studentId = match[1];
-                const studentExists = findUserById(studentId);
-                if(studentExists && studentExists.role === 'student'){
-                    const fileUrl = URL.createObjectURL(file);
-                    newCertificates.push({ 
-                        id: `cert${Date.now()}${studentId}`, 
-                        studentId, 
-                        fileUrl, 
-                        fileName: file.name,
-                        issuedAt: new Date().toISOString()
-                    });
-                    newFeedback.push({ message: `成功: ${file.name} は受験番号 ${studentId} に紐付けられました。`, type: 'success' });
-                } else {
-                    newFeedback.push({ message: `エラー: ${file.name} の受験番号 ${studentId} は存在しません。`, type: 'error' });
-                }
-            } else {
-                newFeedback.push({ message: `エラー: ${file.name} のファイル名が不正です。「受験番号4桁.pdf」の形式にしてください。`, type: 'error' });
+    // 合格証書一覧を取得
+    const fetchCertificates = async () => {
+        try {
+            const response = await fetch('/api/certificates');
+            if (response.ok) {
+                const data = await response.json();
+                setCertificates(data);
             }
-        });
-        
-        setCertificates(prev => {
-            const updatedCerts = [...prev];
-            newCertificates.forEach(newCert => {
-                const existingIndex = updatedCerts.findIndex(c => c.studentId === newCert.studentId);
-                if (existingIndex > -1) {
-                    updatedCerts[existingIndex] = newCert;
-                } else {
-                    updatedCerts.push(newCert);
-                }
-            });
-            return updatedCerts;
-        });
-        setFeedback(newFeedback);
-
-    }, []);
-    
-    const handleDelete = (id: string) => {
-        if (window.confirm('この合格証書を削除してもよろしいですか？')) {
-            setCertificates(prev => prev.filter(c => c.id !== id));
+        } catch (error) {
+            console.error('Failed to fetch certificates:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    return (
-        <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800">合格証書管理</h2>
-            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800">合格証書アップロード</h3>
-                <p className="text-sm text-gray-600 mt-1">ファイル名は「受験番号4桁.pdf」（例: 1001.pdf）としてください。複数ファイルを選択して一括アップロードできます。</p>
-                <div className="mt-4">
-                    <label htmlFor="certificate-upload" className="w-full cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                        <UploadIcon className="w-5 h-5 mr-2"/>
-                        ファイルを選択してアップロード
-                    </label>
-                    <input id="certificate-upload" name="certificate-upload" type="file" className="sr-only" multiple accept=".pdf" onChange={handleFileUpload} />
+    useEffect(() => {
+        fetchCertificates();
+    }, []);
+
+    // 合格証書を作成・更新
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setMessage('');
+
+        try {
+            const response = await fetch('/api/certificates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    studentId: newCertificate.studentId,
+                    fileName: newCertificate.fileName,
+                    fileUrl: newCertificate.fileUrl,
+                    issuedAt: newCertificate.issuedAt
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setMessage(data.message);
+                setNewCertificate({
+                    studentId: '',
+                    fileName: '',
+                    fileUrl: '',
+                    issuedAt: new Date().toISOString().split('T')[0]
+                });
+                fetchCertificates(); // 一覧を更新
+            } else {
+                setMessage(`エラー: ${data.error}`);
+            }
+        } catch (error) {
+            setMessage('合格証書の作成・更新に失敗しました');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="p-4 sm:p-6">
+                <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-gray-600">読み込み中...</span>
                 </div>
-                {feedback.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                        {feedback.map((item, index) => (
-                            <p key={index} className={`text-sm ${item.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                                {item.message}
-                            </p>
-                        ))}
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-4 sm:p-6">
+            <div className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">合格証書管理</h2>
+                <p className="mt-1 text-sm text-gray-600">学生の合格証書を管理します</p>
+            </div>
+
+            {/* 新規作成フォーム */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">合格証書作成・更新</h3>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="studentId" className="block text-sm font-medium text-gray-700 mb-1">
+                                受験番号 <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="studentId"
+                                value={newCertificate.studentId}
+                                onChange={(e) => setNewCertificate(prev => ({ ...prev, studentId: e.target.value }))}
+                                required
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="0001"
+                                maxLength={4}
+                            />
+                        </div>
+                        
+                        <div>
+                            <label htmlFor="fileName" className="block text-sm font-medium text-gray-700 mb-1">
+                                ファイル名 <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="fileName"
+                                value={newCertificate.fileName}
+                                onChange={(e) => setNewCertificate(prev => ({ ...prev, fileName: e.target.value }))}
+                                required
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="certificate_0001.pdf"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label htmlFor="fileUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                            ファイルURL
+                        </label>
+                        <input
+                            type="url"
+                            id="fileUrl"
+                            value={newCertificate.fileUrl}
+                            onChange={(e) => setNewCertificate(prev => ({ ...prev, fileUrl: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="https://example.com/certificate.pdf"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label htmlFor="issuedAt" className="block text-sm font-medium text-gray-700 mb-1">
+                            発行日
+                        </label>
+                        <input
+                            type="date"
+                            id="issuedAt"
+                            value={newCertificate.issuedAt}
+                            onChange={(e) => setNewCertificate(prev => ({ ...prev, issuedAt: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+                    
+                    <div className="flex justify-end">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {isSubmitting ? '処理中...' : '保存'}
+                        </button>
+                    </div>
+                </form>
+                
+                {message && (
+                    <div className={`mt-4 p-3 rounded-lg ${
+                        message.includes('エラー') 
+                            ? 'bg-red-50 border border-red-200 text-red-800' 
+                            : 'bg-green-50 border border-green-200 text-green-800'
+                    }`}>
+                        <p className="text-sm">{message}</p>
                     </div>
                 )}
             </div>
 
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <h3 className="text-xl font-bold text-gray-800 px-4 py-4 sm:px-6">アップロード済み一覧</h3>
-                <ul role="list" className="divide-y divide-gray-200">
-                    {certificates.map((cert) => (
-                         <li key={cert.id} className="px-4 py-4 sm:px-6 flex items-center justify-between hover:bg-gray-50">
-                            <p className="text-md font-medium text-gray-800">受験番号: <span className="font-bold">{cert.studentId}</span> ({cert.fileName})</p>
-                             <button onClick={() => handleDelete(cert.id)} className="text-gray-400 hover:text-red-600"><TrashIcon className="w-5 h-5"/></button>
-                        </li>
-                    ))}
-                </ul>
+            {/* 合格証書一覧 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">合格証書一覧</h3>
+                    
+                    {certificates.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            受験番号
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ファイル名
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            発行日
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            更新日
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {certificates.map((cert) => (
+                                        <tr key={cert.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {cert.student_id}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {cert.file_name}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(cert.issued_at).toLocaleDateString('ja-JP')}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(cert.updated_at).toLocaleDateString('ja-JP')}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="text-center py-8">
+                            <div className="text-gray-400 text-4xl mb-4">🏆</div>
+                            <p className="text-gray-500">合格証書がまだ登録されていません</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
