@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import crypto from 'crypto';
+
+// パスワードハッシュ化関数
+function hashPassword(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -48,30 +54,32 @@ export async function POST(request: NextRequest) {
 
             // パスワードは電話番号の下4桁
             const password = phoneNumber.slice(-4);
+            const passwordHash = hashPassword(password);
 
             try {
                 // 既存のユーザーをチェック
                 const existingUser = await sql`
-                    SELECT id FROM users WHERE id = ${examNumber}
+                    SELECT id FROM users WHERE exam_no = ${examNumber}
                 `;
 
                 if (existingUser.rows.length > 0) {
                     // 既存ユーザーを更新
                     await sql`
                         UPDATE users 
-                        SET password = ${password}, 
+                        SET password_hash = ${passwordHash}, 
+                            phone_last4 = ${password},
                             email = ${`student${examNumber}@shinko.edu.jp`},
                             name = ${`学生${examNumber}`},
                             role = 'student',
                             updated_at = NOW()
-                        WHERE id = ${examNumber}
+                        WHERE exam_no = ${examNumber}
                     `;
                     results.push(`受験番号 ${examNumber}: 更新完了`);
                 } else {
                     // 新規ユーザーを作成
                     await sql`
-                        INSERT INTO users (id, password, email, name, role, created_at, updated_at)
-                        VALUES (${examNumber}, ${password}, ${`student${examNumber}@shinko.edu.jp`}, ${`学生${examNumber}`}, 'student', NOW(), NOW())
+                        INSERT INTO users (exam_no, password_hash, phone_last4, email, name, role, created_at, updated_at)
+                        VALUES (${examNumber}, ${passwordHash}, ${password}, ${`student${examNumber}@shinko.edu.jp`}, ${`学生${examNumber}`}, 'student', NOW(), NOW())
                     `;
                     results.push(`受験番号 ${examNumber}: 新規作成完了`);
                 }

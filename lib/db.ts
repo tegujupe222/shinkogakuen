@@ -1,5 +1,16 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
+import crypto from 'crypto';
+
+// パスワードハッシュ化関数
+function hashPassword(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// パスワード検証関数
+function verifyPassword(password: string, hash: string): boolean {
+  return hashPassword(password) === hash;
+}
 
 // データベース接続チェック
 async function checkDatabaseConnection() {
@@ -44,11 +55,14 @@ export async function initDatabase() {
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
+        exam_no VARCHAR(4) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
+        phone_last4 VARCHAR(4),
+        email VARCHAR(255),
+        name VARCHAR(100),
         role VARCHAR(20) NOT NULL DEFAULT 'student',
-        name VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
@@ -96,15 +110,9 @@ export async function initDatabase() {
 
     // 初期データの挿入（管理者アカウント）
     await sql`
-      INSERT INTO users (email, password_hash, role, name)
-      VALUES ('admin@example.com', 'admin123', 'admin', '管理者')
-      ON CONFLICT (email) DO NOTHING
-    `;
-
-    await sql`
-      INSERT INTO users (email, password_hash, role, name)
-      VALUES ('student@example.com', 'student123', 'student', '学生')
-      ON CONFLICT (email) DO NOTHING
+      INSERT INTO users (exam_no, password_hash, email, name, role)
+      VALUES ('0000', ${hashPassword('admin123')}, 'admin@example.com', '管理者', 'admin')
+      ON CONFLICT (exam_no) DO NOTHING
     `;
 
     console.log('Database initialized successfully');
@@ -207,6 +215,48 @@ export async function getUserByEmail(email: string) {
     return result.rows[0];
   } catch (error) {
     console.error('Failed to fetch user:', error);
+    throw error;
+  }
+}
+
+export async function getUserByExamNo(examNo: string) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      SELECT * FROM users WHERE exam_no = ${examNo}
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to fetch user by exam number:', error);
+    throw error;
+  }
+}
+
+export async function authenticateUser(examNo: string, password: string) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const user = await getUserByExamNo(examNo);
+    if (!user) {
+      return null;
+    }
+    
+    if (verifyPassword(password, user.password_hash)) {
+      return user;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Failed to authenticate user:', error);
     throw error;
   }
 }

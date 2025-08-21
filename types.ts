@@ -3,9 +3,10 @@ export type UserRole = 'student' | 'admin';
 
 export interface User {
     id: string;
-    email: string;
+    exam_no?: string;
+    email?: string;
     role: UserRole;
-    name: string;
+    name?: string;
 }
 
 export interface AuthenticatedUser extends User {

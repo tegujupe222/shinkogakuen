@@ -6,7 +6,7 @@ import { AuthenticatedUser } from '../types';
 interface AuthContextType {
     user: AuthenticatedUser | null;
     loading: boolean;
-    login: (email: string, password: string) => Promise<boolean>;
+    login: (identifier: string, password: string, type?: 'admin' | 'student') => Promise<boolean>;
     logout: () => void;
 }
 
@@ -38,14 +38,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }, []);
 
-    const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    const login = useCallback(async (identifier: string, password: string, type: 'admin' | 'student' = 'student'): Promise<boolean> => {
         try {
+            const requestBody = type === 'student' 
+                ? { examNo: identifier, password }
+                : { email: identifier, password };
+
             const response = await fetch('/api/auth', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify(requestBody),
             });
 
             if (!response.ok) {
@@ -57,6 +61,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             const userData: AuthenticatedUser = {
                 id: data.user.id,
+                exam_no: data.user.exam_no,
                 email: data.user.email,
                 role: data.user.role,
                 name: data.user.name

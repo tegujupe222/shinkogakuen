@@ -21,13 +21,13 @@ const CertificateView: React.FC = () => {
 
     useEffect(() => {
         const fetchCertificate = async () => {
-            if (!user?.id) {
+            if (!user?.exam_no) {
                 setLoading(false);
                 return;
             }
 
             try {
-                const response = await fetch(`/api/certificates/${user.id}`);
+                const response = await fetch(`/api/certificates/${user.exam_no}`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -46,7 +46,7 @@ const CertificateView: React.FC = () => {
         };
 
         fetchCertificate();
-    }, [user?.id]);
+    }, [user?.exam_no]);
 
     if (loading) {
         return (
@@ -109,7 +109,7 @@ const CertificateView: React.FC = () => {
                     <div className="text-center mb-6">
                         <div className="text-6xl mb-4">🏆</div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-2">合格証書</h3>
-                        <p className="text-gray-600">受験番号: {user?.id}</p>
+                        <p className="text-gray-600">受験番号: {user?.exam_no}</p>
                     </div>
                     
                     <div className="bg-gray-50 rounded-lg p-4 mb-6">
