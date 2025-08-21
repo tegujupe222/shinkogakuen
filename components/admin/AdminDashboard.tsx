@@ -35,6 +35,14 @@ const AdminDashboard: React.FC = () => {
     const [personalResults, setPersonalResults] = useState<any[]>([]);
     const [loadingPersonalResults, setLoadingPersonalResults] = useState(false);
     const [deletePersonalResultStatus, setDeletePersonalResultStatus] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [filterType, setFilterType] = useState<string>('all');
+    const [sortBy, setSortBy] = useState<string>('exam_no');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [userSearchTerm, setUserSearchTerm] = useState<string>('');
+    const [userFilterType, setUserFilterType] = useState<string>('all');
+    const [userSortBy, setUserSortBy] = useState<string>('exam_no');
+    const [userSortOrder, setUserSortOrder] = useState<'asc' | 'desc'>('asc');
 
     const tabs = [
         { 
@@ -199,6 +207,124 @@ const AdminDashboard: React.FC = () => {
         } catch (error) {
             setDeletePersonalResultStatus('全削除中にエラーが発生しました');
             setTimeout(() => setDeletePersonalResultStatus(''), 5000);
+        }
+    };
+
+    // フィルター・ソート機能
+    const filteredAndSortedData = () => {
+        let filteredData = [...personalResults];
+
+        // 検索フィルター
+        if (searchTerm) {
+            filteredData = filteredData.filter(item => 
+                item.exam_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.middle_school?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.accepted_course?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        // タイプフィルター
+        if (filterType !== 'all') {
+            filteredData = filteredData.filter(item => {
+                switch (filterType) {
+                    case 'senkan':
+                        return item.application_type === '専願';
+                    case 'heikan':
+                        return item.application_type === '併願';
+                    case 'has_course':
+                        return item.accepted_course && item.accepted_course.trim() !== '';
+                    case 'no_course':
+                        return !item.accepted_course || item.accepted_course.trim() === '';
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        // ソート
+        filteredData.sort((a, b) => {
+            let aValue = a[sortBy] || '';
+            let bValue = b[sortBy] || '';
+
+            if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+            if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+            if (sortOrder === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        return filteredData;
+    };
+
+    const handleSort = (field: string) => {
+        if (sortBy === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(field);
+            setSortOrder('asc');
+        }
+    };
+
+    // 学生アカウント管理のフィルター・ソート機能
+    const filteredAndSortedUsers = () => {
+        let filteredData = [...users];
+
+        // 検索フィルター
+        if (userSearchTerm) {
+            filteredData = filteredData.filter(item => 
+                item.exam_no?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                item.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                item.email?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                item.phone_last4?.toLowerCase().includes(userSearchTerm.toLowerCase())
+            );
+        }
+
+        // タイプフィルター
+        if (userFilterType !== 'all') {
+            filteredData = filteredData.filter(item => {
+                switch (userFilterType) {
+                    case 'admin':
+                        return item.role === 'admin';
+                    case 'student':
+                        return item.role === 'student';
+                    case 'has_phone':
+                        return item.phone_last4 && item.phone_last4.trim() !== '';
+                    case 'no_phone':
+                        return !item.phone_last4 || item.phone_last4.trim() === '';
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        // ソート
+        filteredData.sort((a, b) => {
+            let aValue = a[userSortBy as keyof User] || '';
+            let bValue = b[userSortBy as keyof User] || '';
+
+            if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+            if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+            if (userSortOrder === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        return filteredData;
+    };
+
+    const handleUserSort = (field: string) => {
+        if (userSortBy === field) {
+            setUserSortOrder(userSortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setUserSortBy(field);
+            setUserSortOrder('asc');
         }
     };
 
@@ -680,6 +806,74 @@ const AdminDashboard: React.FC = () => {
                                     </button>
                                 </div>
 
+                                {/* 検索・フィルター・ソート */}
+                                <div className="mb-6 space-y-4">
+                                    {/* 検索バー */}
+                                    <div className="flex items-center space-x-4">
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                placeholder="受験番号、氏名、中学校名、合格コースで検索..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => setSearchTerm('')}
+                                            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                        >
+                                            クリア
+                                        </button>
+                                    </div>
+
+                                    {/* フィルター・ソート */}
+                                    <div className="flex flex-wrap items-center gap-4">
+                                        {/* フィルター */}
+                                        <div className="flex items-center space-x-2">
+                                            <label className="text-sm font-medium text-gray-700">フィルター:</label>
+                                            <select
+                                                value={filterType}
+                                                onChange={(e) => setFilterType(e.target.value)}
+                                                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="all">全て</option>
+                                                <option value="senkan">専願のみ</option>
+                                                <option value="heikan">併願のみ</option>
+                                                <option value="has_course">合格コースあり</option>
+                                                <option value="no_course">合格コースなし</option>
+                                            </select>
+                                        </div>
+
+                                        {/* ソート */}
+                                        <div className="flex items-center space-x-2">
+                                            <label className="text-sm font-medium text-gray-700">ソート:</label>
+                                            <select
+                                                value={sortBy}
+                                                onChange={(e) => setSortBy(e.target.value)}
+                                                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="exam_no">受験番号</option>
+                                                <option value="name">氏名</option>
+                                                <option value="application_type">出願種別</option>
+                                                <option value="accepted_course">合格コース</option>
+                                                <option value="created_at">作成日時</option>
+                                            </select>
+                                            <button
+                                                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                                                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                                            >
+                                                {sortOrder === 'asc' ? '↑' : '↓'}
+                                            </button>
+                                        </div>
+
+                                        {/* 結果件数 */}
+                                        <div className="text-sm text-gray-600">
+                                            表示: {filteredAndSortedData().length} / {personalResults.length}件
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {deletePersonalResultStatus && (
                                     <div className={`mb-6 p-4 rounded-lg border ${
                                         deletePersonalResultStatus.includes('エラー') 
@@ -700,14 +894,26 @@ const AdminDashboard: React.FC = () => {
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead className="bg-gray-50">
                                                 <tr>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        受験番号
+                                                    <th 
+                                                        scope="col" 
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                        onClick={() => handleSort('exam_no')}
+                                                    >
+                                                        受験番号 {sortBy === 'exam_no' && (sortOrder === 'asc' ? '↑' : '↓')}
                                                     </th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        氏名
+                                                    <th 
+                                                        scope="col" 
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                        onClick={() => handleSort('name')}
+                                                    >
+                                                        氏名 {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                                                     </th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        出願種別
+                                                    <th 
+                                                        scope="col" 
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                        onClick={() => handleSort('application_type')}
+                                                    >
+                                                        出願種別 {sortBy === 'application_type' && (sortOrder === 'asc' ? '↑' : '↓')}
                                                     </th>
                                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         性別
@@ -715,11 +921,19 @@ const AdminDashboard: React.FC = () => {
                                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         中学校名
                                                     </th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        合格コース
+                                                    <th 
+                                                        scope="col" 
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                        onClick={() => handleSort('accepted_course')}
+                                                    >
+                                                        合格コース {sortBy === 'accepted_course' && (sortOrder === 'asc' ? '↑' : '↓')}
                                                     </th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        作成日時
+                                                    <th 
+                                                        scope="col" 
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                        onClick={() => handleSort('created_at')}
+                                                    >
+                                                        作成日時 {sortBy === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
                                                     </th>
                                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         削除
@@ -727,7 +941,7 @@ const AdminDashboard: React.FC = () => {
                                                 </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
-                                                {personalResults.map((result) => (
+                                                {filteredAndSortedData().map((result) => (
                                                     <tr key={result.id}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                             {result.exam_no}
@@ -775,91 +989,173 @@ const AdminDashboard: React.FC = () => {
                                 )}
                             </div>
 
-                            {deleteStatus && (
-                                <div className={`mt-6 p-4 rounded-lg border ${
-                                    deleteStatus.includes('エラー') 
-                                        ? 'bg-red-50 border-red-200 text-red-800' 
-                                        : 'bg-green-50 border-green-200 text-green-800'
-                                }`}>
-                                    <p className="font-medium">{deleteStatus}</p>
+                            {/* ユーザー一覧管理 */}
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-lg font-semibold text-gray-900">ユーザー一覧管理</h3>
+                                    <button
+                                        onClick={() => setUserSearchTerm('')}
+                                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                    >
+                                        クリア
+                                    </button>
                                 </div>
-                            )}
 
-                            {loadingUsers ? (
-                                <div className="text-center py-8">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                                    <p className="mt-4 text-gray-600">ユーザー一覧を読み込み中...</p>
+                                {/* 検索・フィルター・ソート */}
+                                <div className="mb-6 space-y-4">
+                                    {/* 検索バー */}
+                                    <div className="flex items-center space-x-4">
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                placeholder="受験番号、名前、ログインID、電話番号で検索..."
+                                                value={userSearchTerm}
+                                                onChange={(e) => setUserSearchTerm(e.target.value)}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => setUserSearchTerm('')}
+                                            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                        >
+                                            クリア
+                                        </button>
+                                    </div>
+
+                                    {/* フィルター・ソート */}
+                                    <div className="flex flex-wrap items-center gap-4">
+                                        {/* フィルター */}
+                                        <div className="flex items-center space-x-2">
+                                            <label className="text-sm font-medium text-gray-700">フィルター:</label>
+                                            <select
+                                                value={userFilterType}
+                                                onChange={(e) => setUserFilterType(e.target.value)}
+                                                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="all">全て</option>
+                                                <option value="admin">管理者のみ</option>
+                                                <option value="student">学生のみ</option>
+                                                <option value="has_phone">電話番号あり</option>
+                                                <option value="no_phone">電話番号なし</option>
+                                            </select>
+                                        </div>
+
+                                        {/* ソート */}
+                                        <div className="flex items-center space-x-2">
+                                            <label className="text-sm font-medium text-gray-700">ソート:</label>
+                                            <select
+                                                value={userSortBy}
+                                                onChange={(e) => setUserSortBy(e.target.value)}
+                                                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="exam_no">受験番号</option>
+                                                <option value="name">名前</option>
+                                                <option value="email">ログインID</option>
+                                                <option value="phone_last4">電話番号</option>
+                                                <option value="role">ロール</option>
+                                                <option value="created_at">作成日時</option>
+                                            </select>
+                                            <button
+                                                onClick={() => handleUserSort(userSortBy)}
+                                                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                                            >
+                                                {userSortOrder === 'asc' ? '↑' : '↓'}
+                                            </button>
+                                        </div>
+
+                                        {/* 結果件数 */}
+                                        <div className="text-sm text-gray-600">
+                                            表示: {filteredAndSortedUsers().length} / {users.length}件
+                                        </div>
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    受験番号
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    名前
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    ログインID
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    電話番号
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    ロール
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    作成日時
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    更新日時
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    削除
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {users.map((user) => (
-                                                <tr key={user.id}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {user.exam_no}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {user.name}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {user.email}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {user.phone_last4}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {user.role}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {new Date(user.created_at).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {new Date(user.updated_at).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        <button
-                                                            onClick={() => deleteUser(user.exam_no)}
-                                                            className="text-red-600 hover:text-red-900"
-                                                            title="削除"
-                                                        >
-                                                            <TrashIcon className="h-5 w-5" />
-                                                        </button>
-                                                    </td>
+
+                                {deleteStatus && (
+                                    <div className={`mt-6 p-4 rounded-lg border ${
+                                        deleteStatus.includes('エラー') 
+                                            ? 'bg-red-50 border-red-200 text-red-800' 
+                                            : 'bg-green-50 border-green-200 text-green-800'
+                                    }`}>
+                                        <p className="font-medium">{deleteStatus}</p>
+                                    </div>
+                                )}
+
+                                {loadingUsers ? (
+                                    <div className="text-center py-8">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                                        <p className="mt-4 text-gray-600">ユーザー一覧を読み込み中...</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        受験番号
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        名前
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        ログインID
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        電話番号
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        ロール
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        作成日時
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        更新日時
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        削除
+                                                    </th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {filteredAndSortedUsers().map((user) => (
+                                                    <tr key={user.id}>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            {user.exam_no}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {user.name}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {user.email}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {user.phone_last4}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {user.role}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {new Date(user.created_at).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {new Date(user.updated_at).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            <button
+                                                                onClick={() => deleteUser(user.exam_no)}
+                                                                className="text-red-600 hover:text-red-900"
+                                                                title="削除"
+                                                            >
+                                                                <TrashIcon className="h-5 w-5" />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <ActiveComponent />
