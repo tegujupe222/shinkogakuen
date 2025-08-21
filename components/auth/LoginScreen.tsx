@@ -67,7 +67,7 @@ const LoginScreen: React.FC = () => {
                                 placeholder="1234"
                             />
                             <p className="mt-1 text-xs text-gray-500">
-                                例: 1234（学生）, 9999（管理者）
+                                例: 1234
                             </p>
                         </div>
                         
@@ -87,7 +87,7 @@ const LoginScreen: React.FC = () => {
                                 placeholder="5678"
                             />
                             <p className="mt-1 text-xs text-gray-500">
-                                例: 電話番号下4桁（学生）, 5896（管理者）
+                                例: 電話番号下4桁
                             </p>
                         </div>
 
