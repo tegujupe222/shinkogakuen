@@ -9,6 +9,17 @@ function hashPassword(password: string): string {
 
 export async function POST(request: NextRequest) {
     try {
+        // データベース接続チェック
+        if (!process.env.POSTGRES_URL) {
+            return NextResponse.json(
+                { 
+                    error: 'データベースが設定されていません。Vercelダッシュボードでデータベースを設定してください。',
+                    details: 'POSTGRES_URL environment variable is not set'
+                },
+                { status: 503 }
+            );
+        }
+
         const formData = await request.formData();
         const file = formData.get('file') as File;
 
