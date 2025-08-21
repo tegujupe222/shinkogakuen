@@ -1,94 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 
-// 特定の学生の個人結果を削除
-export async function DELETE(
-    request: NextRequest,
-    { params }: { params: Promise<{ examNo: string }> }
-) {
+// 全個人結果を取得
+export async function GET(request: NextRequest) {
     try {
-        const { examNo } = await params;
-
-        // データベース接続チェック
-        if (!process.env.POSTGRES_URL) {
-            return NextResponse.json(
-                { 
-                    error: 'データベースが設定されていません。',
-                    details: 'POSTGRES_URL environment variable is not set'
-                },
-                { status: 503 }
-            );
-        }
-
-        // テーブル存在チェック
-        try {
-            const tableCheck = await sql`
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = 'student_results'
-                );
-            `;
-            
-            if (!tableCheck.rows[0]?.exists) {
-                return NextResponse.json(
-                    { 
-                        error: 'student_resultsテーブルが存在しません。',
-                        details: 'Please run /api/migrate first'
-                    },
-                    { status: 503 }
-                );
-            }
-        } catch (error) {
-            console.error('Table check failed:', error);
-            return NextResponse.json(
-                { error: 'データベース接続エラーが発生しました' },
-                { status: 500 }
-            );
-        }
-
-        // 結果が存在するかチェック
-        const existingResult = await sql`
-            SELECT exam_no, name FROM student_results WHERE exam_no = ${examNo}
-        `;
-
-        if (existingResult.rows.length === 0) {
-            return NextResponse.json(
-                { error: '指定された個人結果が見つかりません' },
-                { status: 404 }
-            );
-        }
-
-        const result = existingResult.rows[0];
-
-        // 個人結果を削除
-        await sql`DELETE FROM student_results WHERE exam_no = ${examNo}`;
-
-        return NextResponse.json({
-            success: true,
-            message: `個人結果 ${examNo} (${result.name}) を削除しました`,
-            deletedResult: {
-                exam_no: result.exam_no,
-                name: result.name
-            }
-        });
-
-    } catch (error) {
-        console.error('Failed to delete student result:', error);
-        return NextResponse.json(
-            { error: '個人結果の削除に失敗しました' },
-            { status: 500 }
-        );
-    }
-}
-
-// 特定の学生の個人結果を取得
-export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ examNo: string }> }
-) {
-    try {
-        const { examNo } = await params;
-
         // データベース接続チェック
         if (!process.env.POSTGRES_URL) {
             return NextResponse.json(
@@ -127,22 +42,99 @@ export async function GET(
         }
 
         const result = await sql`
-            SELECT * FROM student_results 
-            WHERE exam_no = ${examNo}
+            SELECT 
+                id, 
+                exam_no, 
+                name, 
+                application_type,
+                gender,
+                middle_school,
+                accepted_course,
+                created_at, 
+                updated_at
+            FROM student_results 
+            ORDER BY exam_no ASC
         `;
 
-        if (result.rows.length === 0) {
+        return NextResponse.json({
+            success: true,
+            results: result.rows,
+            total: result.rows.length
+        });
+
+    } catch (error) {
+        console.error('Failed to fetch student results:', error);
+        return NextResponse.json(
+            { error: '個人結果一覧の取得に失敗しました' },
+            { status: 500 }
+        );
+    }
+}
+
+// 全個人結果を削除
+export async function DELETE(request: NextRequest) {
+    try {
+        // データベース接続チェック
+        if (!process.env.POSTGRES_URL) {
             return NextResponse.json(
-                { error: '個人結果が見つかりません' },
+                { 
+                    error: 'データベースが設定されていません。',
+                    details: 'POSTGRES_URL environment variable is not set'
+                },
+                { status: 503 }
+            );
+        }
+
+        // テーブル存在チェック
+        try {
+            const tableCheck = await sql`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'student_results'
+                );
+            `;
+            
+            if (!tableCheck.rows[0]?.exists) {
+                return NextResponse.json(
+                    { 
+                        error: 'student_resultsテーブルが存在しません。',
+                        details: 'Please run /api/migrate first'
+                    },
+                    { status: 503 }
+                );
+            }
+        } catch (error) {
+            console.error('Table check failed:', error);
+            return NextResponse.json(
+                { error: 'データベース接続エラーが発生しました' },
+                { status: 500 }
+            );
+        }
+
+        // 削除前の件数を取得
+        const countResult = await sql`SELECT COUNT(*) as count FROM student_results`;
+        const count = parseInt(countResult.rows[0].count);
+
+        if (count === 0) {
+            return NextResponse.json(
+                { error: '削除する個人結果がありません' },
                 { status: 404 }
             );
         }
 
-        return NextResponse.json(result.rows[0]);
+        // 全個人結果を削除
+        await sql`DELETE FROM student_results`;
+
+        return NextResponse.json({
+            success: true,
+            message: `${count}件の個人結果を削除しました`,
+            deletedCount: count
+        });
+
     } catch (error) {
-        console.error('Failed to fetch student result:', error);
+        console.error('Failed to delete all student results:', error);
         return NextResponse.json(
-            { error: '個人結果の取得に失敗しました' },
+            { error: '個人結果の全削除に失敗しました' },
             { status: 500 }
         );
     }

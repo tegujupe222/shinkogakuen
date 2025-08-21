@@ -32,6 +32,9 @@ const AdminDashboard: React.FC = () => {
     const [excelUploadStatus, setExcelUploadStatus] = useState<string>('');
     const [excelUploadResults, setExcelUploadResults] = useState<any>(null);
     const [isExcelUploading, setIsExcelUploading] = useState(false);
+    const [personalResults, setPersonalResults] = useState<any[]>([]);
+    const [loadingPersonalResults, setLoadingPersonalResults] = useState(false);
+    const [deletePersonalResultStatus, setDeletePersonalResultStatus] = useState<string>('');
 
     const tabs = [
         { 
@@ -119,8 +122,85 @@ const AdminDashboard: React.FC = () => {
     useEffect(() => {
         if (activeTab === 'students') {
             fetchUsers();
+            fetchPersonalResults();
         }
     }, [activeTab]);
+
+    // 個人結果一覧を取得
+    const fetchPersonalResults = async () => {
+        setLoadingPersonalResults(true);
+        try {
+            const response = await fetch('/api/results');
+            const data = await response.json();
+            if (data.success) {
+                setPersonalResults(data.results);
+            } else {
+                console.error('Failed to fetch personal results:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching personal results:', error);
+        } finally {
+            setLoadingPersonalResults(false);
+        }
+    };
+
+    // 個人結果削除
+    const deletePersonalResult = async (examNo: string) => {
+        if (!confirm(`個人結果 ${examNo} を削除しますか？この操作は取り消せません。`)) {
+            return;
+        }
+
+        setDeletePersonalResultStatus('削除中...');
+        try {
+            const response = await fetch(`/api/results/${examNo}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setDeletePersonalResultStatus('削除完了');
+                // 個人結果一覧を再取得
+                await fetchPersonalResults();
+                setTimeout(() => setDeletePersonalResultStatus(''), 3000);
+            } else {
+                setDeletePersonalResultStatus(`エラー: ${data.error}`);
+                setTimeout(() => setDeletePersonalResultStatus(''), 5000);
+            }
+        } catch (error) {
+            setDeletePersonalResultStatus('削除中にエラーが発生しました');
+            setTimeout(() => setDeletePersonalResultStatus(''), 5000);
+        }
+    };
+
+    // 全個人結果削除
+    const deleteAllPersonalResults = async () => {
+        if (!confirm('全ての個人結果を削除しますか？この操作は取り消せません。')) {
+            return;
+        }
+
+        setDeletePersonalResultStatus('全削除中...');
+        try {
+            const response = await fetch('/api/results', {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setDeletePersonalResultStatus('全削除完了');
+                // 個人結果一覧を再取得
+                await fetchPersonalResults();
+                setTimeout(() => setDeletePersonalResultStatus(''), 3000);
+            } else {
+                setDeletePersonalResultStatus(`エラー: ${data.error}`);
+                setTimeout(() => setDeletePersonalResultStatus(''), 5000);
+            }
+        } catch (error) {
+            setDeletePersonalResultStatus('全削除中にエラーが発生しました');
+            setTimeout(() => setDeletePersonalResultStatus(''), 5000);
+        }
+    };
 
     // エクセルファイルアップロード処理
     const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,6 +225,8 @@ const AdminDashboard: React.FC = () => {
             if (response.ok) {
                 setExcelUploadStatus('エクセルアップロード完了');
                 setExcelUploadResults(data);
+                // アップロード完了後に個人結果一覧を更新
+                await fetchPersonalResults();
             } else {
                 setExcelUploadStatus(`エラー: ${data.error}`);
             }
@@ -582,6 +664,113 @@ const AdminDashboard: React.FC = () => {
                                                 </div>
                                             </div>
                                         )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 個人結果管理 */}
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-lg font-semibold text-gray-900">個人結果管理</h3>
+                                    <button
+                                        onClick={deleteAllPersonalResults}
+                                        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                                    >
+                                        全削除
+                                    </button>
+                                </div>
+
+                                {deletePersonalResultStatus && (
+                                    <div className={`mb-6 p-4 rounded-lg border ${
+                                        deletePersonalResultStatus.includes('エラー') 
+                                            ? 'bg-red-50 border-red-200 text-red-800' 
+                                            : 'bg-green-50 border-green-200 text-green-800'
+                                    }`}>
+                                        <p className="font-medium">{deletePersonalResultStatus}</p>
+                                    </div>
+                                )}
+
+                                {loadingPersonalResults ? (
+                                    <div className="text-center py-8">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                                        <p className="mt-4 text-gray-600">個人結果一覧を読み込み中...</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        受験番号
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        氏名
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        出願種別
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        性別
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        中学校名
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        合格コース
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        作成日時
+                                                    </th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        削除
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {personalResults.map((result) => (
+                                                    <tr key={result.id}>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            {result.exam_no}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {result.name}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {result.application_type && (
+                                                                <span className={`inline-block px-2 py-1 rounded text-xs font-bold text-white ${
+                                                                    result.application_type === '専願' 
+                                                                        ? 'bg-blue-600' 
+                                                                        : 'bg-red-600'
+                                                                }`}>
+                                                                    {result.application_type}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {result.gender}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {result.middle_school}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {result.accepted_course}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {new Date(result.created_at).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            <button
+                                                                onClick={() => deletePersonalResult(result.exam_no)}
+                                                                className="text-red-600 hover:text-red-900"
+                                                                title="削除"
+                                                            >
+                                                                <TrashIcon className="h-5 w-5" />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 )}
                             </div>
