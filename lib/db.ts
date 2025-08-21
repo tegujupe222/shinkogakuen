@@ -111,7 +111,13 @@ export async function initDatabase() {
     // 初期データの挿入（管理者アカウント）
     await sql`
       INSERT INTO users (exam_no, password_hash, email, name, role)
-      VALUES ('0000', ${hashPassword('admin123')}, 'admin@example.com', '管理者', 'admin')
+      VALUES ('0000', ${hashPassword('admin123')}, 'admin@example.com', '管理者（旧）', 'admin')
+      ON CONFLICT (exam_no) DO NOTHING
+    `;
+
+    await sql`
+      INSERT INTO users (exam_no, password_hash, email, name, role)
+      VALUES ('9999', ${hashPassword('5896')}, 'admin@shinko.edu.jp', '管理者', 'admin')
       ON CONFLICT (exam_no) DO NOTHING
     `;
 

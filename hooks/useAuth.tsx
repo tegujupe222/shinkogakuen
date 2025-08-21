@@ -6,7 +6,7 @@ import { AuthenticatedUser } from '../types';
 interface AuthContextType {
     user: AuthenticatedUser | null;
     loading: boolean;
-    login: (identifier: string, password: string, type?: 'admin' | 'student') => Promise<boolean>;
+    login: (examNo: string, password: string) => Promise<boolean>;
     logout: () => void;
 }
 
@@ -38,13 +38,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }, []);
 
-    const login = useCallback(async (identifier: string, password: string, type: 'admin' | 'student' = 'student'): Promise<boolean> => {
+    const login = useCallback(async (examNo: string, password: string): Promise<boolean> => {
         try {
-            const requestBody = type === 'student' 
-                ? { examNo: identifier, password }
-                : { email: identifier, password };
+            const requestBody = { examNo, password };
 
-            console.log('Login attempt:', { type, identifier, requestBody });
+            console.log('Login attempt:', { examNo, requestBody });
 
             const response = await fetch('/api/auth', {
                 method: 'POST',

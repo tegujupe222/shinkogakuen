@@ -26,6 +26,13 @@ export async function POST(request: NextRequest) {
             WHERE email = 'admin@example.com' AND exam_no IS NULL
         `;
 
+        // 新しい管理者アカウントを追加
+        await sql`
+            INSERT INTO users (exam_no, password_hash, email, name, role, created_at, updated_at)
+            VALUES ('9999', '5896', 'admin@shinko.edu.jp', '管理者', 'admin', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT (exam_no) DO NOTHING
+        `;
+
         return NextResponse.json({
             success: true,
             message: 'Database migration completed successfully'
