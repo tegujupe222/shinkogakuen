@@ -116,6 +116,20 @@ const PersonalResultsView: React.FC = () => {
             
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
                 <div className="p-4 sm:p-6">
+                    {/* 出願種別 */}
+                    {result.application_type && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">出願種別</h3>
+                            <div className={`inline-block px-4 py-2 rounded-lg font-bold text-white ${
+                                result.application_type === '専願' 
+                                    ? 'bg-blue-600' 
+                                    : 'bg-red-600'
+                            }`}>
+                                {result.application_type}
+                            </div>
+                        </div>
+                    )}
+
                     {/* 基本情報 */}
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">基本情報</h3>
@@ -142,20 +156,6 @@ const PersonalResultsView: React.FC = () => {
                             )}
                         </div>
                     </div>
-
-                    {/* 出願種別 */}
-                    {result.application_type && (
-                        <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">出願種別</h3>
-                            <div className={`inline-block px-4 py-2 rounded-lg font-bold text-white ${
-                                result.application_type === '専願' 
-                                    ? 'bg-blue-600' 
-                                    : 'bg-red-600'
-                            }`}>
-                                {result.application_type}
-                            </div>
-                        </div>
-                    )}
 
                     {/* 合格コース */}
                     {result.accepted_course && (
