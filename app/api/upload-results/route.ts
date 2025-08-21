@@ -33,6 +33,32 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // テーブル存在チェック
+        try {
+            const tableCheck = await sql`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'student_results'
+                );
+            `;
+            
+            if (!tableCheck.rows[0]?.exists) {
+                return NextResponse.json(
+                    { 
+                        error: 'student_resultsテーブルが存在しません。先にマイグレーションを実行してください。',
+                        details: 'Please run /api/migrate first'
+                    },
+                    { status: 503 }
+                );
+            }
+        } catch (error) {
+            console.error('Table check failed:', error);
+            return NextResponse.json(
+                { error: 'データベース接続エラーが発生しました' },
+                { status: 500 }
+            );
+        }
+
         const formData = await request.formData();
         const file = formData.get('file') as File;
 

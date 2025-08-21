@@ -20,6 +20,32 @@ export async function GET(
             );
         }
 
+        // テーブル存在チェック
+        try {
+            const tableCheck = await sql`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'student_results'
+                );
+            `;
+            
+            if (!tableCheck.rows[0]?.exists) {
+                return NextResponse.json(
+                    { 
+                        error: 'student_resultsテーブルが存在しません。',
+                        details: 'Please run /api/migrate first'
+                    },
+                    { status: 503 }
+                );
+            }
+        } catch (error) {
+            console.error('Table check failed:', error);
+            return NextResponse.json(
+                { error: 'データベース接続エラーが発生しました' },
+                { status: 500 }
+            );
+        }
+
         const result = await sql`
             SELECT * FROM student_results 
             WHERE exam_no = ${examNo}
