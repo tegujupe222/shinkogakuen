@@ -8,14 +8,31 @@ const LoginScreen: React.FC = () => {
     const [examNo, setExamNo] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const { login } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (loginType === 'student') {
-            await login(examNo, password, 'student');
-        } else {
-            await login(email, password, 'admin');
+        setLoading(true);
+        setError(null);
+
+        try {
+            let success = false;
+            if (loginType === 'student') {
+                success = await login(examNo, password, 'student');
+            } else {
+                success = await login(email, password, 'admin');
+            }
+
+            if (!success) {
+                setError('ログインに失敗しました。入力情報を確認してください。');
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('ログイン中にエラーが発生しました。');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -125,12 +142,31 @@ const LoginScreen: React.FC = () => {
                                 </p>
                             )}
                         </div>
+
+                        {/* エラーメッセージ */}
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                <p className="text-red-800 text-sm">{error}</p>
+                            </div>
+                        )}
                         
                         <button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
+                            disabled={loading}
+                            className={`w-full py-3 px-4 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform shadow-lg ${
+                                loading
+                                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:scale-[1.02]'
+                            }`}
                         >
-                            ログイン
+                            {loading ? (
+                                <div className="flex items-center justify-center">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    ログイン中...
+                                </div>
+                            ) : (
+                                'ログイン'
+                            )}
                         </button>
                     </form>
                     

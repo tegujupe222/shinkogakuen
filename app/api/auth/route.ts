@@ -22,15 +22,19 @@ const fallbackUsers = [
 export async function POST(request: NextRequest) {
   try {
     const { email, password, examNo } = await request.json()
+    
+    console.log('Auth request:', { email, examNo, hasPassword: !!password });
 
     let user;
     
     try {
       // 受験番号が提供されている場合は受験番号で認証
       if (examNo) {
+        console.log('Attempting exam number authentication:', examNo);
         user = await authenticateUser(examNo, password)
       } else {
         // メールアドレスが提供されている場合はメールアドレスで認証
+        console.log('Attempting email authentication:', email);
         const dbUser = await getUserByEmail(email)
         if (dbUser && dbUser.password_hash === hashPassword(password)) {
           user = dbUser
@@ -42,6 +46,7 @@ export async function POST(request: NextRequest) {
       if (examNo) {
         // 受験番号でのフォールバック認証（管理者のみ）
         if (examNo === '0000' && password === 'admin123') {
+          console.log('Fallback admin authentication successful');
           user = fallbackUsers[0]
         }
       } else {
@@ -49,6 +54,8 @@ export async function POST(request: NextRequest) {
         user = fallbackUsers.find(u => u.email === email && u.password_hash === hashPassword(password))
       }
     }
+
+    console.log('Authentication result:', { user: user ? { id: user.id, role: user.role } : null });
 
     if (!user) {
       return NextResponse.json(

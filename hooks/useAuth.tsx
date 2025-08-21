@@ -44,6 +44,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 ? { examNo: identifier, password }
                 : { email: identifier, password };
 
+            console.log('Login attempt:', { type, identifier, requestBody });
+
             const response = await fetch('/api/auth', {
                 method: 'POST',
                 headers: {
@@ -52,12 +54,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 body: JSON.stringify(requestBody),
             });
 
+            console.log('Login response status:', response.status);
+
             if (!response.ok) {
                 const error = await response.json();
+                console.error('Login failed:', error);
                 throw new Error(error.error || 'ログインに失敗しました');
             }
 
             const data = await response.json();
+            console.log('Login success:', data);
             
             const userData: AuthenticatedUser = {
                 id: data.user.id,
