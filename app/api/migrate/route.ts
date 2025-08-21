@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import crypto from 'crypto';
+
+// パスワードハッシュ化関数
+function hashPassword(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -29,7 +35,7 @@ export async function POST(request: NextRequest) {
         // 新しい管理者アカウントを追加
         await sql`
             INSERT INTO users (exam_no, password_hash, email, name, role, created_at, updated_at)
-            VALUES ('9999', '5896', 'admin@shinko.edu.jp', '管理者', 'admin', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            VALUES ('9999', ${hashPassword('5896')}, 'admin@shinko.edu.jp', '管理者', 'admin', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ON CONFLICT (exam_no) DO NOTHING
         `;
 

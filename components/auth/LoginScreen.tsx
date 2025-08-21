@@ -16,7 +16,7 @@ const LoginScreen: React.FC = () => {
         setError(null);
 
         try {
-            const success = await login(examNo, password, 'student');
+            const success = await login(examNo, password);
 
             if (!success) {
                 setError('ログインに失敗しました。IDとパスワードを確認してください。');
