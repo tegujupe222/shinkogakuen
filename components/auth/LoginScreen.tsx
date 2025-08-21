@@ -118,15 +118,7 @@ const LoginScreen: React.FC = () => {
                         </button>
                     </form>
                     
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                        <p className="text-xs text-gray-500 text-center">
-                            テスト用アカウント:
-                        </p>
-                        <div className="text-xs text-gray-500 text-center mt-1 space-y-1">
-                            <p>管理者: 9999 / 5896</p>
-                            <p>学生: 受験番号 / 電話番号下4桁</p>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>
