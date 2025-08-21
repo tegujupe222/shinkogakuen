@@ -29,6 +29,9 @@ const AdminDashboard: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [deleteStatus, setDeleteStatus] = useState<string>('');
+    const [excelUploadStatus, setExcelUploadStatus] = useState<string>('');
+    const [excelUploadResults, setExcelUploadResults] = useState<any>(null);
+    const [isExcelUploading, setIsExcelUploading] = useState(false);
 
     const tabs = [
         { 
@@ -118,6 +121,39 @@ const AdminDashboard: React.FC = () => {
             fetchUsers();
         }
     }, [activeTab]);
+
+    // エクセルファイルアップロード処理
+    const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsExcelUploading(true);
+        setExcelUploadStatus('');
+        setExcelUploadResults(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/api/upload-results', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setExcelUploadStatus('エクセルアップロード完了');
+                setExcelUploadResults(data);
+            } else {
+                setExcelUploadStatus(`エラー: ${data.error}`);
+            }
+        } catch (error) {
+            setExcelUploadStatus('エクセルアップロード中にエラーが発生しました');
+        } finally {
+            setIsExcelUploading(false);
+        }
+    };
 
     const testDatabase = async () => {
         setDbStatus('テスト中...');
@@ -355,7 +391,7 @@ const AdminDashboard: React.FC = () => {
 
                             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                                 <div className="mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">CSVファイルアップロード</h3>
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">CSVファイルアップロード（学生アカウント）</h3>
                                     
                                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                                         <h4 className="font-medium text-blue-900 mb-2">CSVファイル形式</h4>
@@ -438,6 +474,110 @@ const AdminDashboard: React.FC = () => {
                                                     ))}
                                                     {uploadResults.results.length > 10 && (
                                                         <p className="text-sm text-green-600">... 他 {uploadResults.results.length - 10}件</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* エクセルファイルアップロード（個人結果） */}
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+                                <div className="mb-6">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">エクセルファイルアップロード（個人結果）</h3>
+                                    
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                                        <h4 className="font-medium text-green-900 mb-2">エクセルファイル形式</h4>
+                                        <div className="text-sm text-green-800 space-y-1">
+                                            <p>• B列: 受験番号（4桁の数字）</p>
+                                            <p>• C列: 氏名</p>
+                                            <p>• H列: 出願（専願/併願）</p>
+                                            <p>• E列: 性別</p>
+                                            <p>• M列: 中学校名</p>
+                                            <p>• J列: 推薦の表示</p>
+                                            <p>• Z列: 部活動推薦表記</p>
+                                            <p>• V列: 合格コース</p>
+                                            <p>• O列: 3教科上位10%</p>
+                                            <p>• P列: 特進上位5名</p>
+                                            <p>• Q列: 進学上位5名</p>
+                                            <p>• R列: 部活動推薦入学金免除（1=適用）</p>
+                                            <p>• S列: 部活動推薦諸費用免除（1=適用）</p>
+                                            <p>• T列: 部活動推薦奨学金支給（1=適用）</p>
+                                            <p>• X列: 特待生の表示</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
+                                            <input
+                                                type="file"
+                                                accept=".xlsx,.xls"
+                                                onChange={handleExcelUpload}
+                                                disabled={isExcelUploading}
+                                                className="hidden"
+                                            />
+                                            {isExcelUploading ? 'アップロード中...' : 'エクセルファイルを選択'}
+                                        </label>
+                                        
+                                        {isExcelUploading && (
+                                            <div className="flex items-center">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                                                <span className="ml-2 text-sm text-gray-600">処理中...</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {excelUploadStatus && (
+                                    <div className={`p-4 rounded-lg border ${
+                                        excelUploadStatus.includes('エラー') 
+                                            ? 'bg-red-50 border-red-200 text-red-800' 
+                                            : 'bg-green-50 border-green-200 text-green-800'
+                                    }`}>
+                                        <p className="font-medium">{excelUploadStatus}</p>
+                                    </div>
+                                )}
+
+                                {excelUploadResults && (
+                                    <div className="mt-6">
+                                        <h4 className="font-medium text-gray-900 mb-3">処理結果</h4>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                            <div className="bg-gray-50 p-3 rounded-lg">
+                                                <p className="text-sm text-gray-600">総件数</p>
+                                                <p className="text-lg font-semibold">{excelUploadResults.summary.total}</p>
+                                            </div>
+                                            <div className="bg-green-50 p-3 rounded-lg">
+                                                <p className="text-sm text-green-600">成功</p>
+                                                <p className="text-lg font-semibold text-green-700">{excelUploadResults.summary.processed}</p>
+                                            </div>
+                                            <div className="bg-red-50 p-3 rounded-lg">
+                                                <p className="text-sm text-red-600">エラー</p>
+                                                <p className="text-lg font-semibold text-red-700">{excelUploadResults.summary.errors}</p>
+                                            </div>
+                                        </div>
+
+                                        {excelUploadResults.errors.length > 0 && (
+                                            <div className="mt-4">
+                                                <h5 className="font-medium text-red-700 mb-2">エラー詳細</h5>
+                                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                                                    {excelUploadResults.errors.map((error: string, index: number) => (
+                                                        <p key={index} className="text-sm text-red-700 mb-1">{error}</p>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {excelUploadResults.results.length > 0 && (
+                                            <div className="mt-4">
+                                                <h5 className="font-medium text-green-700 mb-2">成功した処理</h5>
+                                                <div className="bg-green-50 border border-green-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                                                    {excelUploadResults.results.slice(0, 10).map((result: string, index: number) => (
+                                                        <p key={index} className="text-sm text-green-700 mb-1">{result}</p>
+                                                    ))}
+                                                    {excelUploadResults.results.length > 10 && (
+                                                        <p className="text-sm text-green-600">... 他 {excelUploadResults.results.length - 10}件</p>
                                                     )}
                                                 </div>
                                             </div>

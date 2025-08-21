@@ -1,14 +1,17 @@
 
 import React, { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import AnnouncementsView from './AnnouncementsView';
-import DocumentsView from './DocumentsView';
 import CertificateView from './CertificateView';
+import DocumentsView from './DocumentsView';
 import ProfileFormView from './ProfileFormView';
+import PersonalResultsView from './PersonalResultsView';
 import MobileMenu from '../shared/MobileMenu';
 
-type Tab = 'announcements' | 'documents' | 'certificate' | 'profile';
+type Tab = 'announcements' | 'certificate' | 'documents' | 'profile' | 'personal-results';
 
 const StudentDashboard: React.FC = () => {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<Tab>('announcements');
 
     const tabs = [
@@ -19,10 +22,10 @@ const StudentDashboard: React.FC = () => {
             component: AnnouncementsView 
         },
         { 
-            id: 'documents', 
-            name: '必要書類', 
-            icon: '📄',
-            component: DocumentsView 
+            id: 'personal-results', 
+            name: '個別お知らせ', 
+            icon: '📋',
+            component: PersonalResultsView 
         },
         { 
             id: 'certificate', 
@@ -31,8 +34,14 @@ const StudentDashboard: React.FC = () => {
             component: CertificateView 
         },
         { 
+            id: 'documents', 
+            name: '書類ダウンロード', 
+            icon: '📄',
+            component: DocumentsView 
+        },
+        { 
             id: 'profile', 
-            name: '個人情報', 
+            name: 'プロフィール', 
             icon: '👤',
             component: ProfileFormView 
         },

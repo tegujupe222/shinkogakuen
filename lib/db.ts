@@ -108,6 +108,30 @@ export async function initDatabase() {
       )
     `;
 
+    // 学生結果テーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS student_results (
+        id SERIAL PRIMARY KEY,
+        exam_no VARCHAR(4) UNIQUE NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        application_type VARCHAR(20),
+        gender VARCHAR(10),
+        middle_school VARCHAR(100),
+        recommendation VARCHAR(100),
+        club_recommendation VARCHAR(100),
+        accepted_course VARCHAR(100),
+        top_10_percent VARCHAR(100),
+        special_advance_top5 VARCHAR(100),
+        advance_top5 VARCHAR(100),
+        club_tuition_exemption BOOLEAN DEFAULT FALSE,
+        club_fee_exemption BOOLEAN DEFAULT FALSE,
+        club_scholarship BOOLEAN DEFAULT FALSE,
+        scholarship_student VARCHAR(100),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     // 初期データの挿入（管理者アカウント）
     await sql`
       INSERT INTO users (exam_no, password_hash, email, name, role)
