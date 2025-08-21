@@ -1,12 +1,24 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminAnnouncements from './AdminAnnouncements';
 import AdminDocuments from './AdminDocuments';
 import AdminCertificates from './AdminCertificates';
 import AdminProfiles from './AdminProfiles';
 import MobileMenu from '../shared/MobileMenu';
+import TrashIcon from '../icons/TrashIcon';
 
 type Tab = 'announcements' | 'documents' | 'certificates' | 'profiles' | 'students';
+
+interface User {
+    id: string;
+    exam_no: string;
+    email: string;
+    name: string;
+    role: string;
+    phone_last4: string;
+    created_at: string;
+    updated_at: string;
+}
 
 const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('announcements');
@@ -14,6 +26,9 @@ const AdminDashboard: React.FC = () => {
     const [uploadStatus, setUploadStatus] = useState<string>('');
     const [uploadResults, setUploadResults] = useState<any>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [users, setUsers] = useState<User[]>([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
+    const [deleteStatus, setDeleteStatus] = useState<string>('');
 
     const tabs = [
         { 
@@ -49,6 +64,60 @@ const AdminDashboard: React.FC = () => {
     ];
 
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || AdminAnnouncements;
+
+    // ユーザー一覧を取得
+    const fetchUsers = async () => {
+        setLoadingUsers(true);
+        try {
+            const response = await fetch('/api/users');
+            const data = await response.json();
+            if (data.success) {
+                setUsers(data.users);
+            } else {
+                console.error('Failed to fetch users:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoadingUsers(false);
+        }
+    };
+
+    // ユーザー削除
+    const deleteUser = async (examNo: string) => {
+        if (!confirm(`アカウント ${examNo} を削除しますか？この操作は取り消せません。`)) {
+            return;
+        }
+
+        setDeleteStatus('削除中...');
+        try {
+            const response = await fetch(`/api/users/${examNo}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setDeleteStatus('削除完了');
+                // ユーザー一覧を再取得
+                await fetchUsers();
+                setTimeout(() => setDeleteStatus(''), 3000);
+            } else {
+                setDeleteStatus(`エラー: ${data.error}`);
+                setTimeout(() => setDeleteStatus(''), 5000);
+            }
+        } catch (error) {
+            setDeleteStatus('削除中にエラーが発生しました');
+            setTimeout(() => setDeleteStatus(''), 5000);
+        }
+    };
+
+    // タブが学生アカウント管理に切り替わった時にユーザー一覧を取得
+    useEffect(() => {
+        if (activeTab === 'students') {
+            fetchUsers();
+        }
+    }, [activeTab]);
 
     const testDatabase = async () => {
         setDbStatus('テスト中...');
@@ -94,6 +163,8 @@ const AdminDashboard: React.FC = () => {
             if (response.ok) {
                 setUploadStatus('アップロード完了');
                 setUploadResults(data);
+                // アップロード完了後にユーザー一覧を更新
+                await fetchUsers();
             } else {
                 setUploadStatus(`エラー: ${data.error}`);
             }
@@ -275,7 +346,195 @@ const AdminDashboard: React.FC = () => {
             {/* コンテンツエリア */}
             <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                    {activeTab === 'students' ? <StudentAccountManagement /> : <ActiveComponent />}
+                    {activeTab === 'students' ? (
+                        <div className="p-4 sm:p-6">
+                            <div className="mb-6">
+                                <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">学生アカウント管理</h2>
+                                <p className="mt-1 text-sm text-gray-600">CSVファイルで学生のログイン情報を一括登録・更新</p>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div className="mb-6">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">CSVファイルアップロード</h3>
+                                    
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                        <h4 className="font-medium text-blue-900 mb-2">CSVファイル形式</h4>
+                                        <div className="text-sm text-blue-800 space-y-1">
+                                            <p>• A列: 受験番号（4桁の数字）</p>
+                                            <p>• B列: 電話番号</p>
+                                            <p>• 1行目はヘッダー行として扱われます</p>
+                                            <p>• ログインID: 受験番号そのまま</p>
+                                            <p>• パスワード: 電話番号の下4桁</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                                            <input
+                                                type="file"
+                                                accept=".csv"
+                                                onChange={handleFileUpload}
+                                                disabled={isUploading}
+                                                className="hidden"
+                                            />
+                                            {isUploading ? 'アップロード中...' : 'CSVファイルを選択'}
+                                        </label>
+                                        
+                                        {isUploading && (
+                                            <div className="flex items-center">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                                <span className="ml-2 text-sm text-gray-600">処理中...</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {uploadStatus && (
+                                    <div className={`p-4 rounded-lg border ${
+                                        uploadStatus.includes('エラー') 
+                                            ? 'bg-red-50 border-red-200 text-red-800' 
+                                            : 'bg-green-50 border-green-200 text-green-800'
+                                    }`}>
+                                        <p className="font-medium">{uploadStatus}</p>
+                                    </div>
+                                )}
+
+                                {uploadResults && (
+                                    <div className="mt-6">
+                                        <h4 className="font-medium text-gray-900 mb-3">処理結果</h4>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                            <div className="bg-gray-50 p-3 rounded-lg">
+                                                <p className="text-sm text-gray-600">総件数</p>
+                                                <p className="text-lg font-semibold">{uploadResults.summary.total}</p>
+                                            </div>
+                                            <div className="bg-green-50 p-3 rounded-lg">
+                                                <p className="text-sm text-green-600">成功</p>
+                                                <p className="text-lg font-semibold text-green-700">{uploadResults.summary.success}</p>
+                                            </div>
+                                            <div className="bg-red-50 p-3 rounded-lg">
+                                                <p className="text-sm text-red-600">エラー</p>
+                                                <p className="text-lg font-semibold text-red-700">{uploadResults.summary.errors}</p>
+                                            </div>
+                                        </div>
+
+                                        {uploadResults.errors.length > 0 && (
+                                            <div className="mt-4">
+                                                <h5 className="font-medium text-red-700 mb-2">エラー詳細</h5>
+                                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                                                    {uploadResults.errors.map((error: string, index: number) => (
+                                                        <p key={index} className="text-sm text-red-700 mb-1">{error}</p>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {uploadResults.results.length > 0 && (
+                                            <div className="mt-4">
+                                                <h5 className="font-medium text-green-700 mb-2">成功した処理</h5>
+                                                <div className="bg-green-50 border border-green-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                                                    {uploadResults.results.slice(0, 10).map((result: string, index: number) => (
+                                                        <p key={index} className="text-sm text-green-700 mb-1">{result}</p>
+                                                    ))}
+                                                    {uploadResults.results.length > 10 && (
+                                                        <p className="text-sm text-green-600">... 他 {uploadResults.results.length - 10}件</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {deleteStatus && (
+                                <div className={`mt-6 p-4 rounded-lg border ${
+                                    deleteStatus.includes('エラー') 
+                                        ? 'bg-red-50 border-red-200 text-red-800' 
+                                        : 'bg-green-50 border-green-200 text-green-800'
+                                }`}>
+                                    <p className="font-medium">{deleteStatus}</p>
+                                </div>
+                            )}
+
+                            {loadingUsers ? (
+                                <div className="text-center py-8">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                                    <p className="mt-4 text-gray-600">ユーザー一覧を読み込み中...</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    受験番号
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    名前
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    ログインID
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    電話番号
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    ロール
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    作成日時
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    更新日時
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    削除
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {users.map((user) => (
+                                                <tr key={user.id}>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        {user.exam_no}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {user.name}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {user.email}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {user.phone_last4}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {user.role}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {new Date(user.created_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {new Date(user.updated_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        <button
+                                                            onClick={() => deleteUser(user.exam_no)}
+                                                            className="text-red-600 hover:text-red-900"
+                                                            title="削除"
+                                                        >
+                                                            <TrashIcon className="h-5 w-5" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <ActiveComponent />
+                    )}
                 </div>
             </div>
         </div>
