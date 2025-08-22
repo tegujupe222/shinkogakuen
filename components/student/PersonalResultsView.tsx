@@ -217,50 +217,14 @@ const PersonalResultsView: React.FC = () => {
                     </div>
 
                     {/* 成績・ランキング情報 */}
-                    <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">成績・ランキング情報</h3>
-                        <div className="space-y-3">
-                            {result.top_10_percent && (
-                                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-                                    <p className="text-indigo-800 text-sm font-medium">3教科上位10%</p>
-                                    <p className="text-indigo-900">{result.top_10_percent}</p>
-                                </div>
-                            )}
-                            {result.special_advance_top5 && (
-                                <div className="bg-pink-50 border border-pink-200 rounded-lg p-3">
-                                    <p className="text-pink-800 text-sm font-medium">特進上位5名</p>
-                                    <p className="text-pink-900">{result.special_advance_top5}</p>
-                                </div>
-                            )}
-                            {result.advance_top5 && (
-                                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                                    <p className="text-orange-800 text-sm font-medium">進学上位5名</p>
-                                    <p className="text-orange-900">{result.advance_top5}</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* 部活動推薦特典 */}
-                    {(result.club_tuition_exemption || result.club_fee_exemption || result.club_scholarship) && (
+                    {result.academic_ranking && (
                         <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">部活動推薦特典</h3>
-                            <div className="space-y-2">
-                                {result.club_tuition_exemption && (
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                        <p className="text-green-800 font-medium">✅ 部活動推薦入学金免除</p>
-                                    </div>
-                                )}
-                                {result.club_fee_exemption && (
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                        <p className="text-green-800 font-medium">✅ 部活動推薦諸費用免除</p>
-                                    </div>
-                                )}
-                                {result.club_scholarship && (
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                        <p className="text-green-800 font-medium">✅ 部活動推薦奨学金支給</p>
-                                    </div>
-                                )}
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">成績・ランキング情報</h3>
+                            <div className="space-y-3">
+                                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                                    <p className="text-indigo-800 text-sm font-medium">学力ランキング</p>
+                                    <p className="text-indigo-900">{result.academic_ranking}</p>
+                                </div>
                             </div>
                         </div>
                     )}
