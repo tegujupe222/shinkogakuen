@@ -4,10 +4,11 @@ import AdminAnnouncements from './AdminAnnouncements';
 import AdminDocuments from './AdminDocuments';
 import AdminCertificates from './AdminCertificates';
 import AdminProfiles from './AdminProfiles';
+import AdminFormSettings from './AdminFormSettings';
 import MobileMenu from '../shared/MobileMenu';
 import TrashIcon from '../icons/TrashIcon';
 
-type Tab = 'announcements' | 'documents' | 'certificates' | 'profiles' | 'students';
+type Tab = 'announcements' | 'documents' | 'certificates' | 'profiles' | 'students' | 'form-settings';
 
 interface User {
     id: string;
@@ -74,6 +75,12 @@ const AdminDashboard: React.FC = () => {
             name: '学生アカウント管理', 
             icon: '👨‍🎓',
             component: null 
+        },
+        { 
+            id: 'form-settings', 
+            name: 'フォーム設定管理', 
+            icon: '⚙️',
+            component: AdminFormSettings 
         },
     ];
 

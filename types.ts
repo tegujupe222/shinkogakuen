@@ -246,3 +246,21 @@ export interface StudentProfile {
     created_at: string;
     updated_at: string;
 }
+
+export interface FormSetting {
+    id: string;
+    field_key: string;
+    field_label: string;
+    field_type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio';
+    field_group: string;
+    field_order: number;
+    is_required: boolean;
+    is_visible: boolean;
+    is_editable: boolean;
+    validation_rules?: string;
+    options?: string;
+    placeholder?: string;
+    help_text?: string;
+    created_at: string;
+    updated_at: string;
+}

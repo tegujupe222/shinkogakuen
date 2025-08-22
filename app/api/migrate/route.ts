@@ -247,6 +247,107 @@ export async function POST(request: NextRequest) {
             )
         `;
 
+        // フォーム設定管理テーブルを作成
+        await sql`
+            CREATE TABLE IF NOT EXISTS form_settings (
+                id SERIAL PRIMARY KEY,
+                field_key VARCHAR(100) UNIQUE NOT NULL,
+                field_label VARCHAR(200) NOT NULL,
+                field_type VARCHAR(50) NOT NULL,
+                field_group VARCHAR(100) NOT NULL,
+                field_order INTEGER NOT NULL,
+                is_required BOOLEAN DEFAULT FALSE,
+                is_visible BOOLEAN DEFAULT TRUE,
+                is_editable BOOLEAN DEFAULT TRUE,
+                validation_rules TEXT,
+                options TEXT,
+                placeholder TEXT,
+                help_text TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+
+        // フォーム設定の初期データを挿入
+        const initialFormSettings = [
+            // 生徒基本情報
+            { key: 'student_last_name', label: '生徒名前(姓)', type: 'text', group: 'personal', order: 1, required: true },
+            { key: 'student_first_name', label: '生徒名前(名)', type: 'text', group: 'personal', order: 2, required: true },
+            { key: 'student_last_name_kana', label: '生徒名前(ふりがな)(姓)', type: 'text', group: 'personal', order: 3 },
+            { key: 'student_first_name_kana', label: '生徒名前(ふりがな)(名)', type: 'text', group: 'personal', order: 4 },
+            { key: 'gender', label: '性別', type: 'select', group: 'personal', order: 5, options: '男,女' },
+            { key: 'birth_date', label: '生年月日', type: 'date', group: 'personal', order: 6 },
+            { key: 'registered_address', label: '本籍地', type: 'text', group: 'personal', order: 7 },
+            
+            // 生徒現在住所
+            { key: 'student_postal_code', label: '生徒の現在住所(郵便番号)', type: 'text', group: 'personal', order: 8, placeholder: '123-4567' },
+            { key: 'student_address', label: '生徒の現在住所', type: 'text', group: 'personal', order: 9 },
+            { key: 'student_address_detail', label: '生徒の現在住所(番地部屋番号)', type: 'text', group: 'personal', order: 10 },
+            { key: 'student_phone', label: '電話番号', type: 'tel', group: 'personal', order: 11 },
+            
+            // 出身校情報
+            { key: 'middle_school_name', label: '出身中学校名', type: 'text', group: 'personal', order: 12 },
+            { key: 'graduation_date', label: '卒業年月日', type: 'date', group: 'personal', order: 13 },
+            
+            // 保護者1情報
+            { key: 'guardian1_last_name', label: '保護者１名前(姓)', type: 'text', group: 'guardian1', order: 1 },
+            { key: 'guardian1_first_name', label: '保護者１名前(名)', type: 'text', group: 'guardian1', order: 2 },
+            { key: 'guardian1_last_name_kana', label: '保護者１名前(ふりがな)(姓)', type: 'text', group: 'guardian1', order: 3 },
+            { key: 'guardian1_first_name_kana', label: '保護者１名前(ふりがな)(名)', type: 'text', group: 'guardian1', order: 4 },
+            { key: 'guardian1_postal_code', label: '保護者１現在住所(郵便番号)', type: 'text', group: 'guardian1', order: 5 },
+            { key: 'guardian1_address', label: '保護者１現在住所', type: 'text', group: 'guardian1', order: 6 },
+            { key: 'guardian1_address_detail', label: '保護者１現在住所(番地・部屋番号)', type: 'text', group: 'guardian1', order: 7 },
+            { key: 'guardian1_phone', label: '保護者１電話番号', type: 'tel', group: 'guardian1', order: 8 },
+            { key: 'guardian1_relationship', label: '保護者１と生徒本人との関係', type: 'select', group: 'guardian1', order: 9, options: '父,母,祖父,祖母,その他' },
+            { key: 'guardian1_relationship_other', label: '保護者１と生徒本人との関係(その他の場合)', type: 'text', group: 'guardian1', order: 10 },
+            { key: 'guardian1_email', label: '保護者１メールアドレス', type: 'email', group: 'guardian1', order: 11 },
+            { key: 'guardian1_workplace_name', label: '保護者１勤務先名', type: 'text', group: 'guardian1', order: 12 },
+            { key: 'guardian1_workplace_postal_code', label: '保護者１勤務先住所(郵便番号)', type: 'text', group: 'guardian1', order: 13 },
+            { key: 'guardian1_workplace_address', label: '保護者１勤務先住所', type: 'text', group: 'guardian1', order: 14 },
+            { key: 'guardian1_workplace_address_detail', label: '保護者１勤務先住所(番地・部屋番号)', type: 'text', group: 'guardian1', order: 15 },
+            { key: 'guardian1_workplace_phone', label: '保護者１勤務先電話番号', type: 'tel', group: 'guardian1', order: 16 },
+            
+            // 通学方法
+            { key: 'commute_method', label: '通学方法', type: 'select', group: 'commute', order: 1, options: '交通機関利用,自転車,徒歩' },
+            { key: 'jr_start', label: 'JR区間(始)', type: 'text', group: 'commute', order: 2 },
+            { key: 'jr_end', label: 'JR区間(終)', type: 'text', group: 'commute', order: 3 },
+            { key: 'subway_nishin_start', label: '神戸市営地下鉄（西神線）区間(始)', type: 'text', group: 'commute', order: 4 },
+            { key: 'subway_nishin_end', label: '神戸市営地下鉄（西神線）区間(終)', type: 'text', group: 'commute', order: 5 },
+            { key: 'via_station', label: '経由地', type: 'textarea', group: 'commute', order: 20 },
+            
+            // 芸術科目選択
+            { key: 'art_first_choice', label: '芸術選択第１希望科目', type: 'select', group: 'art', order: 1, options: '音楽,美術,書道' },
+            { key: 'art_second_choice', label: '芸術選択第２希望科目', type: 'select', group: 'art', order: 2, options: '音楽,美術,書道' },
+            
+            // 持病・健康情報
+            { key: 'has_chronic_illness', label: '持病(あり/なし)', type: 'select', group: 'health', order: 1, options: 'あり,なし' },
+            { key: 'accommodation_notes', label: '宿泊行事について学校へ伝えたいこと', type: 'textarea', group: 'health', order: 2 },
+            { key: 'family_communication', label: '学校生活について家庭からの連絡', type: 'textarea', group: 'health', order: 3 },
+            { key: 'chronic_illness_details', label: '持病に当てはまるもの', type: 'textarea', group: 'health', order: 4, help_text: '心疾患、川崎病、リウマチ熱、腎臓疾患、肝臓疾患、糖尿病、てんかん、喘息、難聴、弱視、側湾症、色覚異常、アトピー性皮膚炎、発達障害、身体障害、食物アレルギー、薬剤アレルギー、怪我、その他' }
+        ];
+
+        for (const setting of initialFormSettings) {
+            await sql`
+                INSERT INTO form_settings (
+                    field_key, field_label, field_type, field_group, field_order,
+                    is_required, options, placeholder, help_text
+                ) VALUES (
+                    ${setting.key}, ${setting.label}, ${setting.type}, ${setting.group}, ${setting.order},
+                    ${setting.required || false}, ${setting.options || null}, ${setting.placeholder || null}, ${setting.help_text || null}
+                )
+                ON CONFLICT (field_key) DO UPDATE SET
+                    field_label = EXCLUDED.field_label,
+                    field_type = EXCLUDED.field_type,
+                    field_group = EXCLUDED.field_group,
+                    field_order = EXCLUDED.field_order,
+                    is_required = EXCLUDED.is_required,
+                    options = EXCLUDED.options,
+                    placeholder = EXCLUDED.placeholder,
+                    help_text = EXCLUDED.help_text,
+                    updated_at = NOW()
+            `;
+        }
+
         return NextResponse.json({
             success: true,
             message: 'Database migration completed successfully'

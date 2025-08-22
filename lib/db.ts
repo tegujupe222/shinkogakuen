@@ -244,6 +244,27 @@ export async function initDatabase() {
       )
     `;
 
+    // フォーム設定管理テーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS form_settings (
+        id SERIAL PRIMARY KEY,
+        field_key VARCHAR(100) UNIQUE NOT NULL,
+        field_label VARCHAR(200) NOT NULL,
+        field_type VARCHAR(50) NOT NULL,
+        field_group VARCHAR(100) NOT NULL,
+        field_order INTEGER NOT NULL,
+        is_required BOOLEAN DEFAULT FALSE,
+        is_visible BOOLEAN DEFAULT TRUE,
+        is_editable BOOLEAN DEFAULT TRUE,
+        validation_rules TEXT,
+        options TEXT,
+        placeholder TEXT,
+        help_text TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     // 書類テーブル
     await sql`
       CREATE TABLE IF NOT EXISTS documents (
