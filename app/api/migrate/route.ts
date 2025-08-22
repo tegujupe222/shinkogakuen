@@ -51,14 +51,14 @@ export async function POST(request: NextRequest) {
                 application_type VARCHAR(100),
                 recommendation VARCHAR(100),
                 middle_school VARCHAR(100),
-                top_10_percent VARCHAR(10),
-                special_advance_top5 VARCHAR(10),
-                advance_top5 VARCHAR(10),
-                club_tuition_exemption VARCHAR(10),
-                club_fee_exemption VARCHAR(10),
-                club_scholarship VARCHAR(10),
+                top_10_percent VARCHAR(50),
+                special_advance_top5 VARCHAR(50),
+                advance_top5 VARCHAR(50),
+                club_tuition_exemption VARCHAR(50),
+                club_fee_exemption VARCHAR(50),
+                club_scholarship VARCHAR(50),
                 accepted_course VARCHAR(100),
-                scholarship_student VARCHAR(10),
+                scholarship_student VARCHAR(50),
                 club_recommendation VARCHAR(100),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -71,6 +71,32 @@ export async function POST(request: NextRequest) {
         } catch (error) {
             console.log('Error dropping student_results table:', error);
         }
+
+        // 学生結果テーブルを新しいスキーマで作成
+        await sql`
+            CREATE TABLE student_results (
+                id SERIAL PRIMARY KEY,
+                exam_no VARCHAR(50) UNIQUE NOT NULL,
+                student_id VARCHAR(50),
+                name VARCHAR(100),
+                gender VARCHAR(10),
+                application_course VARCHAR(100),
+                application_type VARCHAR(100),
+                recommendation VARCHAR(100),
+                middle_school VARCHAR(100),
+                top_10_percent VARCHAR(50),
+                special_advance_top5 VARCHAR(50),
+                advance_top5 VARCHAR(50),
+                club_tuition_exemption VARCHAR(50),
+                club_fee_exemption VARCHAR(50),
+                club_scholarship VARCHAR(50),
+                accepted_course VARCHAR(100),
+                scholarship_student VARCHAR(50),
+                club_recommendation VARCHAR(100),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
 
         // 新しい学生プロフィールテーブルを作成
         await sql`
