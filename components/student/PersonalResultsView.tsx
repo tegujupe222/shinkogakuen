@@ -5,15 +5,21 @@ interface StudentResult {
     id: string;
     exam_no: string;
     student_id?: string;
-    application_type?: string;
-    application_course?: string; // G列: 出願時のコース
+    name?: string;
     gender?: string;
+    application_course?: string;
+    application_type?: string;
+    recommendation?: string;
     middle_school?: string;
-    recommendations?: string;
+    top_10_percent?: string;
+    special_advance_top5?: string;
+    advance_top5?: string;
+    club_tuition_exemption?: string;
+    club_fee_exemption?: string;
+    club_scholarship?: string;
     accepted_course?: string;
-    academic_ranking?: string;
-    club_recommendation_exemption?: string;
-    scholarship_status?: string;
+    scholarship_student?: string;
+    club_recommendation?: string;
     created_at: string;
     updated_at: string;
 }
@@ -195,39 +201,64 @@ const PersonalResultsView: React.FC = () => {
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">推薦・特典情報</h3>
                         <div className="space-y-3">
-                            {result.recommendations && (
+                            {result.recommendation && (
                                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                     <p className="text-blue-800 text-sm font-medium">推薦</p>
-                                    <p className="text-blue-900">{result.recommendations}</p>
+                                    <p className="text-blue-700">{result.recommendation}</p>
                                 </div>
                             )}
-                            {result.club_recommendation_exemption && (
+                            {result.scholarship_student && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <p className="text-green-800 text-sm font-medium">特待生</p>
+                                    <p className="text-green-700">{result.scholarship_student}</p>
+                                </div>
+                            )}
+                            {result.top_10_percent && (
                                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                                    <p className="text-purple-800 text-sm font-medium">部活動推薦免除</p>
-                                    <p className="text-purple-900">{result.club_recommendation_exemption}</p>
+                                    <p className="text-purple-800 text-sm font-medium">3教科上位10%</p>
+                                    <p className="text-purple-700">{result.top_10_percent}</p>
                                 </div>
                             )}
-                            {result.scholarship_status && (
+                            {result.special_advance_top5 && (
+                                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                                    <p className="text-indigo-800 text-sm font-medium">特進上位5名</p>
+                                    <p className="text-indigo-700">{result.special_advance_top5}</p>
+                                </div>
+                            )}
+                            {result.advance_top5 && (
+                                <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                                    <p className="text-teal-800 text-sm font-medium">進学上位5名</p>
+                                    <p className="text-teal-700">{result.advance_top5}</p>
+                                </div>
+                            )}
+                            {result.club_tuition_exemption && (
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                    <p className="text-yellow-800 text-sm font-medium">奨学金状況</p>
-                                    <p className="text-yellow-900">{result.scholarship_status}</p>
+                                    <p className="text-yellow-800 text-sm font-medium">部活動推薦入学金免除</p>
+                                    <p className="text-yellow-700">{result.club_tuition_exemption}</p>
+                                </div>
+                            )}
+                            {result.club_fee_exemption && (
+                                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                    <p className="text-orange-800 text-sm font-medium">部活動推薦諸費用免除</p>
+                                    <p className="text-orange-700">{result.club_fee_exemption}</p>
+                                </div>
+                            )}
+                            {result.club_scholarship && (
+                                <div className="bg-pink-50 border border-pink-200 rounded-lg p-3">
+                                    <p className="text-pink-800 text-sm font-medium">部活動推薦奨学金支給</p>
+                                    <p className="text-pink-700">{result.club_scholarship}</p>
+                                </div>
+                            )}
+                            {result.club_recommendation && (
+                                <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3">
+                                    <p className="text-cyan-800 text-sm font-medium">部活動推薦表記</p>
+                                    <p className="text-cyan-700">{result.club_recommendation}</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* 成績・ランキング情報 */}
-                    {result.academic_ranking && (
-                        <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">成績・ランキング情報</h3>
-                            <div className="space-y-3">
-                                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-                                    <p className="text-indigo-800 text-sm font-medium">学力ランキング</p>
-                                    <p className="text-indigo-900">{result.academic_ranking}</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+
 
                     {/* 更新日時 */}
                     <div className="mt-6 pt-6 border-t border-gray-200">

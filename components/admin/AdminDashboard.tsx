@@ -991,10 +991,10 @@ const AdminDashboard: React.FC = () => {
                                                             {result.exam_no}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.name}
+                                                            {result.name || '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {result.application_type && (
+                                                            {result.application_type ? (
                                                                 <span className={`inline-block px-2 py-1 rounded text-xs font-bold text-white ${
                                                                     result.application_type === '専願' 
                                                                         ? 'bg-blue-600' 
@@ -1002,16 +1002,18 @@ const AdminDashboard: React.FC = () => {
                                                                 }`}>
                                                                     {result.application_type}
                                                                 </span>
+                                                            ) : (
+                                                                <span className="text-gray-500">-</span>
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.application_course}
+                                                            {result.application_course || '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.gender}
+                                                            {result.gender || '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.middle_school}
+                                                            {result.middle_school || '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                             {result.recommendation || '-'}
