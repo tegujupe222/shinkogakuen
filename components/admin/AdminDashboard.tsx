@@ -715,11 +715,11 @@ const AdminDashboard: React.FC = () => {
                                         <div className="text-sm text-green-800 space-y-1">
                                             <p>• A列: 学生ID（プロフィールと紐づけ用）</p>
                                             <p>• B列: 受験番号（4桁の数字）</p>
-                                            <p>• C列: 出願種別</p>
-                                            <p>• D列: 氏名</p>
+                                            <p>• C列: 氏名（ふりがな）</p>
+                                            <p>• D列: 氏名（漢字）</p>
                                             <p>• E列: 性別</p>
                                             <p>• F列: 出身中学校</p>
-                                            <p>• G列: 出願時のコース</p>
+                                            <p>• G列: 出願時コース</p>
                                         </div>
                                     </div>
 

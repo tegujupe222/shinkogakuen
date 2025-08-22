@@ -79,14 +79,18 @@ export async function POST(request: NextRequest) {
             const row = data[j] as any[];
             if (!row || row.length === 0) continue;
 
-            // A列: 学生ID, B列: 受験番号, C列: 出願種別, D列: 氏名, E列: 性別, F列: 出身中学校, G列: 出願時のコース
+            // 実際のエクセルファイルの列順序に合わせて修正
+            // A列: 学生ID, B列: 受験番号, C列: 氏名（ふりがな）, D列: 氏名（漢字）, E列: 性別, F列: 出身中学校, G列: 出願時コース
             const studentId = row[0]?.toString() || ''; // A列: 学生ID
             const examNo = row[1]?.toString() || ''; // B列: 受験番号
-            const applicationType = row[2]?.toString() || ''; // C列: 出願種別
-            const name = row[3]?.toString() || ''; // D列: 氏名
+            const nameKana = row[2]?.toString() || ''; // C列: 氏名（ふりがな）
+            const name = row[3]?.toString() || ''; // D列: 氏名（漢字）
             const gender = row[4]?.toString() || ''; // E列: 性別
             const middleSchool = row[5]?.toString() || ''; // F列: 出身中学校
-            const applicationCourse = row[6]?.toString() || ''; // G列: 出願時のコース
+            const applicationCourse = row[6]?.toString() || ''; // G列: 出願時コース
+            
+            // 出願種別は現在のデータには含まれていないため、空文字として設定
+            const applicationType = '';
 
             if (!examNo) {
                 continue; // 受験番号が空の行はスキップ
