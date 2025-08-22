@@ -6,6 +6,7 @@ interface StudentResult {
     exam_no: string;
     name: string;
     application_type: string;
+    application_course: string; // G列: 出願時のコース
     gender: string;
     middle_school: string;
     recommendation: string;
@@ -126,6 +127,16 @@ const PersonalResultsView: React.FC = () => {
                                     : 'bg-red-600'
                             }`}>
                                 {result.application_type}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 出願時コース */}
+                    {result.application_course && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">出願時コース</h3>
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <p className="text-orange-800 font-medium">{result.application_course}</p>
                             </div>
                         </div>
                     )}

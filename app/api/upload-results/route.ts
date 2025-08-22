@@ -6,6 +6,7 @@ interface StudentResult {
     exam_no: string;
     name: string;
     application_type: string; // H列: 出願（専願/併願）
+    application_course: string; // G列: 出願時のコース
     gender: string; // E列: 性別
     middle_school: string; // M列: 中学校名
     recommendation: string; // J列: 推薦の表示
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
                     exam_no: examNo,
                     name: name,
                     application_type: row[7]?.toString().trim() || '', // H列
+                    application_course: row[6]?.toString().trim() || '', // G列
                     gender: row[4]?.toString().trim() || '', // E列
                     middle_school: row[12]?.toString().trim() || '', // M列
                     recommendation: row[9]?.toString().trim() || '', // J列
@@ -131,15 +133,15 @@ export async function POST(request: NextRequest) {
                 // データベースに保存または更新
                 await sql`
                     INSERT INTO student_results (
-                        exam_no, name, application_type, gender, middle_school,
+                        exam_no, name, application_type, application_course, gender, middle_school,
                         recommendation, club_recommendation, accepted_course,
                         top_10_percent, special_advance_top5, advance_top5,
                         club_tuition_exemption, club_fee_exemption, club_scholarship,
                         scholarship_student, created_at, updated_at
                     ) VALUES (
                         ${studentResult.exam_no}, ${studentResult.name}, ${studentResult.application_type},
-                        ${studentResult.gender}, ${studentResult.middle_school}, ${studentResult.recommendation},
-                        ${studentResult.club_recommendation}, ${studentResult.accepted_course},
+                        ${studentResult.application_course}, ${studentResult.gender}, ${studentResult.middle_school},
+                        ${studentResult.recommendation}, ${studentResult.club_recommendation}, ${studentResult.accepted_course},
                         ${studentResult.top_10_percent}, ${studentResult.special_advance_top5},
                         ${studentResult.advance_top5}, ${studentResult.club_tuition_exemption},
                         ${studentResult.club_fee_exemption}, ${studentResult.club_scholarship},
@@ -149,6 +151,7 @@ export async function POST(request: NextRequest) {
                     DO UPDATE SET
                         name = EXCLUDED.name,
                         application_type = EXCLUDED.application_type,
+                        application_course = EXCLUDED.application_course,
                         gender = EXCLUDED.gender,
                         middle_school = EXCLUDED.middle_school,
                         recommendation = EXCLUDED.recommendation,

@@ -220,7 +220,8 @@ const AdminDashboard: React.FC = () => {
                 item.exam_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.middle_school?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.accepted_course?.toLowerCase().includes(searchTerm.toLowerCase())
+                item.accepted_course?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.application_course?.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 
@@ -856,6 +857,7 @@ const AdminDashboard: React.FC = () => {
                                                 <option value="exam_no">受験番号</option>
                                                 <option value="name">氏名</option>
                                                 <option value="application_type">出願種別</option>
+                                                <option value="application_course">出願時コース</option>
                                                 <option value="accepted_course">合格コース</option>
                                                 <option value="created_at">作成日時</option>
                                             </select>
@@ -915,6 +917,13 @@ const AdminDashboard: React.FC = () => {
                                                     >
                                                         出願種別 {sortBy === 'application_type' && (sortOrder === 'asc' ? '↑' : '↓')}
                                                     </th>
+                                                    <th 
+                                                        scope="col" 
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                        onClick={() => handleSort('application_course')}
+                                                    >
+                                                        出願時コース {sortBy === 'application_course' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                    </th>
                                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         性別
                                                     </th>
@@ -959,6 +968,9 @@ const AdminDashboard: React.FC = () => {
                                                                     {result.application_type}
                                                                 </span>
                                                             )}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {result.application_course}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                             {result.gender}

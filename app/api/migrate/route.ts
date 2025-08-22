@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
                 exam_no VARCHAR(4) UNIQUE NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 application_type VARCHAR(20),
+                application_course VARCHAR(100), -- G列: 出願時のコース
                 gender VARCHAR(10),
                 middle_school VARCHAR(100),
                 recommendation VARCHAR(100),
@@ -61,6 +62,11 @@ export async function POST(request: NextRequest) {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
+        `;
+
+        // student_resultsテーブルにapplication_courseカラムを追加（既存テーブル用）
+        await sql`
+            ALTER TABLE student_results ADD COLUMN IF NOT EXISTS application_course VARCHAR(100)
         `;
 
         return NextResponse.json({

@@ -115,6 +115,7 @@ export async function initDatabase() {
         exam_no VARCHAR(4) UNIQUE NOT NULL,
         name VARCHAR(100) NOT NULL,
         application_type VARCHAR(20),
+        application_course VARCHAR(100), -- G列: 出願時のコース
         gender VARCHAR(10),
         middle_school VARCHAR(100),
         recommendation VARCHAR(100),
