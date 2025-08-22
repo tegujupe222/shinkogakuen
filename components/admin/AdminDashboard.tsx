@@ -241,10 +241,12 @@ const AdminDashboard: React.FC = () => {
                         return item.application_type === '専願';
                     case 'heikan':
                         return item.application_type === '併願';
-                    case 'has_course':
+                    case 'accepted':
                         return item.accepted_course && item.accepted_course.trim() !== '';
-                    case 'no_course':
-                        return !item.accepted_course || item.accepted_course.trim() === '';
+                    case 'rejected':
+                        return !item.accepted_course && item.application_course && item.application_course.trim() !== '';
+                    case 'no_result':
+                        return !item.accepted_course && (!item.application_course || item.application_course.trim() === '');
                     default:
                         return true;
                 }
@@ -814,7 +816,7 @@ const AdminDashboard: React.FC = () => {
                                         <div className="flex-1">
                                             <input
                                                 type="text"
-                                                placeholder="学生ID、受験番号、氏名、中学校名、合格コースで検索..."
+                                                placeholder="学生ID、受験番号、氏名、中学校名、合格結果で検索..."
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -841,8 +843,9 @@ const AdminDashboard: React.FC = () => {
                                                 <option value="all">全て</option>
                                                 <option value="senkan">専願のみ</option>
                                                 <option value="heikan">併願のみ</option>
-                                                <option value="has_course">合格コースあり</option>
-                                                <option value="no_course">合格コースなし</option>
+                                                <option value="accepted">合格者</option>
+                                                <option value="rejected">不合格者</option>
+                                                <option value="no_result">結果未発表</option>
                                             </select>
                                         </div>
 
@@ -859,7 +862,7 @@ const AdminDashboard: React.FC = () => {
                                                 <option value="name">氏名</option>
                                                 <option value="application_type">出願種別</option>
                                                 <option value="application_course">出願時コース</option>
-                                                <option value="accepted_course">合格コース</option>
+                                                <option value="accepted_course">合格結果</option>
                                                 <option value="created_at">作成日時</option>
                                             </select>
                                             <button
@@ -943,7 +946,7 @@ const AdminDashboard: React.FC = () => {
                                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                                         onClick={() => handleSort('accepted_course')}
                                                     >
-                                                        合格コース {sortBy === 'accepted_course' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                        合格結果 {sortBy === 'accepted_course' && (sortOrder === 'asc' ? '↑' : '↓')}
                                                     </th>
                                                     <th 
                                                         scope="col" 
@@ -990,7 +993,13 @@ const AdminDashboard: React.FC = () => {
                                                             {result.middle_school}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {result.accepted_course}
+                                                            {result.accepted_course ? (
+                                                                <span className="text-green-600 font-medium">{result.accepted_course}</span>
+                                                            ) : result.application_course ? (
+                                                                <span className="text-red-600 font-medium">不合格</span>
+                                                            ) : (
+                                                                <span className="text-gray-500">-</span>
+                                                            )}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                             {new Date(result.created_at).toLocaleDateString()}
