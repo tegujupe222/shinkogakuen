@@ -294,22 +294,18 @@ export async function initDatabase() {
     await sql`
       CREATE TABLE IF NOT EXISTS student_results (
         id SERIAL PRIMARY KEY,
-        exam_no VARCHAR(4) UNIQUE NOT NULL,
-        name VARCHAR(100) NOT NULL,
-        application_type VARCHAR(20),
-        application_course VARCHAR(100), -- G列: 出願時のコース
+        exam_no VARCHAR(50) UNIQUE NOT NULL,
+        student_id VARCHAR(50),
+        application_type VARCHAR(100),
+        name VARCHAR(100),
         gender VARCHAR(10),
         middle_school VARCHAR(100),
-        recommendation VARCHAR(100),
-        club_recommendation VARCHAR(100),
+        recommendations VARCHAR(100),
         accepted_course VARCHAR(100),
-        top_10_percent VARCHAR(100),
-        special_advance_top5 VARCHAR(100),
-        advance_top5 VARCHAR(100),
-        club_tuition_exemption BOOLEAN DEFAULT FALSE,
-        club_fee_exemption BOOLEAN DEFAULT FALSE,
-        club_scholarship BOOLEAN DEFAULT FALSE,
-        scholarship_student VARCHAR(100),
+        academic_ranking VARCHAR(50),
+        club_recommendation_exemption VARCHAR(100),
+        scholarship_status VARCHAR(100),
+        application_course VARCHAR(100),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )

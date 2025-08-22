@@ -4,21 +4,16 @@ import { useAuth } from '../../hooks/useAuth';
 interface StudentResult {
     id: string;
     exam_no: string;
-    name: string;
-    application_type: string;
-    application_course: string; // G列: 出願時のコース
-    gender: string;
-    middle_school: string;
-    recommendation: string;
-    club_recommendation: string;
-    accepted_course: string;
-    top_10_percent: string;
-    special_advance_top5: string;
-    advance_top5: string;
-    club_tuition_exemption: boolean;
-    club_fee_exemption: boolean;
-    club_scholarship: boolean;
-    scholarship_student: string;
+    student_id?: string;
+    application_type?: string;
+    application_course?: string; // G列: 出願時のコース
+    gender?: string;
+    middle_school?: string;
+    recommendations?: string;
+    accepted_course?: string;
+    academic_ranking?: string;
+    club_recommendation_exemption?: string;
+    scholarship_status?: string;
     created_at: string;
     updated_at: string;
 }
@@ -145,13 +140,15 @@ const PersonalResultsView: React.FC = () => {
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">基本情報</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {result.student_id && (
+                                <div>
+                                    <p className="text-sm text-gray-600">学生ID</p>
+                                    <p className="font-medium">{result.student_id}</p>
+                                </div>
+                            )}
                             <div>
                                 <p className="text-sm text-gray-600">受験番号</p>
                                 <p className="font-medium">{result.exam_no}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-600">氏名</p>
-                                <p className="font-medium">{result.name}</p>
                             </div>
                             {result.gender && (
                                 <div>
@@ -182,22 +179,22 @@ const PersonalResultsView: React.FC = () => {
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">推薦・特典情報</h3>
                         <div className="space-y-3">
-                            {result.recommendation && (
+                            {result.recommendations && (
                                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                     <p className="text-blue-800 text-sm font-medium">推薦</p>
-                                    <p className="text-blue-900">{result.recommendation}</p>
+                                    <p className="text-blue-900">{result.recommendations}</p>
                                 </div>
                             )}
-                            {result.club_recommendation && (
+                            {result.club_recommendation_exemption && (
                                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                                    <p className="text-purple-800 text-sm font-medium">部活動推薦</p>
-                                    <p className="text-purple-900">{result.club_recommendation}</p>
+                                    <p className="text-purple-800 text-sm font-medium">部活動推薦免除</p>
+                                    <p className="text-purple-900">{result.club_recommendation_exemption}</p>
                                 </div>
                             )}
-                            {result.scholarship_student && (
+                            {result.scholarship_status && (
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                    <p className="text-yellow-800 text-sm font-medium">特待生</p>
-                                    <p className="text-yellow-900">{result.scholarship_student}</p>
+                                    <p className="text-yellow-800 text-sm font-medium">奨学金状況</p>
+                                    <p className="text-yellow-900">{result.scholarship_status}</p>
                                 </div>
                             )}
                         </div>

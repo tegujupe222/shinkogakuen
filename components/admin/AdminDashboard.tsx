@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import AdminAnnouncements from './AdminAnnouncements';
 import AdminDocuments from './AdminDocuments';
 import AdminCertificates from './AdminCertificates';
-import AdminProfiles from './AdminProfiles';
+import AdminStudentProfiles from './AdminStudentProfiles';
 import AdminFormSettings from './AdminFormSettings';
 import MobileMenu from '../shared/MobileMenu';
 import TrashIcon from '../icons/TrashIcon';
@@ -68,7 +68,7 @@ const AdminDashboard: React.FC = () => {
             id: 'profiles', 
             name: '学生情報管理', 
             icon: '👥',
-            component: AdminProfiles 
+            component: AdminStudentProfiles 
         },
         { 
             id: 'students', 
@@ -224,6 +224,7 @@ const AdminDashboard: React.FC = () => {
         // 検索フィルター
         if (searchTerm) {
             filteredData = filteredData.filter(item => 
+                item.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.exam_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.middle_school?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -706,21 +707,13 @@ const AdminDashboard: React.FC = () => {
                                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                                         <h4 className="font-medium text-green-900 mb-2">エクセルファイル形式</h4>
                                         <div className="text-sm text-green-800 space-y-1">
+                                            <p>• A列: 学生ID（プロフィールと紐づけ用）</p>
                                             <p>• B列: 受験番号（4桁の数字）</p>
-                                            <p>• C列: 氏名</p>
-                                            <p>• H列: 出願（専願/併願）</p>
+                                            <p>• C列: 出願種別</p>
+                                            <p>• D列: 氏名</p>
                                             <p>• E列: 性別</p>
-                                            <p>• M列: 中学校名</p>
-                                            <p>• J列: 推薦の表示</p>
-                                            <p>• Z列: 部活動推薦表記</p>
-                                            <p>• V列: 合格コース</p>
-                                            <p>• O列: 3教科上位10%</p>
-                                            <p>• P列: 特進上位5名</p>
-                                            <p>• Q列: 進学上位5名</p>
-                                            <p>• R列: 部活動推薦入学金免除（1=適用）</p>
-                                            <p>• S列: 部活動推薦諸費用免除（1=適用）</p>
-                                            <p>• T列: 部活動推薦奨学金支給（1=適用）</p>
-                                            <p>• X列: 特待生の表示</p>
+                                            <p>• F列: 出身中学校</p>
+                                            <p>• G列: 出願時のコース</p>
                                         </div>
                                     </div>
 
@@ -821,7 +814,7 @@ const AdminDashboard: React.FC = () => {
                                         <div className="flex-1">
                                             <input
                                                 type="text"
-                                                placeholder="受験番号、氏名、中学校名、合格コースで検索..."
+                                                placeholder="学生ID、受験番号、氏名、中学校名、合格コースで検索..."
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -861,6 +854,7 @@ const AdminDashboard: React.FC = () => {
                                                 onChange={(e) => setSortBy(e.target.value)}
                                                 className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             >
+                                                <option value="student_id">学生ID</option>
                                                 <option value="exam_no">受験番号</option>
                                                 <option value="name">氏名</option>
                                                 <option value="application_type">出願種別</option>
@@ -903,6 +897,13 @@ const AdminDashboard: React.FC = () => {
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead className="bg-gray-50">
                                                 <tr>
+                                                    <th 
+                                                        scope="col" 
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                        onClick={() => handleSort('student_id')}
+                                                    >
+                                                        学生ID {sortBy === 'student_id' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                    </th>
                                                     <th 
                                                         scope="col" 
                                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -959,6 +960,9 @@ const AdminDashboard: React.FC = () => {
                                             <tbody className="bg-white divide-y divide-gray-200">
                                                 {filteredAndSortedData().map((result) => (
                                                     <tr key={result.id}>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            {result.student_id || '-'}
+                                                        </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                             {result.exam_no}
                                                         </td>
