@@ -242,7 +242,11 @@ const AdminDashboard: React.FC = () => {
                     case 'heikan':
                         return item.application_type === '併願';
                     case 'accepted':
-                        return item.accepted_course && item.accepted_course.trim() !== '';
+                        return item.accepted_course && item.accepted_course.trim() !== '' && 
+                               (!item.application_course || item.accepted_course === item.application_course);
+                    case 'mawashi':
+                        return item.accepted_course && item.accepted_course.trim() !== '' && 
+                               item.application_course && item.accepted_course !== item.application_course;
                     case 'rejected':
                         return !item.accepted_course && item.application_course && item.application_course.trim() !== '';
                     case 'no_result':
@@ -844,6 +848,7 @@ const AdminDashboard: React.FC = () => {
                                                 <option value="senkan">専願のみ</option>
                                                 <option value="heikan">併願のみ</option>
                                                 <option value="accepted">合格者</option>
+                                                <option value="mawashi">廻し合格者</option>
                                                 <option value="rejected">不合格者</option>
                                                 <option value="no_result">結果未発表</option>
                                             </select>
@@ -994,7 +999,11 @@ const AdminDashboard: React.FC = () => {
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                             {result.accepted_course ? (
-                                                                <span className="text-green-600 font-medium">{result.accepted_course}</span>
+                                                                result.application_course && result.accepted_course !== result.application_course ? (
+                                                                    <span className="text-orange-600 font-medium">廻し合格: {result.accepted_course}</span>
+                                                                ) : (
+                                                                    <span className="text-green-600 font-medium">{result.accepted_course}</span>
+                                                                )
                                                             ) : result.application_course ? (
                                                                 <span className="text-red-600 font-medium">不合格</span>
                                                             ) : (
