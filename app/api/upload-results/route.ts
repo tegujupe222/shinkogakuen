@@ -80,20 +80,24 @@ export async function POST(request: NextRequest) {
             if (!row || row.length === 0) continue;
 
             // 実際のエクセルファイルの列順序に合わせて修正
-            // A列: 学生ID, B列: 受験番号, C列: 氏名（ふりがな）, D列: 氏名（漢字）, E列: 性別, F列: 出身中学校, G列: 出願時コース
+            // A列: 学生ID, B列: 受験番号, C列: 氏名, E列: 性別, G列: 出願時のコース, H列: 出願種別, J列: 推薦, M列: 中学校名, O列: 3教科上位10%, P列: 特進上位5名, Q列: 進学上位5名, R列: 部活動推薦入学金免除, S列: 部活動推薦諸費用免除, T列: 部活動推薦奨学金支給, V列: 合格コース, X列: 特待生, Z列: 部活動推薦表記
             const studentId = row[0]?.toString() || ''; // A列: 学生ID
             const examNo = row[1]?.toString() || ''; // B列: 受験番号
-            const nameKana = row[2]?.toString() || ''; // C列: 氏名（ふりがな）
-            const name = row[3]?.toString() || ''; // D列: 氏名（漢字）
+            const name = row[2]?.toString() || ''; // C列: 氏名
             const gender = row[4]?.toString() || ''; // E列: 性別
-            const middleSchool = row[5]?.toString() || ''; // F列: 出身中学校
-            const applicationCourse = row[6]?.toString() || ''; // G列: 出願時コース
-            
-            // 出願種別は現在のデータには含まれていないため、空文字として設定
-            const applicationType = '';
-            
-            // 漢字の氏名が空の場合は、ふりがなを氏名として使用
-            const displayName = name || nameKana;
+            const applicationCourse = row[6]?.toString() || ''; // G列: 出願時のコース
+            const applicationType = row[7]?.toString() || ''; // H列: 出願種別（専願/併願）
+            const recommendation = row[9]?.toString() || ''; // J列: 推薦
+            const middleSchool = row[12]?.toString() || ''; // M列: 中学校名
+            const top10Percent = row[14]?.toString() || ''; // O列: 3教科上位10%
+            const specialAdvanceTop5 = row[15]?.toString() || ''; // P列: 特進上位5名
+            const advanceTop5 = row[16]?.toString() || ''; // Q列: 進学上位5名
+            const clubTuitionExemption = row[17]?.toString() || ''; // R列: 部活動推薦入学金免除
+            const clubFeeExemption = row[18]?.toString() || ''; // S列: 部活動推薦諸費用免除
+            const clubScholarship = row[19]?.toString() || ''; // T列: 部活動推薦奨学金支給
+            const acceptedCourse = row[21]?.toString() || ''; // V列: 合格コース
+            const scholarshipStudent = row[23]?.toString() || ''; // X列: 特待生
+            const clubRecommendation = row[25]?.toString() || ''; // Z列: 部活動推薦表記
 
             if (!examNo) {
                 continue; // 受験番号が空の行はスキップ
@@ -103,24 +107,38 @@ export async function POST(request: NextRequest) {
                 // 既存のレコードを更新または新規作成
                 await sql`
                     INSERT INTO student_results (
-                        exam_no, student_id, application_type, name, gender, 
-                        middle_school, application_course
+                        exam_no, student_id, name, gender, application_course, application_type,
+                        recommendation, middle_school, top_10_percent, special_advance_top5,
+                        advance_top5, club_tuition_exemption, club_fee_exemption, club_scholarship,
+                        accepted_course, scholarship_student, club_recommendation
                     ) VALUES (
-                        ${examNo}, ${studentId}, ${applicationType}, ${displayName}, ${gender},
-                        ${middleSchool}, ${applicationCourse}
+                        ${examNo}, ${studentId}, ${name}, ${gender}, ${applicationCourse}, ${applicationType},
+                        ${recommendation}, ${middleSchool}, ${top10Percent}, ${specialAdvanceTop5},
+                        ${advanceTop5}, ${clubTuitionExemption}, ${clubFeeExemption}, ${clubScholarship},
+                        ${acceptedCourse}, ${scholarshipStudent}, ${clubRecommendation}
                     )
                     ON CONFLICT (exam_no) 
                     DO UPDATE SET
                         student_id = EXCLUDED.student_id,
-                        application_type = EXCLUDED.application_type,
                         name = EXCLUDED.name,
                         gender = EXCLUDED.gender,
-                        middle_school = EXCLUDED.middle_school,
                         application_course = EXCLUDED.application_course,
+                        application_type = EXCLUDED.application_type,
+                        recommendation = EXCLUDED.recommendation,
+                        middle_school = EXCLUDED.middle_school,
+                        top_10_percent = EXCLUDED.top_10_percent,
+                        special_advance_top5 = EXCLUDED.special_advance_top5,
+                        advance_top5 = EXCLUDED.advance_top5,
+                        club_tuition_exemption = EXCLUDED.club_tuition_exemption,
+                        club_fee_exemption = EXCLUDED.club_fee_exemption,
+                        club_scholarship = EXCLUDED.club_scholarship,
+                        accepted_course = EXCLUDED.accepted_course,
+                        scholarship_student = EXCLUDED.scholarship_student,
+                        club_recommendation = EXCLUDED.club_recommendation,
                         updated_at = NOW()
                 `;
                 
-                results.push(`受験番号 ${examNo}: ${displayName} - 処理完了`);
+                results.push(`受験番号 ${examNo}: ${name} - 処理完了`);
                 processedCount++;
             } catch (error) {
                 console.error(`Error inserting row ${j}:`, error);

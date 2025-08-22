@@ -54,16 +54,21 @@ export interface StudentResult {
     id: string;
     exam_no: string;
     student_id?: string;
-    application_type?: string;
     name?: string;
     gender?: string;
-    middle_school?: string;
-    recommendations?: string;
-    accepted_course?: string;
-    academic_ranking?: string;
-    club_recommendation_exemption?: string;
-    scholarship_status?: string;
     application_course?: string;
+    application_type?: string;
+    recommendation?: string;
+    middle_school?: string;
+    top_10_percent?: string;
+    special_advance_top5?: string;
+    advance_top5?: string;
+    club_tuition_exemption?: string;
+    club_fee_exemption?: string;
+    club_scholarship?: string;
+    accepted_course?: string;
+    scholarship_student?: string;
+    club_recommendation?: string;
     created_at: string;
     updated_at: string;
 }
