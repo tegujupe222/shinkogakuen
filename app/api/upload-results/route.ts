@@ -91,6 +91,9 @@ export async function POST(request: NextRequest) {
             
             // 出願種別は現在のデータには含まれていないため、空文字として設定
             const applicationType = '';
+            
+            // 漢字の氏名が空の場合は、ふりがなを氏名として使用
+            const displayName = name || nameKana;
 
             if (!examNo) {
                 continue; // 受験番号が空の行はスキップ
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
                         exam_no, student_id, application_type, name, gender, 
                         middle_school, application_course
                     ) VALUES (
-                        ${examNo}, ${studentId}, ${applicationType}, ${name}, ${gender},
+                        ${examNo}, ${studentId}, ${applicationType}, ${displayName}, ${gender},
                         ${middleSchool}, ${applicationCourse}
                     )
                     ON CONFLICT (exam_no) 
@@ -117,7 +120,7 @@ export async function POST(request: NextRequest) {
                         updated_at = NOW()
                 `;
                 
-                results.push(`受験番号 ${examNo}: ${name} - 処理完了`);
+                results.push(`受験番号 ${examNo}: ${displayName} - 処理完了`);
                 processedCount++;
             } catch (error) {
                 console.error(`Error inserting row ${j}:`, error);
