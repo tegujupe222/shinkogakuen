@@ -65,17 +65,12 @@ export async function POST(request: NextRequest) {
             )
         `;
 
-        // student_idカラムが存在しない場合は追加
+        // 既存のstudent_resultsテーブルを削除して再作成
         try {
-            await sql`ALTER TABLE student_results ADD COLUMN IF NOT EXISTS student_id VARCHAR(50)`;
+            await sql`DROP TABLE IF EXISTS student_results`;
         } catch (error) {
-            console.log('student_id column already exists or error occurred:', error);
+            console.log('Error dropping student_results table:', error);
         }
-
-        // student_resultsテーブルにapplication_courseカラムを追加（既存テーブル用）
-        await sql`
-            ALTER TABLE student_results ADD COLUMN IF NOT EXISTS application_course VARCHAR(100)
-        `;
 
         // 新しい学生プロフィールテーブルを作成
         await sql`
