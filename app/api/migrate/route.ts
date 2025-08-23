@@ -328,6 +328,7 @@ export async function POST(request: NextRequest) {
             // 出身校情報
             { key: 'middle_school_name', label: '出身中学校名', type: 'text', group: 'personal', order: 12 },
             { key: 'graduation_date', label: '卒業年月日', type: 'date', group: 'personal', order: 13 },
+            { key: 'has_siblings_at_school', label: '兄弟姉妹在学', type: 'select', group: 'personal', order: 14, options: 'あり,なし' },
             
             // 保護者1情報
             { key: 'guardian1_last_name', label: '保護者１名前(姓)', type: 'text', group: 'guardian1', order: 1 },
@@ -360,7 +361,7 @@ export async function POST(request: NextRequest) {
             { key: 'art_second_choice', label: '芸術選択第２希望科目', type: 'select', group: 'art', order: 2, options: '音楽,美術,書道' },
             
             // 持病・健康情報
-            { key: 'has_chronic_illness', label: '持病(あり/なし)', type: 'select', group: 'health', order: 1, options: 'あり,なし' },
+            { key: 'has_chronic_illness', label: '持病(あり/なし)', type: 'select', group: 'health', order: 1, required: true, options: 'あり,なし' },
             { key: 'accommodation_notes', label: '宿泊行事について学校へ伝えたいこと', type: 'textarea', group: 'health', order: 2 },
             { key: 'family_communication', label: '学校生活について家庭からの連絡', type: 'textarea', group: 'health', order: 3 },
             { key: 'chronic_illness_details', label: '持病に当てはまるもの', type: 'textarea', group: 'health', order: 4, help_text: '心疾患、川崎病、リウマチ熱、腎臓疾患、肝臓疾患、糖尿病、てんかん、喘息、難聴、弱視、側湾症、色覚異常、アトピー性皮膚炎、発達障害、身体障害、食物アレルギー、薬剤アレルギー、怪我、その他' }

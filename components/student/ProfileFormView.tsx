@@ -122,8 +122,11 @@ const ProfileFormView: React.FC = () => {
         const fieldValue = profile[setting.field_key as keyof StudentProfile];
         const hasError = getFieldError(setting.field_key);
         
-        // boolean型フィールドの特別処理
-        const isBooleanField = setting.field_key === 'has_chronic_illness' || setting.field_key === 'has_siblings_at_school';
+        // boolean型フィールドの動的検出
+        const isBooleanField = setting.field_key === 'has_chronic_illness' || 
+                             setting.field_key === 'has_siblings_at_school' ||
+                             setting.field_key.includes('_completed') ||
+                             setting.field_type === 'checkbox';
         
         // 文字列フィールド用の共通プロパティ
         const commonProps = {
@@ -245,8 +248,23 @@ const ProfileFormView: React.FC = () => {
         stepSettings.forEach(setting => {
             if (setting.is_required) {
                 const fieldValue = profile[setting.field_key as keyof StudentProfile];
-                if (!fieldValue || (typeof fieldValue === 'string' && fieldValue.trim() === '')) {
-                    errors[setting.field_key] = `${setting.field_label}は必須項目です`;
+                
+                // boolean型フィールドの動的検出と特別処理
+                const isBooleanField = setting.field_key === 'has_chronic_illness' || 
+                                     setting.field_key === 'has_siblings_at_school' ||
+                                     setting.field_key.includes('_completed') ||
+                                     setting.field_type === 'checkbox';
+                
+                if (isBooleanField) {
+                    // boolean型フィールドの場合、undefinedまたはnullの場合のみエラー
+                    if (fieldValue === undefined || fieldValue === null) {
+                        errors[setting.field_key] = `${setting.field_label}は必須項目です`;
+                    }
+                } else {
+                    // 文字列フィールドの処理
+                    if (!fieldValue || (typeof fieldValue === 'string' && fieldValue.trim() === '')) {
+                        errors[setting.field_key] = `${setting.field_label}は必須項目です`;
+                    }
                 }
             }
         });
