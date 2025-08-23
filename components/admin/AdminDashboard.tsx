@@ -38,8 +38,7 @@ const AdminDashboard: React.FC = () => {
     const [personalResultsSortField, setPersonalResultsSortField] = useState<keyof StudentResult>('created_at');
     const [personalResultsSortDirection, setPersonalResultsSortDirection] = useState<'asc' | 'desc'>('desc');
     const [personalResultsFilterCourse, setPersonalResultsFilterCourse] = useState<string>('all');
-    const [personalResultsFilterApplicationCourse, setPersonalResultsFilterApplicationCourse] = useState<string>('all');
-    const [personalResultsFilterAcceptedCourse, setPersonalResultsFilterAcceptedCourse] = useState<string>('all');
+
     const [personalResultsFilterDateRange, setPersonalResultsFilterDateRange] = useState<{
         start: string;
         end: string;
@@ -178,15 +177,7 @@ const AdminDashboard: React.FC = () => {
                 }
             }
             
-            // 出願コースフィルター
-            if (personalResultsFilterApplicationCourse !== 'all') {
-                if (result.application_course !== personalResultsFilterApplicationCourse) return false;
-            }
-            
-            // 合格コースフィルター
-            if (personalResultsFilterAcceptedCourse !== 'all') {
-                if (result.accepted_course !== personalResultsFilterAcceptedCourse) return false;
-            }
+
             
             // 日付範囲フィルター
             if (personalResultsFilterDateRange.start || personalResultsFilterDateRange.end) {
@@ -846,7 +837,7 @@ const AdminDashboard: React.FC = () => {
 
                     {/* 検索・フィルター */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">検索</label>
                                 <input
@@ -870,36 +861,10 @@ const AdminDashboard: React.FC = () => {
                                     <option value="course_change">廻し合格</option>
                                 </select>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">出願コース</label>
-                                <select
-                                    value={personalResultsFilterApplicationCourse}
-                                    onChange={(e) => setPersonalResultsFilterApplicationCourse(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="all">すべて</option>
-                                    <option value="普通科">普通科</option>
-                                    <option value="商業科">商業科</option>
-                                    <option value="情報科">情報科</option>
-                                    <option value="芸術科">芸術科</option>
-                                </select>
-                            </div>
+
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">合格コース</label>
-                                <select
-                                    value={personalResultsFilterAcceptedCourse}
-                                    onChange={(e) => setPersonalResultsFilterAcceptedCourse(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="all">すべて</option>
-                                    <option value="普通科">普通科</option>
-                                    <option value="商業科">商業科</option>
-                                    <option value="情報科">情報科</option>
-                                    <option value="芸術科">芸術科</option>
-                                </select>
-                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">登録日（開始）</label>
                                 <input
@@ -929,8 +894,7 @@ const AdminDashboard: React.FC = () => {
                                     onClick={() => {
                                         setPersonalResultsSearchTerm('');
                                         setPersonalResultsFilterCourse('all');
-                                        setPersonalResultsFilterApplicationCourse('all');
-                                        setPersonalResultsFilterAcceptedCourse('all');
+
                                         setPersonalResultsFilterDateRange({ start: '', end: '' });
                                     }}
                                     className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
