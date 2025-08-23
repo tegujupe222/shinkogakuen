@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
             INSERT INTO form_settings (
                 field_key, field_label, field_type, field_group, field_order,
                 is_required, is_visible, is_editable, validation_rules,
-                field_options, placeholder, help_text
+                options, placeholder, help_text
             ) VALUES (
                 ${field_key}, ${field_label}, ${field_type}, ${field_group}, ${field_order || 0},
                 ${is_required || false}, ${is_visible !== false}, ${is_editable !== false},

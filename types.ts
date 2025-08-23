@@ -248,7 +248,7 @@ export interface FormSetting {
     is_visible: boolean;
     is_editable: boolean;
     validation_rules?: string;
-    field_options?: string;
+    options?: string;
     placeholder?: string;
     help_text?: string;
     created_at: string;

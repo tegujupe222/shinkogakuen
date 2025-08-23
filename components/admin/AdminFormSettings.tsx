@@ -307,7 +307,7 @@ const FormSettingModal: React.FC<FormSettingModalProps> = ({ setting, onSave, on
         is_visible: setting?.is_visible !== false,
         is_editable: setting?.is_editable !== false,
         validation_rules: setting?.validation_rules || '',
-        field_options: setting?.field_options || '',
+        field_options: setting?.options || '',
         placeholder: setting?.placeholder || '',
         help_text: setting?.help_text || ''
     });

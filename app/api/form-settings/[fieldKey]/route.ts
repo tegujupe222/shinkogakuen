@@ -52,7 +52,7 @@ export async function PUT(
                 is_visible = ${body.is_visible !== false},
                 is_editable = ${body.is_editable !== false},
                 validation_rules = ${body.validation_rules || null},
-                field_options = ${body.field_options || null},
+                options = ${body.field_options || null},
                 placeholder = ${body.placeholder || null},
                 help_text = ${body.help_text || null},
                 updated_at = NOW()
