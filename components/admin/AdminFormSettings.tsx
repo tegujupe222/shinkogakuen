@@ -318,7 +318,11 @@ const FormSettingModal: React.FC<FormSettingModalProps> = ({ setting, onSave, on
     };
 
     return (
-        <Modal onClose={onClose}>
+        <Modal 
+            isOpen={true}
+            onClose={onClose}
+            title={setting ? 'フォーム設定を編集' : '新規フォーム設定を作成'}
+        >
             <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     {setting ? 'フォーム設定を編集' : '新規フォーム設定を作成'}

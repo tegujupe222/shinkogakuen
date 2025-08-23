@@ -724,6 +724,7 @@ const AdminDashboard: React.FC = () => {
                             setEditingResult(null);
                         }}
                     />
+                </Modal>
             )}
         </div>
     );
@@ -747,7 +748,7 @@ const PersonalResultEditModal: React.FC<PersonalResultEditModalProps> = ({ resul
         middle_school: result.middle_school || '',
         top_10_percent: result.top_10_percent || '',
         special_advance_top5: result.special_advance_top5 || '',
-                                        advance_5: result.advance_top5 || '',
+        advance_5: result.advance_top5 || '',
         club_tuition_exemption: result.club_tuition_exemption || '',
         club_fee_exemption: result.club_fee_exemption || '',
         club_scholarship: result.club_scholarship || '',
@@ -762,7 +763,11 @@ const PersonalResultEditModal: React.FC<PersonalResultEditModalProps> = ({ resul
     };
 
     return (
-        <Modal onClose={onClose}>
+        <Modal 
+            isOpen={true}
+            onClose={onClose}
+            title="個人結果を編集"
+        >
             <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">個人結果を編集</h3>
                 
