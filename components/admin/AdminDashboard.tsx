@@ -498,8 +498,8 @@ const AdminDashboard: React.FC = () => {
                     </div>
 
                     {/* 検索・フィルター・アップロード・エクスポート */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">検索</label>
                                 <input
@@ -523,40 +523,36 @@ const AdminDashboard: React.FC = () => {
                                     <option value="course_change">廻し合格</option>
                                 </select>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex items-end space-x-2">
                                 <button
                                     onClick={() => setShowPersonalResultsUploadModal(true)}
-                                    className="flex items-center px-3 md:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                 >
-                                    <UploadIcon className="w-4 h-4 mr-1 md:mr-2" />
-                                    <span className="hidden sm:inline">Excelアップロード</span>
-                                    <span className="sm:hidden">アップロード</span>
+                                    <UploadIcon className="w-4 h-4 mr-2" />
+                                    Excelアップロード
                                 </button>
                                 <button
                                     onClick={exportPersonalResultsToCSV}
-                                    className="flex items-center px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                 >
-                                    <DownloadIcon className="w-4 h-4 mr-1 md:mr-2" />
-                                    <span className="hidden sm:inline">CSV出力</span>
-                                    <span className="sm:hidden">CSV</span>
+                                    <DownloadIcon className="w-4 h-4 mr-2" />
+                                    CSV出力
                                 </button>
                                 <button
                                     onClick={exportPersonalResultsToExcel}
-                                    className="flex items-center px-3 md:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                 >
-                                    <DownloadIcon className="w-4 h-4 mr-1 md:mr-2" />
-                                    <span className="hidden sm:inline">Excel出力</span>
-                                    <span className="sm:hidden">Excel</span>
+                                    <DownloadIcon className="w-4 h-4 mr-2" />
+                                    Excel出力
                                 </button>
                             </div>
                             <div className="flex items-end">
                                 <button
                                     onClick={deleteAllPersonalResults}
-                                    className="flex items-center px-3 md:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                                    className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                                 >
-                                    <TrashIcon className="w-4 h-4 mr-1 md:mr-2" />
-                                    <span className="hidden sm:inline">全削除</span>
-                                    <span className="sm:hidden">削除</span>
+                                    <TrashIcon className="w-4 h-4 mr-2" />
+                                    全削除
                                 </button>
                             </div>
                         </div>
@@ -579,17 +575,16 @@ const AdminDashboard: React.FC = () => {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th 
-                                            className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                             onClick={() => handlePersonalResultsSort('exam_no')}
                                         >
-                                            <span className="hidden sm:inline">受験番号</span>
-                                            <span className="sm:hidden">番号</span>
+                                            受験番号
                                             {personalResultsSortField === 'exam_no' && (
                                                 <span className="ml-1">{personalResultsSortDirection === 'asc' ? '↑' : '↓'}</span>
                                             )}
                                         </th>
                                         <th 
-                                            className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                             onClick={() => handlePersonalResultsSort('name')}
                                         >
                                             氏名
@@ -598,7 +593,7 @@ const AdminDashboard: React.FC = () => {
                                             )}
                                         </th>
                                         <th 
-                                            className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                             onClick={() => handlePersonalResultsSort('application_course')}
                                         >
                                             出願時のコース
@@ -607,7 +602,7 @@ const AdminDashboard: React.FC = () => {
                                             )}
                                         </th>
                                         <th 
-                                            className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                             onClick={() => handlePersonalResultsSort('accepted_course')}
                                         >
                                             合格コース
@@ -615,11 +610,11 @@ const AdminDashboard: React.FC = () => {
                                                 <span className="ml-1">{personalResultsSortDirection === 'asc' ? '↑' : '↓'}</span>
                                             )}
                                         </th>
-                                        <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             状況
                                         </th>
                                         <th 
-                                            className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                             onClick={() => handlePersonalResultsSort('created_at')}
                                         >
                                             作成日時
@@ -627,7 +622,7 @@ const AdminDashboard: React.FC = () => {
                                                 <span className="ml-1">{personalResultsSortDirection === 'asc' ? '↑' : '↓'}</span>
                                             )}
                                         </th>
-                                        <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             操作
                                         </th>
                                     </tr>
@@ -635,27 +630,27 @@ const AdminDashboard: React.FC = () => {
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {filteredAndSortedPersonalResults.map((result) => (
                                         <tr key={result.id} className="hover:bg-gray-50">
-                                            <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 {result.exam_no}
                                             </td>
-                                            <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {result.name || '-'}
                                             </td>
-                                            <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {result.application_course || '-'}
                                             </td>
-                                            <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {result.accepted_course || '-'}
                                             </td>
-                                            <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(result)}`}>
                                                     {getStatusLabel(result)}
                                                 </span>
                                             </td>
-                                            <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {new Date(result.created_at).toLocaleDateString('ja-JP')}
                                             </td>
-                                            <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => openEditModal(result)}
