@@ -37,7 +37,7 @@ const ProfileFormView: React.FC = () => {
         guardian1_relationship: '',
         guardian1_relationship_other: '',
         guardian1_email: '',
-        has_chronic_illness: '',
+        has_chronic_illness: false,
         accommodation_notes: '',
         family_communication: '',
         chronic_illness_details: ''
@@ -65,7 +65,7 @@ const ProfileFormView: React.FC = () => {
         }
     };
 
-    const handleInputChange = (field: keyof StudentProfile, value: string) => {
+    const handleInputChange = (field: keyof StudentProfile, value: string | boolean) => {
         console.log('handleInputChange called:', field, value); // デバッグ用
         setProfile(prev => {
             const newProfile = {
@@ -577,7 +577,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">持病</label>
                         <select
                             value={profile.has_chronic_illness ? 'true' : 'false'}
-                            onChange={(e) => handleInputChange('has_chronic_illness', e.target.value)}
+                            onChange={(e) => handleInputChange('has_chronic_illness', e.target.value === 'true')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">選択してください</option>
