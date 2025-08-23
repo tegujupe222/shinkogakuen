@@ -7,6 +7,7 @@ import AdminDocuments from './AdminDocuments';
 import AdminProfiles from './AdminProfiles';
 import AdminStudentProfiles from './AdminStudentProfiles';
 import AdminFormSettings from './AdminFormSettings';
+import AdminMobileMenu from './AdminMobileMenu';
 import TrashIcon from '../icons/TrashIcon';
 import PencilIcon from '../icons/PencilIcon';
 import PlusIcon from '../icons/PlusIcon';
@@ -437,9 +438,9 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-gray-600">システム全体を管理します</p>
             </div>
 
-            {/* タブナビゲーション */}
-            <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex flex-wrap gap-2 md:gap-8">
+            {/* デスクトップ用タブナビゲーション */}
+            <div className="hidden md:block border-b border-gray-200 mb-6">
+                <nav className="-mb-px flex space-x-8">
                     {[
                         { id: 'announcements', name: 'お知らせ管理', icon: '📢' },
                         { id: 'certificates', name: '合格証書管理', icon: '🏆' },
@@ -452,19 +453,33 @@ const AdminDashboard: React.FC = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as Tab)}
-                            className={`py-2 px-2 md:px-1 border-b-2 font-medium text-xs md:text-sm whitespace-nowrap ${
+                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
                                 activeTab === tab.id
                                     ? 'border-blue-500 text-blue-600'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                         >
-                            <span className="mr-1 md:mr-2">{tab.icon}</span>
-                            <span className="hidden sm:inline">{tab.name}</span>
-                            <span className="sm:hidden">{tab.name.split('管理')[0]}</span>
+                            <span className="mr-2">{tab.icon}</span>
+                            {tab.name}
                         </button>
                     ))}
                 </nav>
             </div>
+
+            {/* ハンバーガーメニュー */}
+            <AdminMobileMenu
+                tabs={[
+                    { id: 'announcements', name: 'お知らせ管理', icon: '📢' },
+                    { id: 'certificates', name: '合格証書管理', icon: '🏆' },
+                    { id: 'documents', name: '書類管理', icon: '📄' },
+                    { id: 'profiles', name: 'ユーザー管理', icon: '👥' },
+                    { id: 'personal-results', name: '個人結果管理', icon: '📊' },
+                    { id: 'student-profiles', name: '学生プロフィール管理', icon: '📝' },
+                    { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' }
+                ]}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as Tab)}
+            />
 
             {/* タブコンテンツ */}
             {activeTab === 'announcements' && <AdminAnnouncements />}
