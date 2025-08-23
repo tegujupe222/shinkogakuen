@@ -12,7 +12,36 @@ const ProfileFormView: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string>('');
-    const [profile, setProfile] = useState<Partial<StudentProfile>>({});
+    const [profile, setProfile] = useState<Partial<StudentProfile>>({
+        student_last_name: '',
+        student_first_name: '',
+        student_last_name_kana: '',
+        student_first_name_kana: '',
+        gender: '',
+        birth_date: '',
+        registered_address: '',
+        student_postal_code: '',
+        student_address: '',
+        student_address_detail: '',
+        student_phone: '',
+        middle_school_name: '',
+        graduation_date: '',
+        guardian1_last_name: '',
+        guardian1_first_name: '',
+        guardian1_last_name_kana: '',
+        guardian1_first_name_kana: '',
+        guardian1_postal_code: '',
+        guardian1_address: '',
+        guardian1_address_detail: '',
+        guardian1_phone: '',
+        guardian1_relationship: '',
+        guardian1_relationship_other: '',
+        guardian1_email: '',
+        has_chronic_illness: '',
+        accommodation_notes: '',
+        family_communication: '',
+        chronic_illness_details: ''
+    });
 
     useEffect(() => {
         if (user?.exam_no) {
@@ -25,7 +54,11 @@ const ProfileFormView: React.FC = () => {
             const response = await fetch(`/api/profiles/${user?.exam_no}`);
             if (response.ok) {
                 const data = await response.json();
-                setProfile(data);
+                console.log('Fetched profile data:', data); // デバッグ用
+                setProfile(prev => ({
+                    ...prev,
+                    ...data
+                }));
             }
         } catch (error) {
             console.error('Failed to fetch profile:', error);
@@ -33,10 +66,15 @@ const ProfileFormView: React.FC = () => {
     };
 
     const handleInputChange = (field: keyof StudentProfile, value: string) => {
-        setProfile(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        console.log('handleInputChange called:', field, value); // デバッグ用
+        setProfile(prev => {
+            const newProfile = {
+                ...prev,
+                [field]: value
+            };
+            console.log('New profile state:', newProfile); // デバッグ用
+            return newProfile;
+        });
     };
 
     const saveForm = async (step: FormStep, isComplete: boolean = false) => {
@@ -93,8 +131,12 @@ const ProfileFormView: React.FC = () => {
                         </label>
                         <input
                             type="text"
-                            value={profile.student_last_name || ''}
-                            onChange={(e) => handleInputChange('student_last_name', e.target.value || '')}
+                            value={profile.student_last_name ?? ''}
+                            onChange={(e) => {
+                                const value = e.target.value ?? '';
+                                console.log('Input change:', 'student_last_name', value); // デバッグ用
+                                handleInputChange('student_last_name', value);
+                            }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
