@@ -7,6 +7,7 @@ export interface User {
     email?: string;
     role: UserRole;
     name?: string;
+    phone?: string;
 }
 
 export interface AuthenticatedUser extends User {
@@ -247,7 +248,7 @@ export interface FormSetting {
     is_visible: boolean;
     is_editable: boolean;
     validation_rules?: string;
-    options?: string;
+    field_options?: string;
     placeholder?: string;
     help_text?: string;
     created_at: string;

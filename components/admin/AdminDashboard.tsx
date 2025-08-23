@@ -1,291 +1,203 @@
 
 import React, { useState, useEffect } from 'react';
+import { Announcement, User, Document, Certificate, StudentResult } from '../../types';
 import AdminAnnouncements from './AdminAnnouncements';
-import AdminDocuments from './AdminDocuments';
 import AdminCertificates from './AdminCertificates';
+import AdminDocuments from './AdminDocuments';
+import AdminProfiles from './AdminProfiles';
 import AdminStudentProfiles from './AdminStudentProfiles';
-
-import MobileMenu from '../shared/MobileMenu';
+import AdminFormSettings from './AdminFormSettings';
 import TrashIcon from '../icons/TrashIcon';
-import { StudentResult } from '../../types';
+import PencilIcon from '../icons/PencilIcon';
+import PlusIcon from '../icons/PlusIcon';
+import UploadIcon from '../icons/UploadIcon';
+import DownloadIcon from '../icons/DownloadIcon';
+import Modal from '../shared/Modal';
+import * as XLSX from 'xlsx';
 
-type Tab = 'announcements' | 'documents' | 'certificates' | 'students' | 'personal-results' | 'profiles';
-
-interface User {
-    id: string;
-    exam_no: string;
-    email: string;
-    name: string;
-    role: string;
-    phone_last4: string;
-    created_at: string;
-    updated_at: string;
-}
+type Tab = 'announcements' | 'certificates' | 'documents' | 'profiles' | 'personal-results' | 'student-profiles' | 'form-settings';
 
 const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('announcements');
-    const [dbStatus, setDbStatus] = useState<string>('');
-    const [uploadStatus, setUploadStatus] = useState<string>('');
-    const [uploadResults, setUploadResults] = useState<any>(null);
-    const [isUploading, setIsUploading] = useState(false);
     const [users, setUsers] = useState<User[]>([]);
-    const [loadingUsers, setLoadingUsers] = useState(false);
-    const [deleteStatus, setDeleteStatus] = useState<string>('');
-    const [userSearchTerm, setUserSearchTerm] = useState<string>('');
-    const [userFilterType, setUserFilterType] = useState<string>('all');
-    const [userSortBy, setUserSortBy] = useState<string>('exam_no');
-    const [userSortOrder, setUserSortOrder] = useState<'asc' | 'desc'>('asc');
-    
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortField, setSortField] = useState<keyof User>('exam_no');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState('');
+
     // 個人結果管理用の状態
     const [personalResults, setPersonalResults] = useState<StudentResult[]>([]);
-    const [loadingPersonalResults, setLoadingPersonalResults] = useState(false);
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [filterType, setFilterType] = useState<string>('all');
-    const [sortBy, setSortBy] = useState<string>('exam_no');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-    const [excelUploadStatus, setExcelUploadStatus] = useState<string>('');
-    const [excelUploadResults, setExcelUploadResults] = useState<any>(null);
-    const [isExcelUploading, setIsExcelUploading] = useState(false);
-    const [deletePersonalResultStatus, setDeletePersonalResultStatus] = useState<string>('');
+    const [personalResultsLoading, setPersonalResultsLoading] = useState(false);
+    const [personalResultsSearchTerm, setPersonalResultsSearchTerm] = useState('');
+    const [personalResultsSortField, setPersonalResultsSortField] = useState<keyof StudentResult>('created_at');
+    const [personalResultsSortDirection, setPersonalResultsSortDirection] = useState<'asc' | 'desc'>('desc');
+    const [personalResultsFilterCourse, setPersonalResultsFilterCourse] = useState<string>('all');
+    const [showPersonalResultsUploadModal, setShowPersonalResultsUploadModal] = useState(false);
+    const [personalResultsUploadFile, setPersonalResultsUploadFile] = useState<File | null>(null);
+    const [personalResultsUploading, setPersonalResultsUploading] = useState(false);
+    const [personalResultsUploadMessage, setPersonalResultsUploadMessage] = useState('');
     const [editingResult, setEditingResult] = useState<StudentResult | null>(null);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editLoading, setEditLoading] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
-    const tabs = [
-        { 
-            id: 'announcements', 
-            name: 'お知らせ管理', 
-            icon: '📢',
-            component: AdminAnnouncements 
-        },
-        { 
-            id: 'documents', 
-            name: '書類管理', 
-            icon: '📄',
-            component: AdminDocuments 
-        },
-        { 
-            id: 'certificates', 
-            name: '合格証書管理', 
-            icon: '🏆',
-            component: AdminCertificates 
-        },
-        { 
-            id: 'students', 
-            name: '学生アカウント管理', 
-            icon: '👨‍🎓',
-            component: null 
-        },
-        { 
-            id: 'personal-results', 
-            name: '個人結果管理', 
-            icon: '📊',
-            component: null 
-        },
-        { 
-            id: 'profiles', 
-            name: '学生プロフィール管理', 
-            icon: '👥',
-            component: AdminStudentProfiles 
-        },
-    ];
+    useEffect(() => {
+        fetchUsers();
+        fetchPersonalResults();
+    }, []);
 
-    const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || AdminAnnouncements;
-
-    // ユーザー一覧を取得
     const fetchUsers = async () => {
-        setLoadingUsers(true);
         try {
+            setLoading(true);
             const response = await fetch('/api/users');
-            const data = await response.json();
-            if (data.success) {
-                setUsers(data.users);
-            } else {
-                console.error('Failed to fetch users:', data.error);
-            }
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        } finally {
-            setLoadingUsers(false);
-        }
-    };
-
-    // ユーザー削除
-    const deleteUser = async (examNo: string) => {
-        if (!confirm(`アカウント ${examNo} を削除しますか？この操作は取り消せません。`)) {
-            return;
-        }
-
-        setDeleteStatus('削除中...');
-        try {
-            const response = await fetch(`/api/users/${examNo}`, {
-                method: 'DELETE',
-            });
-
-            const data = await response.json();
-
             if (response.ok) {
-                setDeleteStatus('削除完了');
-                // ユーザー一覧を再取得
-                await fetchUsers();
-                setTimeout(() => setDeleteStatus(''), 3000);
-            } else {
-                setDeleteStatus(`エラー: ${data.error}`);
-                setTimeout(() => setDeleteStatus(''), 5000);
-            }
-        } catch (error) {
-            setDeleteStatus('削除中にエラーが発生しました');
-            setTimeout(() => setDeleteStatus(''), 5000);
-        }
-    };
-
-    // タブが学生アカウント管理に切り替わった時にユーザー一覧を取得
-    useEffect(() => {
-        if (activeTab === 'students') {
-            fetchUsers();
-        }
-    }, [activeTab]);
-
-    // タブが個人結果管理に切り替わった時に個人結果一覧を取得
-    useEffect(() => {
-        if (activeTab === 'personal-results') {
-            fetchPersonalResults();
-        }
-    }, [activeTab]);
-
-    // 個人結果一覧を取得
-    const fetchPersonalResults = async () => {
-        setLoadingPersonalResults(true);
-        try {
-            const response = await fetch('/api/results');
-            const data = await response.json();
-            if (data.success) {
-                setPersonalResults(data.results);
-            } else {
-                console.error('Failed to fetch personal results:', data.error);
-            }
-        } catch (error) {
-            console.error('Error fetching personal results:', error);
-        } finally {
-            setLoadingPersonalResults(false);
-        }
-    };
-
-    // 個人結果削除
-    const deletePersonalResult = async (examNo: string) => {
-        if (!confirm(`個人結果 ${examNo} を削除しますか？この操作は取り消せません。`)) {
-            return;
-        }
-
-        setDeletePersonalResultStatus('削除中...');
-        try {
-            const response = await fetch(`/api/results/${examNo}`, {
-                method: 'DELETE',
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setDeletePersonalResultStatus('削除完了');
-                await fetchPersonalResults();
-                setTimeout(() => setDeletePersonalResultStatus(''), 3000);
-            } else {
-                setDeletePersonalResultStatus(`エラー: ${data.error}`);
-                setTimeout(() => setDeletePersonalResultStatus(''), 5000);
-            }
-        } catch (error) {
-            setDeletePersonalResultStatus('削除中にエラーが発生しました');
-            setTimeout(() => setDeletePersonalResultStatus(''), 5000);
-        }
-    };
-
-    // 全個人結果削除
-    const deleteAllPersonalResults = async () => {
-        if (!confirm('全ての個人結果を削除しますか？この操作は取り消せません。')) {
-            return;
-        }
-
-        setDeletePersonalResultStatus('全削除中...');
-        try {
-            const response = await fetch('/api/results', {
-                method: 'DELETE',
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setDeletePersonalResultStatus('全削除完了');
-                await fetchPersonalResults();
-                setTimeout(() => setDeletePersonalResultStatus(''), 3000);
-            } else {
-                setDeletePersonalResultStatus(`エラー: ${data.error}`);
-                setTimeout(() => setDeletePersonalResultStatus(''), 5000);
-            }
-        } catch (error) {
-            setDeletePersonalResultStatus('全削除中にエラーが発生しました');
-            setTimeout(() => setDeletePersonalResultStatus(''), 5000);
-        }
-    };
-
-    // 個人結果編集機能
-    const openEditModal = (result: StudentResult) => {
-        setEditingResult({ ...result });
-        setIsEditModalOpen(true);
-    };
-
-    const closeEditModal = () => {
-        setEditingResult(null);
-        setIsEditModalOpen(false);
-    };
-
-    const handleEditSubmit = async () => {
-        if (!editingResult) return;
-
-        setEditLoading(true);
-        try {
-            const response = await fetch(`/api/results/${editingResult.exam_no}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(editingResult),
-            });
-
-            if (response.ok) {
-                await fetchPersonalResults();
-                closeEditModal();
-                alert('個人結果を更新しました。学生画面に反映されます。');
-            } else {
                 const data = await response.json();
-                alert(`更新に失敗しました: ${data.error}`);
+                if (data.success) {
+                    setUsers(data.users);
+                }
             }
         } catch (error) {
-            alert('更新中にエラーが発生しました');
+            console.error('Failed to fetch users:', error);
         } finally {
-            setEditLoading(false);
+            setLoading(false);
         }
     };
 
-    const handleEditChange = (field: keyof StudentResult, value: string) => {
-        if (!editingResult) return;
-        setEditingResult(prev => ({
-            ...prev!,
-            [field]: value
-        }));
+    const fetchPersonalResults = async () => {
+        try {
+            setPersonalResultsLoading(true);
+            const response = await fetch('/api/results');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setPersonalResults(data.results);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch personal results:', error);
+        } finally {
+            setPersonalResultsLoading(false);
+        }
     };
 
-    // Excelファイルアップロード処理
-    const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
+    const handleSort = (field: keyof User) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
 
-        setIsExcelUploading(true);
-        setExcelUploadStatus('');
-        setExcelUploadResults(null);
+    const handlePersonalResultsSort = (field: keyof StudentResult) => {
+        if (personalResultsSortField === field) {
+            setPersonalResultsSortDirection(personalResultsSortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setPersonalResultsSortField(field);
+            setPersonalResultsSortDirection('asc');
+        }
+    };
+
+    const filteredAndSortedUsers = users
+        .filter(user => 
+            user.exam_no?.includes(searchTerm) ||
+            user.name?.includes(searchTerm) ||
+            user.phone?.includes(searchTerm)
+        )
+        .sort((a, b) => {
+            const aValue = a[sortField];
+            const bValue = b[sortField];
+            
+            if (aValue === null || aValue === undefined) return 1;
+            if (bValue === null || bValue === undefined) return -1;
+            
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return sortDirection === 'asc' 
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            }
+            
+            return 0;
+        });
+
+    const filteredAndSortedPersonalResults = personalResults
+        .filter(result => {
+            const matchesSearch = 
+                result.exam_no.includes(personalResultsSearchTerm) ||
+                result.name?.includes(personalResultsSearchTerm) ||
+                result.student_id?.includes(personalResultsSearchTerm);
+            
+            if (personalResultsFilterCourse === 'all') return matchesSearch;
+            if (personalResultsFilterCourse === 'pass') {
+                return matchesSearch && result.accepted_course && result.accepted_course.trim() !== '';
+            }
+            if (personalResultsFilterCourse === 'fail') {
+                return matchesSearch && result.application_course && (!result.accepted_course || result.accepted_course.trim() === '');
+            }
+            if (personalResultsFilterCourse === 'course_change') {
+                return matchesSearch && result.application_course && result.accepted_course && 
+                       result.application_course !== result.accepted_course;
+            }
+            return matchesSearch;
+        })
+        .sort((a, b) => {
+            const aValue = a[personalResultsSortField];
+            const bValue = b[personalResultsSortField];
+            
+            if (aValue === null || aValue === undefined) return 1;
+            if (bValue === null || bValue === undefined) return -1;
+            
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return personalResultsSortDirection === 'asc' 
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            }
+            
+            return 0;
+        });
+
+    const handleCSVUpload = async () => {
+        if (!uploadFile) return;
+
+        setUploading(true);
+        setUploadMessage('');
 
         try {
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', uploadFile);
+
+            const response = await fetch('/api/upload-users', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setUploadMessage(`成功: ${data.message}`);
+                setUploadFile(null);
+                fetchUsers();
+            } else {
+                setUploadMessage(`エラー: ${data.error}`);
+            }
+        } catch (error) {
+            setUploadMessage('アップロードに失敗しました');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handlePersonalResultsUpload = async () => {
+        if (!personalResultsUploadFile) return;
+
+        setPersonalResultsUploading(true);
+        setPersonalResultsUploadMessage('');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', personalResultsUploadFile);
 
             const response = await fetch('/api/upload-results', {
                 method: 'POST',
@@ -295,1023 +207,731 @@ const AdminDashboard: React.FC = () => {
             const data = await response.json();
 
             if (response.ok) {
-                setExcelUploadStatus('エクセルアップロード完了');
-                setExcelUploadResults(data);
-                await fetchPersonalResults();
+                setPersonalResultsUploadMessage(`成功: ${data.message}`);
+                setPersonalResultsUploadFile(null);
+                fetchPersonalResults();
             } else {
-                setExcelUploadStatus(`エラー: ${data.error}`);
+                setPersonalResultsUploadMessage(`エラー: ${data.error}`);
             }
         } catch (error) {
-            setExcelUploadStatus('エクセルアップロード中にエラーが発生しました');
+            setPersonalResultsUploadMessage('アップロードに失敗しました');
         } finally {
-            setIsExcelUploading(false);
+            setPersonalResultsUploading(false);
         }
     };
 
-    // 個人結果のフィルタリング・ソート機能
-    const filteredAndSortedPersonalResults = () => {
-        let filtered = personalResults;
-
-        // 検索フィルター
-        if (searchTerm) {
-            filtered = filtered.filter(item => 
-                (item.student_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (item.exam_no || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (item.middle_school || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (item.accepted_course || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (item.application_course || '').toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        // フィルター
-        switch (filterType) {
-            case 'senkan':
-                filtered = filtered.filter(item => item.application_type === '専願');
-                break;
-            case 'heikan':
-                filtered = filtered.filter(item => item.application_type === '併願');
-                break;
-            case 'accepted':
-                filtered = filtered.filter(item => 
-                    item.accepted_course && 
-                    (!item.application_course || item.accepted_course === item.application_course)
-                );
-                break;
-            case 'mawashi':
-                filtered = filtered.filter(item => 
-                    item.accepted_course && 
-                    item.application_course && 
-                    item.accepted_course !== item.application_course
-                );
-                break;
-            case 'rejected':
-                filtered = filtered.filter(item => 
-                    !item.accepted_course && item.application_course
-                );
-                break;
-            case 'no_result':
-                filtered = filtered.filter(item => !item.accepted_course && !item.application_course);
-                break;
-        }
-
-        // ソート
-        filtered.sort((a, b) => {
-            let aValue = a[sortBy as keyof StudentResult] || '';
-            let bValue = b[sortBy as keyof StudentResult] || '';
-
-            if (typeof aValue === 'string') aValue = aValue.toLowerCase();
-            if (typeof bValue === 'string') bValue = bValue.toLowerCase();
-
-            if (sortOrder === 'asc') {
-                return aValue > bValue ? 1 : -1;
-            } else {
-                return aValue < bValue ? 1 : -1;
+    const deletePersonalResult = async (examNo: string) => {
+        if (!confirm('この個人結果を削除しますか？')) return;
+        
+        try {
+            const response = await fetch(`/api/results/${examNo}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                setPersonalResults(personalResults.filter(r => r.exam_no !== examNo));
             }
-        });
-
-        return filtered;
-    };
-
-    const handleSort = (field: string) => {
-        if (sortBy === field) {
-            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortBy(field);
-            setSortOrder('asc');
+        } catch (error) {
+            console.error('Failed to delete personal result:', error);
         }
     };
 
-    // フィルタリング・ソート機能
-    const filteredAndSortedUsers = () => {
-        let filtered = users;
-
-        // 検索フィルター
-        if (userSearchTerm) {
-            filtered = filtered.filter(user => 
-                user.exam_no.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                user.email.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                (user.phone_last4 && user.phone_last4.includes(userSearchTerm))
-            );
-        }
-
-        // フィルター
-        switch (userFilterType) {
-            case 'admin':
-                filtered = filtered.filter(user => user.role === 'admin');
-                break;
-            case 'student':
-                filtered = filtered.filter(user => user.role === 'student');
-                break;
-            case 'has_phone':
-                filtered = filtered.filter(user => user.phone_last4);
-                break;
-            case 'no_phone':
-                filtered = filtered.filter(user => !user.phone_last4);
-                break;
-        }
-
-        // ソート
-        filtered.sort((a, b) => {
-            let aValue = a[userSortBy as keyof User] || '';
-            let bValue = b[userSortBy as keyof User] || '';
-
-            if (typeof aValue === 'string') aValue = aValue.toLowerCase();
-            if (typeof bValue === 'string') bValue = bValue.toLowerCase();
-
-            if (userSortOrder === 'asc') {
-                return aValue > bValue ? 1 : -1;
-            } else {
-                return aValue < bValue ? 1 : -1;
+    const deleteAllPersonalResults = async () => {
+        if (!confirm('全ての個人結果を削除しますか？この操作は取り消せません。')) return;
+        
+        try {
+            const response = await fetch('/api/results', {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                setPersonalResults([]);
             }
-        });
-
-        return filtered;
-    };
-
-    const handleUserSort = (field: string) => {
-        if (userSortBy === field) {
-            setUserSortOrder(userSortOrder === 'asc' ? 'desc' : 'asc');
-        } else {
-            setUserSortBy(field);
-            setUserSortOrder('asc');
+        } catch (error) {
+            console.error('Failed to delete all personal results:', error);
         }
     };
+
+    const openEditModal = (result: StudentResult) => {
+        setEditingResult(result);
+        setShowEditModal(true);
+    };
+
+    const handleEditSave = async (updatedResult: Partial<StudentResult>) => {
+        if (!editingResult) return;
+
+        try {
+            const response = await fetch(`/api/results/${editingResult.exam_no}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedResult),
+            });
+
+            if (response.ok) {
+                setShowEditModal(false);
+                setEditingResult(null);
+                fetchPersonalResults();
+            }
+        } catch (error) {
+            console.error('Failed to update personal result:', error);
+        }
+    };
+
+    const exportPersonalResultsToCSV = () => {
+        const headers = [
+            '受験番号',
+            '学生ID',
+            '氏名',
+            '性別',
+            '出願時のコース',
+            '出願種別',
+            '推薦',
+            '中学校名',
+            '3教科上位10%',
+            '特進上位5名',
+            '進学上位5名',
+            '部活動推薦入学金免除',
+            '部活動推薦諸費用免除',
+            '部活動推薦奨学金支給',
+            '合格コース',
+            '特待生',
+            '部活動推薦表記',
+            '作成日時',
+            '更新日時'
+        ];
+
+        const csvContent = [
+            headers.join(','),
+            ...filteredAndSortedPersonalResults.map(result => [
+                result.exam_no,
+                result.student_id || '',
+                result.name || '',
+                result.gender || '',
+                result.application_course || '',
+                result.application_type || '',
+                result.recommendation || '',
+                result.middle_school || '',
+                result.top_10_percent || '',
+                result.special_advance_top5 || '',
+                result.advance_top5 || '',
+                result.club_tuition_exemption || '',
+                result.club_fee_exemption || '',
+                result.club_scholarship || '',
+                result.accepted_course || '',
+                result.scholarship_student || '',
+                result.club_recommendation || '',
+                result.created_at,
+                result.updated_at
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `個人結果_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const getStatusLabel = (result: StudentResult) => {
+        if (!result.application_course) return '未発表';
+        if (!result.accepted_course || result.accepted_course.trim() === '') {
+            return '不合格';
+        }
+        if (result.application_course !== result.accepted_course) {
+            return '廻し合格';
+        }
+        return '合格';
+    };
+
+    const getStatusColor = (result: StudentResult) => {
+        if (!result.application_course) return 'bg-gray-100 text-gray-800';
+        if (!result.accepted_course || result.accepted_course.trim() === '') {
+            return 'bg-red-100 text-red-800';
+        }
+        if (result.application_course !== result.accepted_course) {
+            return 'bg-orange-100 text-orange-800';
+        }
+        return 'bg-green-100 text-green-800';
+    };
+
+    if (loading) {
+        return (
+            <div className="p-6">
+                <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">データを読み込み中...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* モバイル用ヘッダー */}
-            <div className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 md:hidden">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-lg font-semibold text-gray-900">管理画面</h1>
-                    <div className="text-sm text-gray-500">
-                        {tabs.find(tab => tab.id === activeTab)?.name}
-                    </div>
-                </div>
+        <div className="p-6">
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">管理画面</h2>
+                <p className="text-gray-600">システム全体を管理します</p>
             </div>
 
-            {/* デスクトップ用タブ */}
-            <div className="hidden md:block border-b border-gray-200 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <nav className="-mb-px flex space-x-8">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id as Tab)}
-                                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                                    activeTab === tab.id
-                                        ? 'border-blue-500 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                }`}
-                            >
-                                {tab.name}
-                            </button>
-                        ))}
-                    </nav>
-                </div>
+            {/* タブナビゲーション */}
+            <div className="border-b border-gray-200 mb-6">
+                <nav className="-mb-px flex space-x-8">
+                    {[
+                        { id: 'announcements', name: 'お知らせ管理', icon: '📢' },
+                        { id: 'certificates', name: '合格証書管理', icon: '🏆' },
+                        { id: 'documents', name: '書類管理', icon: '📄' },
+                        { id: 'profiles', name: 'ユーザー管理', icon: '👥' },
+                        { id: 'personal-results', name: '個人結果管理', icon: '📊' },
+                        { id: 'student-profiles', name: '学生プロフィール管理', icon: '📝' },
+                        { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' }
+                    ].map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as Tab)}
+                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === tab.id
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            <span className="mr-2">{tab.icon}</span>
+                            {tab.name}
+                        </button>
+                    ))}
+                </nav>
             </div>
 
-            {/* ハンバーガーメニュー */}
-            <MobileMenu 
-                tabs={tabs}
-                activeTab={activeTab}
-                onTabChange={(tabId) => setActiveTab(tabId as Tab)}
-            />
+            {/* タブコンテンツ */}
+            {activeTab === 'announcements' && <AdminAnnouncements />}
+            {activeTab === 'certificates' && <AdminCertificates />}
+            {activeTab === 'documents' && <AdminDocuments />}
+            {activeTab === 'profiles' && <AdminProfiles />}
+            {activeTab === 'student-profiles' && <AdminStudentProfiles />}
+            {activeTab === 'form-settings' && <AdminFormSettings />}
 
-            {/* コンテンツエリア */}
-            <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-                {activeTab === 'students' ? (
-                    <div>
-                        {/* データベース接続テスト */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">データベース接続テスト</h3>
-                            <button
-                                onClick={async () => {
-                                    setDbStatus('テスト中...');
-                                    try {
-                                        const response = await fetch('/api/test-db');
-                                        const data = await response.json();
-                                        setDbStatus(data.success ? '接続成功' : `エラー: ${data.error}`);
-                                    } catch (error) {
-                                        setDbStatus('接続エラー');
-                                    }
-                                }}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                                接続テスト
-                            </button>
-                            {dbStatus && (
-                                <p className="mt-2 text-sm text-gray-600">{dbStatus}</p>
-                            )}
-                        </div>
-
-                        {/* CSVアップロード */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">CSVアップロード（学生アカウント作成）</h3>
-                            <form onSubmit={async (e) => {
-                                e.preventDefault();
-                                const formData = new FormData(e.currentTarget);
-                                setIsUploading(true);
-                                setUploadStatus('アップロード中...');
-                                
-                                try {
-                                    const response = await fetch('/api/upload-students', {
-                                        method: 'POST',
-                                        body: formData,
-                                    });
-                                    
-                                    const data = await response.json();
-                                    
-                                    if (response.ok) {
-                                        setUploadStatus('アップロード成功');
-                                        setUploadResults(data);
-                                        // ユーザー一覧を再取得
-                                        await fetchUsers();
-                                    } else {
-                                        setUploadStatus(`エラー: ${data.error}`);
-                                    }
-                                } catch (error) {
-                                    setUploadStatus('アップロード中にエラーが発生しました');
-                                } finally {
-                                    setIsUploading(false);
-                                }
-                            }}>
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        CSVファイル（A列: 受験番号、B列: 電話番号）
-                                    </label>
-                                    <input
-                                        type="file"
-                                        name="file"
-                                        accept=".csv"
-                                        required
-                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={isUploading}
-                                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                                >
-                                    {isUploading ? 'アップロード中...' : 'アップロード'}
-                                </button>
-                            </form>
-                            
-                            {uploadStatus && (
-                                <div className={`mt-4 p-4 rounded-lg border ${
-                                    uploadStatus.includes('エラー') 
-                                        ? 'bg-red-50 border-red-200 text-red-800' 
-                                        : 'bg-green-50 border-green-200 text-green-800'
-                                }`}>
-                                    <p className="font-medium">{uploadStatus}</p>
-                                    {uploadResults && (
-                                        <div className="mt-2">
-                                            <p>処理結果:</p>
-                                            <ul className="list-disc list-inside mt-1">
-                                                {uploadResults.results?.map((result: string, index: number) => (
-                                                    <li key={index} className="text-sm">{result}</li>
-                                                ))}
-                                            </ul>
-                                            {uploadResults.errors?.length > 0 && (
-                                                <div className="mt-2">
-                                                    <p className="font-medium text-red-700">エラー:</p>
-                                                    <ul className="list-disc list-inside mt-1">
-                                                        {uploadResults.errors.map((error: string, index: number) => (
-                                                            <li key={index} className="text-sm text-red-600">{error}</li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* ユーザー一覧管理 */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">ユーザー一覧管理</h3>
-                                <button
-                                    onClick={() => setUserSearchTerm('')}
-                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                                >
-                                    クリア
-                                </button>
-                            </div>
-
-                            {/* 検索・フィルター・ソート */}
-                            <div className="mb-6 space-y-4">
-                                {/* 検索バー */}
-                                <div className="flex items-center space-x-4">
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            placeholder="受験番号、名前、ログインID、電話番号で検索..."
-                                            value={userSearchTerm}
-                                            onChange={(e) => setUserSearchTerm(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={() => setUserSearchTerm('')}
-                                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                                    >
-                                        クリア
-                                    </button>
-                                </div>
-
-                                {/* フィルター・ソート */}
-                                <div className="flex flex-wrap items-center gap-4">
-                                    {/* フィルター */}
-                                    <div className="flex items-center space-x-2">
-                                        <label className="text-sm font-medium text-gray-700">フィルター:</label>
-                                        <select
-                                            value={userFilterType}
-                                            onChange={(e) => setUserFilterType(e.target.value)}
-                                            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="all">全て</option>
-                                            <option value="admin">管理者のみ</option>
-                                            <option value="student">学生のみ</option>
-                                            <option value="has_phone">電話番号あり</option>
-                                            <option value="no_phone">電話番号なし</option>
-                                        </select>
-                                    </div>
-
-                                    {/* ソート */}
-                                    <div className="flex items-center space-x-2">
-                                        <label className="text-sm font-medium text-gray-700">ソート:</label>
-                                        <select
-                                            value={userSortBy}
-                                            onChange={(e) => setUserSortBy(e.target.value)}
-                                            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="exam_no">受験番号</option>
-                                            <option value="name">名前</option>
-                                            <option value="email">ログインID</option>
-                                            <option value="phone_last4">電話番号</option>
-                                            <option value="role">ロール</option>
-                                            <option value="created_at">作成日時</option>
-                                        </select>
-                                        <button
-                                            onClick={() => handleUserSort(userSortBy)}
-                                            className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-                                        >
-                                            {userSortOrder === 'asc' ? '↑' : '↓'}
-                                        </button>
-                                    </div>
-
-                                    {/* 結果件数 */}
-                                    <div className="text-sm text-gray-600">
-                                        表示: {filteredAndSortedUsers().length} / {users.length}件
-                                    </div>
-                                </div>
-                            </div>
-
-                            {deleteStatus && (
-                                <div className={`mt-6 p-4 rounded-lg border ${
-                                    deleteStatus.includes('エラー') 
-                                        ? 'bg-red-50 border-red-200 text-red-800' 
-                                        : 'bg-green-50 border-green-200 text-green-800'
-                                }`}>
-                                    <p className="font-medium">{deleteStatus}</p>
-                                </div>
-                            )}
-
-                            {loadingUsers ? (
-                                <div className="text-center py-8">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                                    <p className="mt-4 text-gray-600">ユーザー一覧を読み込み中...</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    受験番号
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    名前
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    ログインID
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    電話番号
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    ロール
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    作成日時
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    更新日時
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    削除
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {filteredAndSortedUsers().map((user) => (
-                                                <tr key={user.id}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {user.exam_no}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {user.name}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {user.email}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {user.phone_last4}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {user.role}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {new Date(user.created_at).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {new Date(user.updated_at).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        <button
-                                                            onClick={() => deleteUser(user.exam_no)}
-                                                            className="text-red-600 hover:text-red-900"
-                                                            title="削除"
-                                                        >
-                                                            <TrashIcon className="h-5 w-5" />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
+            {/* 個人結果管理タブ */}
+            {activeTab === 'personal-results' && (
+                <div className="space-y-6">
+                    <div className="mb-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">個人結果管理</h3>
+                        <p className="text-gray-600">学生の個人結果を管理します</p>
                     </div>
-                ) : activeTab === 'personal-results' ? (
-                    <div>
-                        {/* Excelファイルアップロード */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Excelファイルアップロード（個人結果）</h3>
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                                <h4 className="font-medium text-green-900 mb-2">Excelファイル形式</h4>
-                                <div className="text-sm text-green-800 space-y-1">
-                                    <p>• A列: 学生ID</p>
-                                    <p>• B列: 受験番号</p>
-                                    <p>• C列: 氏名</p>
-                                    <p>• E列: 性別</p>
-                                    <p>• G列: 出願時のコース</p>
-                                    <p>• H列: 出願種別（専願/併願）</p>
-                                    <p>• J列: 推薦</p>
-                                    <p>• M列: 中学校名</p>
-                                    <p>• O列: 3教科上位10%</p>
-                                    <p>• P列: 特進上位5名</p>
-                                    <p>• Q列: 進学上位5名</p>
-                                    <p>• R列: 部活動推薦入学金免除</p>
-                                    <p>• S列: 部活動推薦諸費用免除</p>
-                                    <p>• T列: 部活動推薦奨学金支給</p>
-                                    <p>• V列: 合格コース</p>
-                                    <p>• X列: 特待生</p>
-                                    <p>• Z列: 部活動推薦表記</p>
-                                </div>
-                            </div>
 
-                            <div className="flex items-center space-x-4">
-                                <label className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
-                                    <input
-                                        type="file"
-                                        accept=".xlsx,.xls"
-                                        onChange={handleExcelUpload}
-                                        disabled={isExcelUploading}
-                                        className="hidden"
-                                    />
-                                    {isExcelUploading ? 'アップロード中...' : 'Excelファイルを選択'}
-                                </label>
-                                
-                                {isExcelUploading && (
-                                    <div className="flex items-center">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                                        <span className="ml-2 text-sm text-gray-600">処理中...</span>
-                                    </div>
-                                )}
+                    {/* 検索・フィルター・アップロード・エクスポート */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">検索</label>
+                                <input
+                                    type="text"
+                                    value={personalResultsSearchTerm}
+                                    onChange={(e) => setPersonalResultsSearchTerm(e.target.value)}
+                                    placeholder="受験番号、氏名、学生IDで検索"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
                             </div>
-                        </div>
-
-                        {excelUploadStatus && (
-                            <div className={`mb-6 p-4 rounded-lg border ${
-                                excelUploadStatus.includes('エラー') 
-                                    ? 'bg-red-50 border-red-200 text-red-800' 
-                                    : 'bg-green-50 border-green-200 text-green-800'
-                            }`}>
-                                <p className="font-medium">{excelUploadStatus}</p>
-                                {excelUploadResults && (
-                                    <div className="mt-2">
-                                        <p>処理結果:</p>
-                                        <ul className="list-disc list-inside mt-1">
-                                            {excelUploadResults.results?.map((result: string, index: number) => (
-                                                <li key={index} className="text-sm">{result}</li>
-                                            ))}
-                                        </ul>
-                                        {excelUploadResults.errors?.length > 0 && (
-                                            <div className="mt-2">
-                                                <p className="font-medium text-red-700">エラー:</p>
-                                                <ul className="list-disc list-inside mt-1">
-                                                    {excelUploadResults.errors.map((error: string, index: number) => (
-                                                        <li key={index} className="text-sm text-red-600">{error}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">合格状況</label>
+                                <select
+                                    value={personalResultsFilterCourse}
+                                    onChange={(e) => setPersonalResultsFilterCourse(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="all">すべて</option>
+                                    <option value="pass">合格</option>
+                                    <option value="fail">不合格</option>
+                                    <option value="course_change">廻し合格</option>
+                                </select>
                             </div>
-                        )}
-
-                        {/* 個人結果管理 */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">個人結果管理</h3>
+                            <div className="flex items-end space-x-2">
+                                <button
+                                    onClick={() => setShowPersonalResultsUploadModal(true)}
+                                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                    <UploadIcon className="w-4 h-4 mr-2" />
+                                    Excelアップロード
+                                </button>
+                                <button
+                                    onClick={exportPersonalResultsToCSV}
+                                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    <DownloadIcon className="w-4 h-4 mr-2" />
+                                    CSV出力
+                                </button>
+                            </div>
+                            <div className="flex items-end">
                                 <button
                                     onClick={deleteAllPersonalResults}
-                                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                                    className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                                 >
+                                    <TrashIcon className="w-4 h-4 mr-2" />
                                     全削除
                                 </button>
                             </div>
-
-                            {/* 検索・フィルター・ソート */}
-                            <div className="mb-6 space-y-4">
-                                {/* 検索バー */}
-                                <div className="flex items-center space-x-4">
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            placeholder="学生ID、受験番号、氏名、中学校名、合格結果で検索..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={() => setSearchTerm('')}
-                                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                                    >
-                                        クリア
-                                    </button>
-                                </div>
-
-                                {/* フィルター・ソート */}
-                                <div className="flex flex-wrap items-center gap-4">
-                                    {/* フィルター */}
-                                    <div className="flex items-center space-x-2">
-                                        <label className="text-sm font-medium text-gray-700">フィルター:</label>
-                                        <select
-                                            value={filterType}
-                                            onChange={(e) => setFilterType(e.target.value)}
-                                            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="all">全て</option>
-                                            <option value="senkan">専願のみ</option>
-                                            <option value="heikan">併願のみ</option>
-                                            <option value="accepted">合格者</option>
-                                            <option value="mawashi">廻し合格者</option>
-                                            <option value="rejected">不合格者</option>
-                                            <option value="no_result">結果未発表</option>
-                                        </select>
-                                    </div>
-
-                                    {/* ソート */}
-                                    <div className="flex items-center space-x-2">
-                                        <label className="text-sm font-medium text-gray-700">ソート:</label>
-                                        <select
-                                            value={sortBy}
-                                            onChange={(e) => setSortBy(e.target.value)}
-                                            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="student_id">学生ID</option>
-                                            <option value="exam_no">受験番号</option>
-                                            <option value="name">氏名</option>
-                                            <option value="application_type">出願種別</option>
-                                            <option value="application_course">出願時コース</option>
-                                            <option value="accepted_course">合格結果</option>
-                                            <option value="created_at">作成日時</option>
-                                        </select>
-                                        <button
-                                            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                                            className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-                                        >
-                                            {sortOrder === 'asc' ? '↑' : '↓'}
-                                        </button>
-                                    </div>
-
-                                    {/* 結果件数 */}
-                                    <div className="text-sm text-gray-600">
-                                        表示: {filteredAndSortedPersonalResults().length} / {personalResults.length}件
-                                    </div>
-                                </div>
-                            </div>
-
-                            {deletePersonalResultStatus && (
-                                <div className={`mb-6 p-4 rounded-lg border ${
-                                    deletePersonalResultStatus.includes('エラー') 
-                                        ? 'bg-red-50 border-red-200 text-red-800' 
-                                        : 'bg-green-50 border-green-200 text-green-800'
-                                }`}>
-                                    <p className="font-medium">{deletePersonalResultStatus}</p>
-                                </div>
-                            )}
-
-                            {loadingPersonalResults ? (
-                                <div className="text-center py-8">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                                    <p className="mt-4 text-gray-600">個人結果一覧を読み込み中...</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th 
-                                                    scope="col" 
-                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => handleSort('student_id')}
-                                                >
-                                                    学生ID {sortBy === 'student_id' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                                </th>
-                                                <th 
-                                                    scope="col" 
-                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => handleSort('exam_no')}
-                                                >
-                                                    受験番号 {sortBy === 'exam_no' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                                </th>
-                                                <th 
-                                                    scope="col" 
-                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => handleSort('name')}
-                                                >
-                                                    氏名 {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                                </th>
-                                                <th 
-                                                    scope="col" 
-                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => handleSort('application_type')}
-                                                >
-                                                    出願種別 {sortBy === 'application_type' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                                </th>
-                                                <th 
-                                                    scope="col" 
-                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => handleSort('application_course')}
-                                                >
-                                                    出願時コース {sortBy === 'application_course' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    性別
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    中学校名
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    推薦
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    特待生
-                                                </th>
-                                                <th 
-                                                    scope="col" 
-                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => handleSort('accepted_course')}
-                                                >
-                                                    合格結果 {sortBy === 'accepted_course' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                                </th>
-                                                <th 
-                                                    scope="col" 
-                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => handleSort('created_at')}
-                                                >
-                                                    作成日時 {sortBy === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    編集
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    削除
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {filteredAndSortedPersonalResults().map((result, index) => (
-                                                <tr key={result.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors duration-150`}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-gray-50">
-                                                        {result.student_id || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-blue-50">
-                                                        {result.exam_no}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {result.name || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {result.application_type ? (
-                                                            <span className={`inline-block px-2 py-1 rounded text-xs font-bold text-white ${
-                                                                result.application_type === '専願' 
-                                                                    ? 'bg-blue-600' 
-                                                                    : 'bg-red-600'
-                                                            }`}>
-                                                                {result.application_type}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-gray-500">-</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {result.application_course || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {result.gender || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {result.middle_school || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {result.recommendation || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {result.scholarship_student || '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {result.accepted_course ? (
-                                                            result.application_course && result.accepted_course !== result.application_course ? (
-                                                                <span className="text-orange-600 font-medium">廻し合格: {result.accepted_course}</span>
-                                                            ) : (
-                                                                <span className="text-green-600 font-medium">{result.accepted_course}</span>
-                                                            )
-                                                        ) : result.application_course ? (
-                                                            <span className="text-red-600 font-medium">不合格</span>
-                                                        ) : (
-                                                            <span className="text-gray-500">-</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {new Date(result.created_at).toLocaleDateString('ja-JP')}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        <button
-                                                            onClick={() => openEditModal(result)}
-                                                            className="text-blue-600 hover:text-blue-900 mr-2"
-                                                            title="編集"
-                                                        >
-                                                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
-                                                        </button>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        <button
-                                                            onClick={() => deletePersonalResult(result.exam_no)}
-                                                            className="text-red-600 hover:text-red-900"
-                                                            title="削除"
-                                                        >
-                                                            <TrashIcon className="h-5 w-5" />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
                         </div>
+                    </div>
 
-                        {/* 個人結果編集モーダル */}
-                        {isEditModalOpen && editingResult && (
-                            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                                <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-                                    <div className="mt-3">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-semibold text-gray-900">個人結果編集</h3>
-                                            <button
-                                                onClick={closeEditModal}
-                                                className="text-gray-400 hover:text-gray-600"
-                                            >
-                                                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
+                    {personalResultsUploadMessage && (
+                        <div className={`p-4 rounded-lg border ${
+                            personalResultsUploadMessage.includes('エラー') 
+                                ? 'bg-red-50 border-red-200 text-red-800' 
+                                : 'bg-green-50 border-green-200 text-green-800'
+                        }`}>
+                            <p className="font-medium">{personalResultsUploadMessage}</p>
+                        </div>
+                    )}
 
-                                        <div className="space-y-4 max-h-96 overflow-y-auto">
-                                            {/* 基本情報 */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">学生ID</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.student_id || ''}
-                                                        onChange={(e) => handleEditChange('student_id', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">受験番号</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.exam_no || ''}
-                                                        onChange={(e) => handleEditChange('exam_no', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">氏名</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.name || ''}
-                                                        onChange={(e) => handleEditChange('name', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
-                                                    <select
-                                                        value={editingResult.gender || ''}
-                                                        onChange={(e) => handleEditChange('gender', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    {/* 個人結果一覧 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handlePersonalResultsSort('exam_no')}
+                                        >
+                                            受験番号
+                                            {personalResultsSortField === 'exam_no' && (
+                                                <span className="ml-1">{personalResultsSortDirection === 'asc' ? '↑' : '↓'}</span>
+                                            )}
+                                        </th>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handlePersonalResultsSort('name')}
+                                        >
+                                            氏名
+                                            {personalResultsSortField === 'name' && (
+                                                <span className="ml-1">{personalResultsSortDirection === 'asc' ? '↑' : '↓'}</span>
+                                            )}
+                                        </th>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handlePersonalResultsSort('application_course')}
+                                        >
+                                            出願時のコース
+                                            {personalResultsSortField === 'application_course' && (
+                                                <span className="ml-1">{personalResultsSortDirection === 'asc' ? '↑' : '↓'}</span>
+                                            )}
+                                        </th>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handlePersonalResultsSort('accepted_course')}
+                                        >
+                                            合格コース
+                                            {personalResultsSortField === 'accepted_course' && (
+                                                <span className="ml-1">{personalResultsSortDirection === 'asc' ? '↑' : '↓'}</span>
+                                            )}
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            状況
+                                        </th>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            onClick={() => handlePersonalResultsSort('created_at')}
+                                        >
+                                            作成日時
+                                            {personalResultsSortField === 'created_at' && (
+                                                <span className="ml-1">{personalResultsSortDirection === 'asc' ? '↑' : '↓'}</span>
+                                            )}
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            操作
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredAndSortedPersonalResults.map((result) => (
+                                        <tr key={result.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {result.exam_no}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {result.name || '-'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {result.application_course || '-'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {result.accepted_course || '-'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(result)}`}>
+                                                    {getStatusLabel(result)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(result.created_at).toLocaleDateString('ja-JP')}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div className="flex space-x-2">
+                                                    <button
+                                                        onClick={() => openEditModal(result)}
+                                                        className="text-blue-600 hover:text-blue-900"
                                                     >
-                                                        <option value="">選択してください</option>
-                                                        <option value="男">男</option>
-                                                        <option value="女">女</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            {/* 出願情報 */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">出願種別</label>
-                                                    <select
-                                                        value={editingResult.application_type || ''}
-                                                        onChange={(e) => handleEditChange('application_type', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        <PencilIcon className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => deletePersonalResult(result.exam_no)}
+                                                        className="text-red-600 hover:text-red-900"
                                                     >
-                                                        <option value="">選択してください</option>
-                                                        <option value="専願">専願</option>
-                                                        <option value="併願">併願</option>
-                                                    </select>
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </button>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">出願時コース</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.application_course || ''}
-                                                        onChange={(e) => handleEditChange('application_course', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">合格コース</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.accepted_course || ''}
-                                                        onChange={(e) => handleEditChange('accepted_course', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">中学校名</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.middle_school || ''}
-                                                        onChange={(e) => handleEditChange('middle_school', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* 推薦・特典情報 */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">推薦</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.recommendation || ''}
-                                                        onChange={(e) => handleEditChange('recommendation', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">特待生</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.scholarship_student || ''}
-                                                        onChange={(e) => handleEditChange('scholarship_student', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">3教科上位10%</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.top_10_percent || ''}
-                                                        onChange={(e) => handleEditChange('top_10_percent', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">特進上位5名</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.special_advance_top5 || ''}
-                                                        onChange={(e) => handleEditChange('special_advance_top5', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">進学上位5名</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.advance_top5 || ''}
-                                                        onChange={(e) => handleEditChange('advance_top5', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦表記</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.club_recommendation || ''}
-                                                        onChange={(e) => handleEditChange('club_recommendation', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* 部活動推薦免除情報 */}
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦入学金免除</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.club_tuition_exemption || ''}
-                                                        onChange={(e) => handleEditChange('club_tuition_exemption', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦諸費用免除</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.club_fee_exemption || ''}
-                                                        onChange={(e) => handleEditChange('club_fee_exemption', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦奨学金支給</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingResult.club_scholarship || ''}
-                                                        onChange={(e) => handleEditChange('club_scholarship', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-end space-x-3 mt-6">
-                                            <button
-                                                onClick={closeEditModal}
-                                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                                            >
-                                                キャンセル
-                                            </button>
-                                            <button
-                                                onClick={handleEditSubmit}
-                                                disabled={editLoading}
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                                            >
-                                                {editLoading ? '更新中...' : '更新'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {filteredAndSortedPersonalResults.length === 0 && (
+                            <div className="text-center py-8">
+                                <p className="text-gray-500">個人結果が見つかりません</p>
                             </div>
                         )}
                     </div>
-                ) : (
-                    <ActiveComponent />
-                )}
-            </div>
+
+                    <div className="mt-4 text-sm text-gray-600">
+                        総件数: {filteredAndSortedPersonalResults.length}件
+                    </div>
+                </div>
+            )}
+
+            {/* CSVアップロードモーダル */}
+            {showUploadModal && (
+                <Modal 
+                    isOpen={showUploadModal}
+                    onClose={() => setShowUploadModal(false)}
+                    title="CSVファイルアップロード"
+                >
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">CSVファイルアップロード</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">CSVファイル</label>
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div className="text-sm text-gray-600">
+                                <p>CSVファイルの形式:</p>
+                                <p>A列: 受験番号（4桁）</p>
+                                <p>B列: 電話番号</p>
+                            </div>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => setShowUploadModal(false)}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                                >
+                                    キャンセル
+                                </button>
+                                <button
+                                    onClick={handleCSVUpload}
+                                    disabled={!uploadFile || uploading}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                >
+                                    {uploading ? 'アップロード中...' : 'アップロード'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
+            {/* 個人結果アップロードモーダル */}
+            {showPersonalResultsUploadModal && (
+                <Modal 
+                    isOpen={showPersonalResultsUploadModal}
+                    onClose={() => setShowPersonalResultsUploadModal(false)}
+                    title="Excelファイルアップロード（個人結果）"
+                >
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Excelファイルアップロード（個人結果）</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Excelファイル</label>
+                                <input
+                                    type="file"
+                                    accept=".xlsx,.xls"
+                                    onChange={(e) => setPersonalResultsUploadFile(e.target.files?.[0] || null)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div className="text-sm text-gray-600">
+                                <p>Excelファイルの形式:</p>
+                                <p>A列: 学生ID</p>
+                                <p>B列: 受験番号</p>
+                                <p>C列: 氏名</p>
+                                <p>E列: 性別</p>
+                                <p>G列: 出願時のコース</p>
+                                <p>H列: 出願種別</p>
+                                <p>J列: 推薦</p>
+                                <p>M列: 中学校名</p>
+                                <p>O列: 3教科上位10%</p>
+                                <p>P列: 特進上位5名</p>
+                                <p>Q列: 進学上位5名</p>
+                                <p>R列: 部活動推薦入学金免除</p>
+                                <p>S列: 部活動推薦諸費用免除</p>
+                                <p>T列: 部活動推薦奨学金支給</p>
+                                <p>V列: 合格コース</p>
+                                <p>X列: 特待生</p>
+                                <p>Z列: 部活動推薦表記</p>
+                            </div>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => setShowPersonalResultsUploadModal(false)}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                                >
+                                    キャンセル
+                                </button>
+                                <button
+                                    onClick={handlePersonalResultsUpload}
+                                    disabled={!personalResultsUploadFile || personalResultsUploading}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                >
+                                    {personalResultsUploading ? 'アップロード中...' : 'アップロード'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
+            {/* 個人結果編集モーダル */}
+            {showEditModal && editingResult && (
+                <Modal 
+                    isOpen={showEditModal}
+                    onClose={() => {
+                        setShowEditModal(false);
+                        setEditingResult(null);
+                    }}
+                    title="個人結果を編集"
+                >
+                    <PersonalResultEditModal
+                        result={editingResult}
+                        onSave={handleEditSave}
+                        onClose={() => {
+                            setShowEditModal(false);
+                            setEditingResult(null);
+                        }}
+                    />
+            )}
         </div>
+    );
+};
+
+// 個人結果編集モーダルコンポーネント
+interface PersonalResultEditModalProps {
+    result: StudentResult;
+    onSave: (data: Partial<StudentResult>) => void;
+    onClose: () => void;
+}
+
+const PersonalResultEditModal: React.FC<PersonalResultEditModalProps> = ({ result, onSave, onClose }) => {
+    const [formData, setFormData] = useState({
+        student_id: result.student_id || '',
+        name: result.name || '',
+        gender: result.gender || '',
+        application_course: result.application_course || '',
+        application_type: result.application_type || '',
+        recommendation: result.recommendation || '',
+        middle_school: result.middle_school || '',
+        top_10_percent: result.top_10_percent || '',
+        special_advance_top5: result.special_advance_top5 || '',
+                                        advance_5: result.advance_top5 || '',
+        club_tuition_exemption: result.club_tuition_exemption || '',
+        club_fee_exemption: result.club_fee_exemption || '',
+        club_scholarship: result.club_scholarship || '',
+        accepted_course: result.accepted_course || '',
+        scholarship_student: result.scholarship_student || '',
+        club_recommendation: result.club_recommendation || ''
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formData);
+    };
+
+    return (
+        <Modal onClose={onClose}>
+            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">個人結果を編集</h3>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">学生ID</label>
+                            <input
+                                type="text"
+                                value={formData.student_id}
+                                onChange={(e) => setFormData({...formData, student_id: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">氏名</label>
+                            <input
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
+                            <input
+                                type="text"
+                                value={formData.gender}
+                                onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">出願時のコース</label>
+                            <input
+                                type="text"
+                                value={formData.application_course}
+                                onChange={(e) => setFormData({...formData, application_course: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">出願種別</label>
+                            <input
+                                type="text"
+                                value={formData.application_type}
+                                onChange={(e) => setFormData({...formData, application_type: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">推薦</label>
+                            <input
+                                type="text"
+                                value={formData.recommendation}
+                                onChange={(e) => setFormData({...formData, recommendation: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">中学校名</label>
+                            <input
+                                type="text"
+                                value={formData.middle_school}
+                                onChange={(e) => setFormData({...formData, middle_school: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">3教科上位10%</label>
+                            <input
+                                type="text"
+                                value={formData.top_10_percent}
+                                onChange={(e) => setFormData({...formData, top_10_percent: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">特進上位5名</label>
+                            <input
+                                type="text"
+                                value={formData.special_advance_top5}
+                                onChange={(e) => setFormData({...formData, special_advance_top5: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">進学上位5名</label>
+                            <input
+                                type="text"
+                                value={formData.advance_5}
+                                onChange={(e) => setFormData({...formData, advance_5: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦入学金免除</label>
+                            <input
+                                type="text"
+                                value={formData.club_tuition_exemption}
+                                onChange={(e) => setFormData({...formData, club_tuition_exemption: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦諸費用免除</label>
+                            <input
+                                type="text"
+                                value={formData.club_fee_exemption}
+                                onChange={(e) => setFormData({...formData, club_fee_exemption: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦奨学金支給</label>
+                            <input
+                                type="text"
+                                value={formData.club_scholarship}
+                                onChange={(e) => setFormData({...formData, club_scholarship: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">合格コース</label>
+                            <input
+                                type="text"
+                                value={formData.accepted_course}
+                                onChange={(e) => setFormData({...formData, accepted_course: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">特待生</label>
+                            <input
+                                type="text"
+                                value={formData.scholarship_student}
+                                onChange={(e) => setFormData({...formData, scholarship_student: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦表記</label>
+                            <input
+                                type="text"
+                                value={formData.club_recommendation}
+                                onChange={(e) => setFormData({...formData, club_recommendation: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                        >
+                            キャンセル
+                        </button>
+                        <button
+                            type="submit"
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            更新
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
     );
 };
 
