@@ -20,11 +20,16 @@ const AdminFormSettings: React.FC = () => {
     const fetchSettings = async () => {
         try {
             setLoading(true);
+            console.log('FormSettings: Fetching settings...');
             const response = await fetch('/api/form-settings');
+            console.log('FormSettings: Fetch response status:', response.status);
+            
             if (response.ok) {
                 const data = await response.json();
+                console.log('FormSettings: Fetch response data:', data);
                 if (data.success) {
                     setSettings(data.settings);
+                    console.log('FormSettings: Settings updated:', data.settings);
                 }
             }
         } catch (error) {
@@ -52,6 +57,10 @@ const AdminFormSettings: React.FC = () => {
             
             const method = editingSetting ? 'PUT' : 'POST';
             
+            console.log('FormSettings: Saving with method:', method);
+            console.log('FormSettings: URL:', url);
+            console.log('FormSettings: Form data:', formData);
+            
             const response = await fetch(url, {
                 method,
                 headers: {
@@ -60,12 +69,17 @@ const AdminFormSettings: React.FC = () => {
                 body: JSON.stringify(formData),
             });
 
+            console.log('FormSettings: Response status:', response.status);
+            const data = await response.json();
+            console.log('FormSettings: Response data:', data);
+
             if (response.ok) {
+                console.log('FormSettings: Save successful');
                 setShowModal(false);
                 setEditingSetting(null);
                 fetchSettings();
             } else {
-                const data = await response.json();
+                console.log('FormSettings: Save failed');
                 alert(`エラー: ${data.error}`);
             }
         } catch (error) {

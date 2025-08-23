@@ -41,6 +41,9 @@ export async function PUT(
         const { fieldKey } = await params;
         const body = await request.json();
         
+        console.log('API: Updating form setting for fieldKey:', fieldKey);
+        console.log('API: Request body:', body);
+        
         const result = await sql`
             UPDATE form_settings 
             SET 
@@ -60,13 +63,17 @@ export async function PUT(
             RETURNING *
         `;
         
+        console.log('API: Update result:', result.rows);
+        
         if (result.rows.length === 0) {
+            console.log('API: Form setting not found');
             return NextResponse.json({ 
                 success: false, 
                 message: 'フォーム設定が見つかりません' 
             }, { status: 404 });
         }
         
+        console.log('API: Update successful');
         return NextResponse.json({ 
             success: true, 
             message: 'フォーム設定を更新しました',
