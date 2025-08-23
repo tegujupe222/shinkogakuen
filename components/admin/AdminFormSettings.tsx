@@ -137,8 +137,8 @@ const AdminFormSettings: React.FC = () => {
             </div>
 
             {/* 検索・フィルター・追加 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">検索</label>
                         <input
@@ -166,10 +166,11 @@ const AdminFormSettings: React.FC = () => {
                     <div className="flex items-end">
                         <button
                             onClick={openCreateModal}
-                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="flex items-center px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                         >
-                            <PlusIcon className="w-4 h-4 mr-2" />
-                            新規フィールド追加
+                            <PlusIcon className="w-4 h-4 mr-1 md:mr-2" />
+                            <span className="hidden sm:inline">新規フィールド追加</span>
+                            <span className="sm:hidden">フィールド追加</span>
                         </button>
                     </div>
                 </div>

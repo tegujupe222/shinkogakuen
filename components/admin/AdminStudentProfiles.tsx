@@ -243,8 +243,8 @@ const AdminStudentProfiles: React.FC = () => {
             </div>
 
             {/* 検索・フィルター・エクスポート */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">検索</label>
                         <input
@@ -267,24 +267,26 @@ const AdminStudentProfiles: React.FC = () => {
                             <option value="incomplete">未完了</option>
                         </select>
                     </div>
-                    <div className="flex items-end space-x-2">
+                    <div className="flex flex-wrap gap-2">
                         <button
                             onClick={exportToCSV}
-                            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            className="flex items-center px-3 md:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                         >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            CSV出力
+                            <span className="hidden sm:inline">CSV出力</span>
+                            <span className="sm:hidden">CSV</span>
                         </button>
                         <button
                             onClick={exportToExcel}
-                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="flex items-center px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                         >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            Excel出力
+                            <span className="hidden sm:inline">Excel出力</span>
+                            <span className="sm:hidden">Excel</span>
                         </button>
                     </div>
                 </div>
@@ -293,67 +295,68 @@ const AdminStudentProfiles: React.FC = () => {
             {/* プロフィール一覧 */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('student_id')}
-                                >
-                                    学生ID
-                                    {sortField === 'student_id' && (
-                                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                                    )}
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('student_last_name')}
-                                >
-                                    氏名
-                                    {sortField === 'student_last_name' && (
-                                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                                    )}
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('middle_school_name')}
-                                >
-                                    中学校名
-                                    {sortField === 'middle_school_name' && (
-                                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                                    )}
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    進捗状況
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('created_at')}
-                                >
-                                    作成日時
-                                    {sortField === 'created_at' && (
-                                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                                    )}
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    操作
-                                </th>
-                            </tr>
-                        </thead>
+                                            <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th 
+                                        className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                        onClick={() => handleSort('student_id')}
+                                    >
+                                        <span className="hidden sm:inline">学生ID</span>
+                                        <span className="sm:hidden">ID</span>
+                                        {sortField === 'student_id' && (
+                                            <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </th>
+                                    <th 
+                                        className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                        onClick={() => handleSort('student_last_name')}
+                                    >
+                                        氏名
+                                        {sortField === 'student_last_name' && (
+                                            <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </th>
+                                    <th 
+                                        className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                        onClick={() => handleSort('middle_school_name')}
+                                    >
+                                        中学校名
+                                        {sortField === 'middle_school_name' && (
+                                            <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </th>
+                                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        進捗状況
+                                    </th>
+                                    <th 
+                                        className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                        onClick={() => handleSort('created_at')}
+                                    >
+                                        作成日時
+                                        {sortField === 'created_at' && (
+                                            <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </th>
+                                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        操作
+                                    </th>
+                                </tr>
+                            </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {filteredAndSortedProfiles.map((profile) => (
                                 <tr key={profile.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {profile.student_id}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {profile.student_last_name} {profile.student_first_name}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {profile.middle_school_name || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex space-x-1">
+                                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                                        <div className="flex flex-wrap gap-1">
                                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                                 profile.personal_info_completed 
                                                     ? 'bg-green-100 text-green-800' 
@@ -384,10 +387,10 @@ const AdminStudentProfiles: React.FC = () => {
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {new Date(profile.created_at).toLocaleDateString('ja-JP')}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <button
                                             onClick={() => deleteProfile(profile.student_id)}
                                             className="text-red-600 hover:text-red-900"
