@@ -154,6 +154,8 @@ const AdminDashboard: React.FC = () => {
             const response = await fetch('/api/results');
             const data = await response.json();
             if (data.success) {
+                console.log('Fetched personal results:', data.results); // デバッグ用
+                console.log('First result sample:', data.results[0]); // デバッグ用
                 setPersonalResults(data.results);
             } else {
                 console.error('Failed to fetch personal results:', data.error);
@@ -226,16 +228,20 @@ const AdminDashboard: React.FC = () => {
     // フィルター・ソート機能
     const filteredAndSortedData = () => {
         let filteredData = [...personalResults];
+        
+        console.log('Filtering data. Total results:', personalResults.length); // デバッグ用
+        console.log('Search term:', searchTerm); // デバッグ用
+        console.log('Filter type:', filterType); // デバッグ用
 
         // 検索フィルター
         if (searchTerm) {
             filteredData = filteredData.filter(item => 
-                item.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.exam_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.middle_school?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.accepted_course?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.application_course?.toLowerCase().includes(searchTerm.toLowerCase())
+                (item.student_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (item.exam_no || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (item.middle_school || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (item.accepted_course || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (item.application_course || '').toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 
@@ -265,8 +271,8 @@ const AdminDashboard: React.FC = () => {
 
         // ソート
         filteredData.sort((a, b) => {
-            let aValue = a[sortBy] || '';
-            let bValue = b[sortBy] || '';
+            let aValue = a[sortBy as keyof typeof a] || '';
+            let bValue = b[sortBy as keyof typeof b] || '';
 
             if (typeof aValue === 'string') aValue = aValue.toLowerCase();
             if (typeof bValue === 'string') bValue = bValue.toLowerCase();
