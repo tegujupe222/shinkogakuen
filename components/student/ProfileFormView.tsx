@@ -377,290 +377,29 @@ const ProfileFormView: React.FC = () => {
 
             {/* 個人情報入力フォーム */}
             {currentStep === 'personal' && (
-        <div className="space-y-6">
+                <div className="space-y-6">
                     {/* 生徒基本情報 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">生徒基本情報</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    生徒名前(姓)
-                                    {isFieldRequired('student_last_name') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.student_last_name || ''}
-                                    onChange={(e) => handleInputChange('student_last_name', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('student_last_name') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('student_last_name')}
-                                />
-                                {getFieldError('student_last_name') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_last_name')}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    生徒名前(名)
-                                    {isFieldRequired('student_first_name') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.student_first_name || ''}
-                                    onChange={(e) => handleInputChange('student_first_name', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('student_first_name') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('student_first_name')}
-                                />
-                                {getFieldError('student_first_name') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_first_name')}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    生徒名前(ふりがな)(せい)
-                                    {isFieldRequired('student_last_name_kana') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.student_last_name_kana || ''}
-                                    onChange={(e) => handleInputChange('student_last_name_kana', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('student_last_name_kana') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('student_last_name_kana')}
-                                />
-                                {getFieldError('student_last_name_kana') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_last_name_kana')}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    生徒名前(ふりがな)(めい)
-                                    {isFieldRequired('student_first_name_kana') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.student_first_name_kana || ''}
-                                    onChange={(e) => handleInputChange('student_first_name_kana', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('student_first_name_kana') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('student_first_name_kana')}
-                                />
-                                {getFieldError('student_first_name_kana') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_first_name_kana')}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    性別
-                                    {isFieldRequired('gender') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <select
-                                    value={profile.gender || ''}
-                                    onChange={(e) => handleInputChange('gender', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('gender') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('gender')}
-                                >
-                                    <option value="">選択してください</option>
-                                    <option value="男">男</option>
-                                    <option value="女">女</option>
-                                </select>
-                                {getFieldError('gender') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('gender')}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    生年月日
-                                    {isFieldRequired('birth_date') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="date"
-                                    value={profile.birth_date || ''}
-                                    onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('birth_date') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('birth_date')}
-                                />
-                                {getFieldError('birth_date') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('birth_date')}</p>
-                                )}
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    本籍地
-                                    {isFieldRequired('registered_address') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.registered_address || ''}
-                                    onChange={(e) => handleInputChange('registered_address', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('registered_address') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('registered_address')}
-                                />
-                                {getFieldError('registered_address') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('registered_address')}</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 生徒現在住所 */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">生徒現在住所</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    生徒の現在住所(郵便番号)
-                                    {isFieldRequired('student_postal_code') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.student_postal_code || ''}
-                                    onChange={(e) => handleInputChange('student_postal_code', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('student_postal_code') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    placeholder="123-4567"
-                                    required={isFieldRequired('student_postal_code')}
-                                />
-                                {getFieldError('student_postal_code') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_postal_code')}</p>
-                                )}
-                            </div>
-                        <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    電話番号
-                                    {isFieldRequired('student_phone') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="tel"
-                                    value={profile.student_phone || ''}
-                                    onChange={(e) => handleInputChange('student_phone', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('student_phone') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    placeholder="090-1234-5678"
-                                    required={isFieldRequired('student_phone')}
-                                />
-                                {getFieldError('student_phone') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_phone')}</p>
-                                )}
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    生徒の現在住所
-                                    {isFieldRequired('student_address') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.student_address || ''}
-                                    onChange={(e) => handleInputChange('student_address', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('student_address') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('student_address')}
-                                />
-                                {getFieldError('student_address') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_address')}</p>
-                                )}
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    生徒の現在住所(番地部屋番号)
-                                    {isFieldRequired('student_address_detail') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.student_address_detail || ''}
-                                    onChange={(e) => handleInputChange('student_address_detail', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('student_address_detail') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('student_address_detail')}
-                                />
-                                {getFieldError('student_address_detail') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_address_detail')}</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 出身校情報 */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">出身校情報</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    出身中学校名
-                                    {isFieldRequired('middle_school_name') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={profile.middle_school_name || ''}
-                                    onChange={(e) => handleInputChange('middle_school_name', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('middle_school_name') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('middle_school_name')}
-                                />
-                                {getFieldError('middle_school_name') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('middle_school_name')}</p>
-                                )}
-                        </div>
-                        <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    卒業年月日
-                                    {isFieldRequired('graduation_date') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <input
-                                    type="date"
-                                    value={profile.graduation_date || ''}
-                                    onChange={(e) => handleInputChange('graduation_date', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('graduation_date') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('graduation_date')}
-                                />
-                                {getFieldError('graduation_date') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('graduation_date')}</p>
-                                )}
-                            </div>
+                            {formSettings
+                                .filter(setting => setting.field_group === 'personal')
+                                .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
                         </div>
                     </div>
 
@@ -691,32 +430,26 @@ const ProfileFormView: React.FC = () => {
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">通学方法</h3>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    通学方法
-                                    {isFieldRequired('commute_method') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <select
-                                    value={profile.commute_method || ''}
-                                    onChange={(e) => handleInputChange('commute_method', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('commute_method') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('commute_method')}
-                                >
-                                    <option value="">選択してください</option>
-                                    <option value="交通機関利用">交通機関利用</option>
-                                    <option value="自転車">自転車</option>
-                                    <option value="徒歩">徒歩</option>
-                                </select>
-                                {getFieldError('commute_method') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('commute_method')}</p>
-                                )}
-                            </div>
+                            {formSettings
+                                .filter(setting => setting.field_group === 'commute')
+                                .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
 
-                            {/* JR */}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1233,59 +966,27 @@ const ProfileFormView: React.FC = () => {
             {currentStep === 'health' && (
                 <div className="space-y-6">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">持病について</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">健康情報</h3>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    持病
-                                    {isFieldRequired('has_chronic_illness') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <select
-                                    value={profile.has_chronic_illness ? 'あり' : 'なし'}
-                                    onChange={(e) => handleInputChange('has_chronic_illness', e.target.value === 'あり')}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('has_chronic_illness') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('has_chronic_illness')}
-                                >
-                                    <option value="">選択してください</option>
-                                    <option value="あり">あり</option>
-                                    <option value="なし">なし</option>
-                                </select>
-                                {getFieldError('has_chronic_illness') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('has_chronic_illness')}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">宿泊行事について学校へ伝えたいこと</label>
-                                <textarea
-                                    value={profile.accommodation_notes || ''}
-                                    onChange={(e) => handleInputChange('accommodation_notes', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    rows={3}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">学校生活について家庭からの連絡</label>
-                                <textarea
-                                    value={profile.family_communication || ''}
-                                    onChange={(e) => handleInputChange('family_communication', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    rows={3}
-                                />
-                    </div>
-                    <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">持病に当てはまるもの</label>
-                                <textarea
-                                    value={profile.chronic_illness_details || ''}
-                                    onChange={(e) => handleInputChange('chronic_illness_details', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    rows={4}
-                                    placeholder="心疾患、川崎病、リウマチ熱、腎臓疾患、肝臓疾患、糖尿病、てんかん、喘息、難聴、弱視、側湾症、色覚異常、アトピー性皮膚炎、発達障害、身体障害、食物アレルギー、薬剤アレルギー、怪我、その他"
-                                />
-                            </div>
+                            {formSettings
+                                .filter(setting => setting.field_group === 'health')
+                                .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
+
                         </div>
                     </div>
 
