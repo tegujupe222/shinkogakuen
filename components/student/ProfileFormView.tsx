@@ -288,24 +288,44 @@ const ProfileFormView: React.FC = () => {
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">生徒名前(ふりがな)(せい)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    生徒名前(ふりがな)(せい)
+                                    {isFieldRequired('student_last_name_kana') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.student_last_name_kana || ''}
                                     onChange={(e) => handleInputChange('student_last_name_kana', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('student_last_name_kana') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('student_last_name_kana')}
                                 />
+                                {getFieldError('student_last_name_kana') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_last_name_kana')}</p>
+                                )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">生徒名前(ふりがな)(めい)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    生徒名前(ふりがな)(めい)
+                                    {isFieldRequired('student_first_name_kana') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.student_first_name_kana || ''}
                                     onChange={(e) => handleInputChange('student_first_name_kana', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('student_first_name_kana') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('student_first_name_kana')}
                                 />
+                                {getFieldError('student_first_name_kana') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_first_name_kana')}</p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -351,13 +371,24 @@ const ProfileFormView: React.FC = () => {
                                 )}
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">本籍地</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    本籍地
+                                    {isFieldRequired('registered_address') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.registered_address || ''}
                                     onChange={(e) => handleInputChange('registered_address', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('registered_address') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('registered_address')}
                                 />
+                                {getFieldError('registered_address') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('registered_address')}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -429,13 +460,24 @@ const ProfileFormView: React.FC = () => {
                                 )}
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">生徒の現在住所(番地部屋番号)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    生徒の現在住所(番地部屋番号)
+                                    {isFieldRequired('student_address_detail') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.student_address_detail || ''}
                                     onChange={(e) => handleInputChange('student_address_detail', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('student_address_detail') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('student_address_detail')}
                                 />
+                                {getFieldError('student_address_detail') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_address_detail')}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -542,132 +584,264 @@ const ProfileFormView: React.FC = () => {
                             {/* JR */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">JR区間(始)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        JR区間(始)
+                                        {isFieldRequired('jr_start') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.jr_start || ''}
                                         onChange={(e) => handleInputChange('jr_start', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('jr_start') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('jr_start')}
                                     />
+                                    {getFieldError('jr_start') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('jr_start')}</p>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">JR区間(終)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        JR区間(終)
+                                        {isFieldRequired('jr_end') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.jr_end || ''}
                                         onChange={(e) => handleInputChange('jr_end', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('jr_end') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('jr_end')}
                                     />
+                                    {getFieldError('jr_end') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('jr_end')}</p>
+                                    )}
                                 </div>
                             </div>
 
                             {/* 神戸市営地下鉄（西神線） */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">神戸市営地下鉄（西神線）区間(始)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        神戸市営地下鉄（西神線）区間(始)
+                                        {isFieldRequired('subway_nishin_start') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.subway_nishin_start || ''}
                                         onChange={(e) => handleInputChange('subway_nishin_start', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('subway_nishin_start') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('subway_nishin_start')}
                                     />
+                                    {getFieldError('subway_nishin_start') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('subway_nishin_start')}</p>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">神戸市営地下鉄（西神線）区間(終)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        神戸市営地下鉄（西神線）区間(終)
+                                        {isFieldRequired('subway_nishin_end') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.subway_nishin_end || ''}
                                         onChange={(e) => handleInputChange('subway_nishin_end', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('subway_nishin_end') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('subway_nishin_end')}
                                     />
+                                    {getFieldError('subway_nishin_end') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('subway_nishin_end')}</p>
+                                    )}
                                 </div>
                             </div>
 
                             {/* 神戸市営地下鉄（海岸線） */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">神戸市営地下鉄（海岸線）区間（始）</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        神戸市営地下鉄（海岸線）区間（始）
+                                        {isFieldRequired('subway_kaigan_start') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.subway_kaigan_start || ''}
                                         onChange={(e) => handleInputChange('subway_kaigan_start', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('subway_kaigan_start') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('subway_kaigan_start')}
                                     />
+                                    {getFieldError('subway_kaigan_start') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('subway_kaigan_start')}</p>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">神戸市営地下鉄（海岸線）区間(終)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        神戸市営地下鉄（海岸線）区間(終)
+                                        {isFieldRequired('subway_kaigan_end') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.subway_kaigan_end || ''}
                                         onChange={(e) => handleInputChange('subway_kaigan_end', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('subway_kaigan_end') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('subway_kaigan_end')}
                                     />
+                                    {getFieldError('subway_kaigan_end') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('subway_kaigan_end')}</p>
+                                    )}
                                 </div>
                             </div>
 
                             {/* 阪急 */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">阪急区間(始)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        阪急区間(始)
+                                        {isFieldRequired('hankyu_start') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.hankyu_start || ''}
                                         onChange={(e) => handleInputChange('hankyu_start', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('hankyu_start') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('hankyu_start')}
                                     />
+                                    {getFieldError('hankyu_start') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('hankyu_start')}</p>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">阪急区間(終)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        阪急区間(終)
+                                        {isFieldRequired('hankyu_end') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.hankyu_end || ''}
                                         onChange={(e) => handleInputChange('hankyu_end', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('hankyu_end') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('hankyu_end')}
                                     />
+                                    {getFieldError('hankyu_end') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('hankyu_end')}</p>
+                                    )}
                                 </div>
                             </div>
 
                             {/* 神戸電鉄 */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">神戸電鉄区間(始)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        神戸電鉄区間(始)
+                                        {isFieldRequired('kobe_electric_start') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.kobe_electric_start || ''}
                                         onChange={(e) => handleInputChange('kobe_electric_start', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('kobe_electric_start') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('kobe_electric_start')}
                                     />
+                                    {getFieldError('kobe_electric_start') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('kobe_electric_start')}</p>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">神戸電鉄区間(終)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        神戸電鉄区間(終)
+                                        {isFieldRequired('kobe_electric_end') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.kobe_electric_end || ''}
                                         onChange={(e) => handleInputChange('kobe_electric_end', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('kobe_electric_end') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('kobe_electric_end')}
                                     />
+                                    {getFieldError('kobe_electric_end') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('kobe_electric_end')}</p>
+                                    )}
                                 </div>
                             </div>
 
                             {/* 阪神 */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">阪神区間(始)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        阪神区間(始)
+                                        {isFieldRequired('hanshin_start') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.hanshin_start || ''}
                                         onChange={(e) => handleInputChange('hanshin_start', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('hanshin_start') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('hanshin_start')}
                                     />
+                                    {getFieldError('hanshin_start') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('hanshin_start')}</p>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">阪神区間(終)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        阪神区間(終)
+                                        {isFieldRequired('hanshin_end') && <span className="text-red-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         value={profile.hanshin_end || ''}
                                         onChange={(e) => handleInputChange('hanshin_end', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            getFieldError('hanshin_end') 
+                                                ? 'border-red-500 focus:ring-red-500' 
+                                                : 'border-gray-300'
+                                        }`}
+                                        required={isFieldRequired('hanshin_end')}
                                     />
+                                    {getFieldError('hanshin_end') && (
+                                        <p className="mt-1 text-sm text-red-600">{getFieldError('hanshin_end')}</p>
+                                    )}
                                 </div>
                             </div>
 
