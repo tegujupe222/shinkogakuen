@@ -24,6 +24,11 @@ export async function POST(request: NextRequest) {
             ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         `;
 
+        // usersテーブルのemailカラムをNULL許可に変更
+        await sql`
+            ALTER TABLE users ALTER COLUMN email DROP NOT NULL
+        `;
+
         // 既存の管理者アカウントにexam_noを設定
         await sql`
             UPDATE users 
