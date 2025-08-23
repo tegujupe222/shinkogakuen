@@ -38,10 +38,8 @@ const AdmissionFeeView: React.FC = () => {
 
             if (resultResponse.ok) {
                 const resultData = await resultResponse.json();
-                console.log('AdmissionFeeView: API response =', resultData);
                 if (resultData.success && resultData.result) {
                     setStudentResult(resultData.result);
-                    console.log('AdmissionFeeView: Set studentResult =', resultData.result);
                 }
             }
 
@@ -104,15 +102,9 @@ const AdmissionFeeView: React.FC = () => {
 
     // 合格判定
     const isAccepted = () => {
-        if (!studentResult) {
-            console.log('AdmissionFeeView: studentResult is null');
-            return false;
-        }
-        console.log('AdmissionFeeView: studentResult.accepted_course =', studentResult.accepted_course);
+        if (!studentResult) return false;
         // accepted_courseが存在し、空でない場合は合格
-        const accepted = studentResult.accepted_course && studentResult.accepted_course.trim() !== '';
-        console.log('AdmissionFeeView: isAccepted =', accepted);
-        return accepted;
+        return studentResult.accepted_course && studentResult.accepted_course.trim() !== '';
     };
 
     if (loading) {
