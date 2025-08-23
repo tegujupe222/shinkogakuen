@@ -100,6 +100,13 @@ const AdmissionFeeView: React.FC = () => {
         return Math.max(0, totalAmount - exemptionAmount);
     };
 
+    // 合格判定
+    const isAccepted = () => {
+        if (!studentResult) return false;
+        // accepted_courseが存在し、空でない場合は合格
+        return studentResult.accepted_course && studentResult.accepted_course.trim() !== '';
+    };
+
     if (loading) {
         return (
             <div className="p-6">
@@ -116,6 +123,23 @@ const AdmissionFeeView: React.FC = () => {
             <div className="p-6">
                 <div className="text-center py-8">
                     <p className="text-gray-500">入学手続金情報が設定されていません</p>
+                </div>
+            </div>
+        );
+    }
+
+    // 不合格の場合は情報なしを表示
+    if (!isAccepted()) {
+        return (
+            <div className="p-6">
+                <div className="mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">入学手続金お知らせ</h2>
+                    <p className="text-gray-600">入学手続金の詳細をご確認ください</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="text-center py-8">
+                        <p className="text-gray-500">情報がありません</p>
+                    </div>
                 </div>
             </div>
         );
