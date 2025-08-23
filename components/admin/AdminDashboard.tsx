@@ -38,6 +38,12 @@ const AdminDashboard: React.FC = () => {
     const [personalResultsSortField, setPersonalResultsSortField] = useState<keyof StudentResult>('created_at');
     const [personalResultsSortDirection, setPersonalResultsSortDirection] = useState<'asc' | 'desc'>('desc');
     const [personalResultsFilterCourse, setPersonalResultsFilterCourse] = useState<string>('all');
+    const [personalResultsFilterApplicationCourse, setPersonalResultsFilterApplicationCourse] = useState<string>('all');
+    const [personalResultsFilterAcceptedCourse, setPersonalResultsFilterAcceptedCourse] = useState<string>('all');
+    const [personalResultsFilterDateRange, setPersonalResultsFilterDateRange] = useState<{
+        start: string;
+        end: string;
+    }>({ start: '', end: '' });
     const [showPersonalResultsUploadModal, setShowPersonalResultsUploadModal] = useState(false);
     const [personalResultsUploadFile, setPersonalResultsUploadFile] = useState<File | null>(null);
     const [personalResultsUploading, setPersonalResultsUploading] = useState(false);
@@ -153,23 +159,50 @@ const AdminDashboard: React.FC = () => {
 
     const filteredAndSortedPersonalResults = personalResults
         .filter(result => {
+            // 検索フィルター
             const matchesSearch = 
                 result.exam_no.includes(personalResultsSearchTerm) ||
                 result.name?.includes(personalResultsSearchTerm) ||
                 result.student_id?.includes(personalResultsSearchTerm);
             
-            if (personalResultsFilterCourse === 'all') return matchesSearch;
-            if (personalResultsFilterCourse === 'pass') {
-                return matchesSearch && result.accepted_course && result.accepted_course.trim() !== '';
+            if (!matchesSearch) return false;
+            
+            // 合格状況フィルター
+            if (personalResultsFilterCourse !== 'all') {
+                if (personalResultsFilterCourse === 'pass') {
+                    if (!(result.accepted_course && result.accepted_course.trim() !== '')) return false;
+                } else if (personalResultsFilterCourse === 'fail') {
+                    if (!(result.application_course && (!result.accepted_course || result.accepted_course.trim() === ''))) return false;
+                } else if (personalResultsFilterCourse === 'course_change') {
+                    if (!(result.application_course && result.accepted_course && result.application_course !== result.accepted_course)) return false;
+                }
             }
-            if (personalResultsFilterCourse === 'fail') {
-                return matchesSearch && result.application_course && (!result.accepted_course || result.accepted_course.trim() === '');
+            
+            // 出願コースフィルター
+            if (personalResultsFilterApplicationCourse !== 'all') {
+                if (result.application_course !== personalResultsFilterApplicationCourse) return false;
             }
-            if (personalResultsFilterCourse === 'course_change') {
-                return matchesSearch && result.application_course && result.accepted_course && 
-                       result.application_course !== result.accepted_course;
+            
+            // 合格コースフィルター
+            if (personalResultsFilterAcceptedCourse !== 'all') {
+                if (result.accepted_course !== personalResultsFilterAcceptedCourse) return false;
             }
-            return matchesSearch;
+            
+            // 日付範囲フィルター
+            if (personalResultsFilterDateRange.start || personalResultsFilterDateRange.end) {
+                const resultDate = new Date(result.created_at);
+                if (personalResultsFilterDateRange.start) {
+                    const startDate = new Date(personalResultsFilterDateRange.start);
+                    if (resultDate < startDate) return false;
+                }
+                if (personalResultsFilterDateRange.end) {
+                    const endDate = new Date(personalResultsFilterDateRange.end);
+                    endDate.setHours(23, 59, 59, 999); // 終了日の23:59:59まで
+                    if (resultDate > endDate) return false;
+                }
+            }
+            
+            return true;
         })
         .sort((a, b) => {
             const aValue = a[personalResultsSortField];
@@ -813,7 +846,7 @@ const AdminDashboard: React.FC = () => {
 
                     {/* 検索・フィルター */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">検索</label>
                                 <input
@@ -836,6 +869,74 @@ const AdminDashboard: React.FC = () => {
                                     <option value="fail">不合格</option>
                                     <option value="course_change">廻し合格</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">出願コース</label>
+                                <select
+                                    value={personalResultsFilterApplicationCourse}
+                                    onChange={(e) => setPersonalResultsFilterApplicationCourse(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="all">すべて</option>
+                                    <option value="普通科">普通科</option>
+                                    <option value="商業科">商業科</option>
+                                    <option value="情報科">情報科</option>
+                                    <option value="芸術科">芸術科</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">合格コース</label>
+                                <select
+                                    value={personalResultsFilterAcceptedCourse}
+                                    onChange={(e) => setPersonalResultsFilterAcceptedCourse(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="all">すべて</option>
+                                    <option value="普通科">普通科</option>
+                                    <option value="商業科">商業科</option>
+                                    <option value="情報科">情報科</option>
+                                    <option value="芸術科">芸術科</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">登録日（開始）</label>
+                                <input
+                                    type="date"
+                                    value={personalResultsFilterDateRange.start}
+                                    onChange={(e) => setPersonalResultsFilterDateRange(prev => ({
+                                        ...prev,
+                                        start: e.target.value
+                                    }))}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">登録日（終了）</label>
+                                <input
+                                    type="date"
+                                    value={personalResultsFilterDateRange.end}
+                                    onChange={(e) => setPersonalResultsFilterDateRange(prev => ({
+                                        ...prev,
+                                        end: e.target.value
+                                    }))}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div className="flex items-end">
+                                <button
+                                    onClick={() => {
+                                        setPersonalResultsSearchTerm('');
+                                        setPersonalResultsFilterCourse('all');
+                                        setPersonalResultsFilterApplicationCourse('all');
+                                        setPersonalResultsFilterAcceptedCourse('all');
+                                        setPersonalResultsFilterDateRange({ start: '', end: '' });
+                                    }}
+                                    className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                >
+                                    フィルターリセット
+                                </button>
                             </div>
                         </div>
                     </div>
