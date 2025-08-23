@@ -4,8 +4,9 @@ import { useAuth } from '../../hooks/useAuth';
 import AnnouncementsView from './AnnouncementsView';
 import CertificateView from './CertificateView';
 import DocumentsView from './DocumentsView';
-import ProfileFormView from './ProfileFormView';
+
 import PersonalResultsView from './PersonalResultsView';
+import ProfileFormView from './ProfileFormView';
 import MobileMenu from '../shared/MobileMenu';
 
 type Tab = 'announcements' | 'personal-results' | 'certificate' | 'documents' | 'profile';
@@ -45,6 +46,7 @@ const StudentDashboard: React.FC = () => {
             icon: '👤',
             component: ProfileFormView 
         },
+
     ];
 
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || AnnouncementsView;

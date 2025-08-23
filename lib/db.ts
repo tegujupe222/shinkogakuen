@@ -66,7 +66,18 @@ export async function initDatabase() {
       )
     `;
 
-    // 学生プロフィールテーブル（詳細版）
+    // 書類テーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS documents (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        file_name VARCHAR(255),
+        file_url TEXT,
+        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // 学生プロフィールテーブル（完全版）
     await sql`
       CREATE TABLE IF NOT EXISTS student_profiles (
         id SERIAL PRIMARY KEY,
@@ -241,17 +252,6 @@ export async function initDatabase() {
         
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-
-    // 書類テーブル
-    await sql`
-      CREATE TABLE IF NOT EXISTS documents (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        file_name VARCHAR(255),
-        file_url TEXT,
-        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `;
 

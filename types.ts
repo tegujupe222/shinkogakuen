@@ -38,18 +38,6 @@ export interface Certificate {
     issuedAt: string;
 }
 
-export interface Profile {
-    studentId: string;
-    fullName: string;
-    kana: string;
-    postalCode: string;
-    address: string;
-    guardianName: string;
-    phone: string;
-    email: string;
-    updatedAt: string;
-}
-
 export interface StudentResult {
     id: string;
     exam_no: string;
