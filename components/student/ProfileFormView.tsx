@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { StudentProfile } from '../../types';
 
@@ -77,6 +77,15 @@ const ProfileFormView: React.FC = () => {
         });
     };
 
+    // 直接的な入力処理関数
+    const handleDirectInputChange = useCallback((field: keyof StudentProfile, value: string) => {
+        console.log('Direct input change:', field, value);
+        setProfile(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    }, []);
+
     const saveForm = async (step: FormStep, isComplete: boolean = false) => {
         if (!user?.exam_no) return;
 
@@ -131,12 +140,8 @@ const ProfileFormView: React.FC = () => {
                         </label>
                         <input
                             type="text"
-                            value={profile.student_last_name ?? ''}
-                            onChange={(e) => {
-                                const value = e.target.value ?? '';
-                                console.log('Input change:', 'student_last_name', value); // デバッグ用
-                                handleInputChange('student_last_name', value);
-                            }}
+                            value={profile.student_last_name || ''}
+                            onChange={(e) => handleDirectInputChange('student_last_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -148,7 +153,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_first_name || ''}
-                            onChange={(e) => handleInputChange('student_first_name', e.target.value || '')}
+                            onChange={(e) => handleDirectInputChange('student_first_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -160,7 +165,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name_kana || ''}
-                            onChange={(e) => handleInputChange('student_last_name_kana', e.target.value || '')}
+                            onChange={(e) => handleDirectInputChange('student_last_name_kana', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
