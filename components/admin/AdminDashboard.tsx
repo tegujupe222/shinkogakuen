@@ -61,6 +61,12 @@ const AdminDashboard: React.FC = () => {
     const [manualUserMessage, setManualUserMessage] = useState('');
     const [manualUserLoading, setManualUserLoading] = useState(false);
 
+    // ユーザー削除用の状態
+    const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [deleteUserLoading, setDeleteUserLoading] = useState(false);
+    const [deleteUserMessage, setDeleteUserMessage] = useState('');
+
     useEffect(() => {
         fetchUsers();
         fetchPersonalResults();
@@ -525,6 +531,36 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    // ユーザー削除処理
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
+
+        setDeleteUserLoading(true);
+        setDeleteUserMessage('');
+
+        try {
+            const response = await fetch(`/api/users/${userToDelete.exam_no}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setDeleteUserMessage('ユーザーを削除しました');
+                setUserToDelete(null);
+                setShowDeleteUserModal(false);
+                fetchUsers(); // ユーザーリストを更新
+            } else {
+                setDeleteUserMessage(`エラー: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Failed to delete user:', error);
+            setDeleteUserMessage('ユーザー削除中にエラーが発生しました');
+        } finally {
+            setDeleteUserLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="p-6">
@@ -658,6 +694,70 @@ const AdminDashboard: React.FC = () => {
                         <p className="text-sm text-gray-600">
                             受験番号（4桁）とパスワード（4桁）を手動で入力してユーザーを追加できます。
                         </p>
+                    </div>
+
+                    {/* ユーザー一覧 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h4 className="text-lg font-semibold text-gray-900 mb-4">ユーザー一覧</h4>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            受験番号
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            名前
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ロール
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            作成日
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            操作
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {users.map((user) => (
+                                        <tr key={user.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {user.exam_no}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {user.name || '-'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                    user.role === 'admin' 
+                                                        ? 'bg-red-100 text-red-800' 
+                                                        : 'bg-green-100 text-green-800'
+                                                }`}>
+                                                    {user.role === 'admin' ? '管理者' : '学生'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {user.created_at ? new Date(user.created_at).toLocaleDateString('ja-JP') : '-'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <button
+                                                    onClick={() => {
+                                                        setUserToDelete(user);
+                                                        setShowDeleteUserModal(true);
+                                                    }}
+                                                    className="text-red-600 hover:text-red-900"
+                                                    disabled={user.role === 'admin'}
+                                                >
+                                                    <TrashIcon className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             )}
@@ -994,6 +1094,16 @@ const AdminDashboard: React.FC = () => {
                 loading={manualUserLoading}
                 message={manualUserMessage}
             />
+
+            {/* ユーザー削除モーダル */}
+            <DeleteUserModal
+                isOpen={showDeleteUserModal}
+                onClose={() => setShowDeleteUserModal(false)}
+                onConfirm={handleDeleteUser}
+                user={userToDelete}
+                loading={deleteUserLoading}
+                message={deleteUserMessage}
+            />
         </div>
     );
 };
@@ -1305,6 +1415,80 @@ const ManualUserModal: React.FC<{
                         </button>
                     </div>
                 </form>
+            </div>
+        </Modal>
+    );
+};
+
+// ユーザー削除モーダル
+const DeleteUserModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    user: User | null;
+    loading: boolean;
+    message: string;
+}> = ({ isOpen, onClose, onConfirm, user, loading, message }) => {
+    if (!isOpen || !user) return null;
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="ユーザー削除">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">ユーザー削除の確認</h3>
+                
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                        以下のユーザーを削除しますか？この操作は取り消せません。
+                    </p>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="space-y-2">
+                            <div className="flex justify-between">
+                                <span className="text-sm font-medium text-gray-700">受験番号:</span>
+                                <span className="text-sm text-gray-900">{user.exam_no}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-sm font-medium text-gray-700">名前:</span>
+                                <span className="text-sm text-gray-900">{user.name || '-'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-sm font-medium text-gray-700">ロール:</span>
+                                <span className="text-sm text-gray-900">
+                                    {user.role === 'admin' ? '管理者' : '学生'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {message && (
+                        <div className={`p-3 rounded-lg border ${
+                            message.includes('エラー')
+                                ? 'bg-red-50 border-red-200 text-red-800'
+                                : 'bg-green-50 border-green-200 text-green-800'
+                        }`}>
+                            <p className="text-sm font-medium">{message}</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                        disabled={loading}
+                    >
+                        キャンセル
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onConfirm}
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={loading}
+                    >
+                        {loading ? '削除中...' : '削除'}
+                    </button>
+                </div>
             </div>
         </Modal>
     );

@@ -8,6 +8,8 @@ export interface User {
     role: UserRole;
     name?: string;
     phone?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface AuthenticatedUser extends User {
