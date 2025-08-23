@@ -12,64 +12,8 @@ const ProfileFormView: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string>('');
-    // useReducerを使用した状態管理
-    const profileReducer = (state: Partial<StudentProfile>, action: { type: string; field?: keyof StudentProfile; value?: any; data?: Partial<StudentProfile> }) => {
-        switch (action.type) {
-            case 'UPDATE_FIELD':
-                if (action.field && action.value !== undefined) {
-                    console.log('Reducer: Updating field', action.field, action.value);
-                    return {
-                        ...state,
-                        [action.field]: action.value
-                    };
-                }
-                return state;
-            case 'LOAD_PROFILE':
-                if (action.data) {
-                    console.log('Reducer: Loading profile data', action.data);
-                    return {
-                        ...state,
-                        ...action.data
-                    };
-                }
-                return state;
-            case 'RESET_PROFILE':
-                return {
-                    student_last_name: '',
-                    student_first_name: '',
-                    student_last_name_kana: '',
-                    student_first_name_kana: '',
-                    gender: '',
-                    birth_date: '',
-                    registered_address: '',
-                    student_postal_code: '',
-                    student_address: '',
-                    student_address_detail: '',
-                    student_phone: '',
-                    middle_school_name: '',
-                    graduation_date: '',
-                    guardian1_last_name: '',
-                    guardian1_first_name: '',
-                    guardian1_last_name_kana: '',
-                    guardian1_first_name_kana: '',
-                    guardian1_postal_code: '',
-                    guardian1_address: '',
-                    guardian1_address_detail: '',
-                    guardian1_phone: '',
-                    guardian1_relationship: '',
-                    guardian1_relationship_other: '',
-                    guardian1_email: '',
-                    has_chronic_illness: false,
-                    accommodation_notes: '',
-                    family_communication: '',
-                    chronic_illness_details: ''
-                };
-            default:
-                return state;
-        }
-    };
-
-    const [profile, dispatch] = useReducer(profileReducer, {
+    // 最もシンプルで確実な状態管理
+    const [profile, setProfile] = useState<Partial<StudentProfile>>({
         student_last_name: '',
         student_first_name: '',
         student_last_name_kana: '',
@@ -112,17 +56,24 @@ const ProfileFormView: React.FC = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Fetched profile data:', data); // デバッグ用
-                dispatch({ type: 'LOAD_PROFILE', data });
+                setProfile(prev => ({
+                    ...prev,
+                    ...data
+                }));
             }
         } catch (error) {
             console.error('Failed to fetch profile:', error);
         }
     };
 
-    // useReducerを使用した状態更新
+    // 最もシンプルで確実な入力処理
     const updateField = (field: keyof StudentProfile, value: string | boolean) => {
-        console.log('Dispatching update:', field, value);
-        dispatch({ type: 'UPDATE_FIELD', field, value });
+        console.log('Updating field:', field, 'with value:', value);
+        setProfile(prev => {
+            const newState = { ...prev, [field]: value };
+            console.log('New state for', field, ':', newState[field]);
+            return newState;
+        });
     };
 
     const saveForm = async (step: FormStep, isComplete: boolean = false) => {
@@ -180,7 +131,13 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name || ''}
-                            onChange={(e) => updateField('student_last_name', e.target.value)}
+                            onChange={(e) => {
+                                console.log('Input event:', e.target.value);
+                                setProfile(prev => ({
+                                    ...prev,
+                                    student_last_name: e.target.value
+                                }));
+                            }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -192,7 +149,13 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_first_name || ''}
-                            onChange={(e) => updateField('student_first_name', e.target.value)}
+                            onChange={(e) => {
+                                console.log('Input event:', e.target.value);
+                                setProfile(prev => ({
+                                    ...prev,
+                                    student_first_name: e.target.value
+                                }));
+                            }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -204,7 +167,13 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name_kana || ''}
-                            onChange={(e) => updateField('student_last_name_kana', e.target.value)}
+                            onChange={(e) => {
+                                console.log('Input event:', e.target.value);
+                                setProfile(prev => ({
+                                    ...prev,
+                                    student_last_name_kana: e.target.value
+                                }));
+                            }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
