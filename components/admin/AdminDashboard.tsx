@@ -17,7 +17,7 @@ import DownloadIcon from '../icons/DownloadIcon';
 import Modal from '../shared/Modal';
 import * as XLSX from 'xlsx';
 
-type Tab = 'announcements' | 'certificates' | 'documents' | 'personal-results' | 'student-profiles' | 'form-settings' | 'admission-fees';
+type Tab = 'announcements' | 'certificates' | 'documents' | 'personal-results' | 'student-profiles' | 'form-settings' | 'admission-fees' | 'login-settings';
 
 const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('announcements');
@@ -44,6 +44,12 @@ const AdminDashboard: React.FC = () => {
     const [personalResultsUploadMessage, setPersonalResultsUploadMessage] = useState('');
     const [editingResult, setEditingResult] = useState<StudentResult | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
+
+    // ログイン設定用の状態
+    const [showLoginSettingsUploadModal, setShowLoginSettingsUploadModal] = useState(false);
+    const [loginSettingsUploadFile, setLoginSettingsUploadFile] = useState<File | null>(null);
+    const [loginSettingsUploading, setLoginSettingsUploading] = useState(false);
+    const [loginSettingsUploadMessage, setLoginSettingsUploadMessage] = useState('');
 
     useEffect(() => {
         fetchUsers();
@@ -421,6 +427,39 @@ const AdminDashboard: React.FC = () => {
         return 'bg-green-100 text-green-800';
     };
 
+    // ログイン設定用のCSVアップロード処理
+    const handleLoginSettingsUpload = async () => {
+        if (!loginSettingsUploadFile) return;
+
+        setLoginSettingsUploading(true);
+        setLoginSettingsUploadMessage('');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', loginSettingsUploadFile);
+
+            const response = await fetch('/api/upload-login-settings', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setLoginSettingsUploadMessage(`ログイン設定を更新しました。更新件数: ${data.updatedCount}件`);
+                setLoginSettingsUploadFile(null);
+                setShowLoginSettingsUploadModal(false);
+            } else {
+                setLoginSettingsUploadMessage(`エラー: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Failed to upload login settings:', error);
+            setLoginSettingsUploadMessage('アップロード中にエラーが発生しました');
+        } finally {
+            setLoginSettingsUploading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="p-6">
@@ -449,7 +488,8 @@ const AdminDashboard: React.FC = () => {
                         { id: 'personal-results', name: '個人結果管理', icon: '📊' },
                         { id: 'student-profiles', name: '学生プロフィール管理', icon: '📝' },
                         { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' },
-                        { id: 'admission-fees', name: '入学手続金管理', icon: '💰' }
+                        { id: 'admission-fees', name: '入学手続金管理', icon: '💰' },
+                        { id: 'login-settings', name: 'ログイン設定', icon: '🔐' }
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -476,7 +516,8 @@ const AdminDashboard: React.FC = () => {
                     { id: 'personal-results', name: '個人結果管理', icon: '📊' },
                     { id: 'student-profiles', name: '学生プロフィール管理', icon: '📝' },
                     { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' },
-                    { id: 'admission-fees', name: '入学手続金管理', icon: '💰' }
+                    { id: 'admission-fees', name: '入学手続金管理', icon: '💰' },
+                    { id: 'login-settings', name: 'ログイン設定', icon: '🔐' }
                 ]}
                 activeTab={activeTab}
                 onTabChange={(tabId) => setActiveTab(tabId as Tab)}
@@ -489,6 +530,55 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'student-profiles' && <AdminStudentProfiles />}
             {activeTab === 'form-settings' && <AdminFormSettings />}
             {activeTab === 'admission-fees' && <AdminAdmissionFees />}
+
+            {/* ログイン設定タブ */}
+            {activeTab === 'login-settings' && (
+                <div className="space-y-6">
+                    <div className="mb-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">ログイン設定</h3>
+                        <p className="text-gray-600">学生のログインIDとパスワードを設定します</p>
+                    </div>
+
+                    {/* CSVアップロード */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h4 className="text-lg font-semibold text-gray-900 mb-4">CSVアップロード</h4>
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-sm text-gray-600 mb-2">
+                                    CSVファイルの形式：<br />
+                                    A列：受験番号（4桁の数字）<br />
+                                    B列：電話番号（パスワードは電話番号の下4桁）
+                                </p>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={(e) => setLoginSettingsUploadFile(e.target.files?.[0] || null)}
+                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                />
+                                <button
+                                    onClick={handleLoginSettingsUpload}
+                                    disabled={!loginSettingsUploadFile || loginSettingsUploading}
+                                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                >
+                                    <UploadIcon className="w-4 h-4 mr-2" />
+                                    {loginSettingsUploading ? 'アップロード中...' : 'アップロード'}
+                                </button>
+                            </div>
+                            {loginSettingsUploadMessage && (
+                                <div className={`p-4 rounded-lg border ${
+                                    loginSettingsUploadMessage.includes('エラー')
+                                        ? 'bg-red-50 border-red-200 text-red-800'
+                                        : 'bg-green-50 border-green-200 text-green-800'
+                                }`}>
+                                    <p className="font-medium">{loginSettingsUploadMessage}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* 個人結果管理タブ */}
             {activeTab === 'personal-results' && (

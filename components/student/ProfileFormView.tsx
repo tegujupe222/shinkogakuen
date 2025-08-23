@@ -16,7 +16,7 @@ const ProfileFormView: React.FC = () => {
     const [studentResult, setStudentResult] = useState<StudentResult | null>(null);
     
     const [profile, setProfile] = useState<Partial<StudentProfile>>({});
-
+    
     useEffect(() => {
         if (user?.exam_no) {
             fetchProfile();
@@ -284,7 +284,7 @@ const ProfileFormView: React.FC = () => {
 
             {/* 個人情報入力フォーム */}
             {currentStep === 'personal' && (
-                <div className="space-y-6">
+        <div className="space-y-6">
                     {/* 生徒基本情報 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">生徒基本情報</h3>
@@ -460,7 +460,7 @@ const ProfileFormView: React.FC = () => {
                                     <p className="mt-1 text-sm text-red-600">{getFieldError('student_postal_code')}</p>
                                 )}
                             </div>
-                            <div>
+                        <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     電話番号
                                     {isFieldRequired('student_phone') && <span className="text-red-500 ml-1">*</span>}
@@ -547,8 +547,8 @@ const ProfileFormView: React.FC = () => {
                                 {getFieldError('middle_school_name') && (
                                     <p className="mt-1 text-sm text-red-600">{getFieldError('middle_school_name')}</p>
                                 )}
-                            </div>
-                            <div>
+                        </div>
+                        <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     卒業年月日
                                     {isFieldRequired('graduation_date') && <span className="text-red-500 ml-1">*</span>}
@@ -1037,7 +1037,7 @@ const ProfileFormView: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div>
+                    <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">経由地</label>
                                 <input
                                     type="text"
@@ -1109,7 +1109,7 @@ const ProfileFormView: React.FC = () => {
                                     <p className="mt-1 text-sm text-red-600">{getFieldError('art_first_choice')}</p>
                                 )}
                             </div>
-                            <div>
+                        <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     芸術選択第２希望科目
                                     {isFieldRequired('art_second_choice') && <span className="text-red-500 ml-1">*</span>}
@@ -1212,8 +1212,8 @@ const ProfileFormView: React.FC = () => {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     rows={3}
                                 />
-                            </div>
-                            <div>
+                    </div>
+                    <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">持病に当てはまるもの</label>
                                 <textarea
                                     value={profile.chronic_illness_details || ''}
@@ -1253,8 +1253,8 @@ const ProfileFormView: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+                        </div>
+                    )}
         </div>
     );
 };
