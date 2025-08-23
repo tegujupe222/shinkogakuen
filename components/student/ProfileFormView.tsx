@@ -70,11 +70,14 @@ const ProfileFormView: React.FC = () => {
         if (!user?.exam_no) return;
         
         try {
+            console.log('ProfileFormView: Fetching result for exam_no =', user.exam_no);
             const response = await fetch(`/api/results/${user.exam_no}`);
             if (response.ok) {
                 const data = await response.json();
+                console.log('ProfileFormView: API response =', data);
                 if (data.success && data.result) {
                     setStudentResult(data.result);
+                    console.log('ProfileFormView: Set studentResult =', data.result);
                 }
             }
         } catch (error) {
@@ -114,9 +117,15 @@ const ProfileFormView: React.FC = () => {
 
     // 合格判定
     const isAccepted = () => {
-        if (!studentResult) return false;
+        if (!studentResult) {
+            console.log('ProfileFormView: studentResult is null');
+            return false;
+        }
+        console.log('ProfileFormView: studentResult.accepted_course =', studentResult.accepted_course);
         // accepted_courseが存在し、空でない場合は合格
-        return studentResult.accepted_course && studentResult.accepted_course.trim() !== '';
+        const accepted = studentResult.accepted_course && studentResult.accepted_course.trim() !== '';
+        console.log('ProfileFormView: isAccepted =', accepted);
+        return accepted;
     };
 
     const validateStep = (step: FormStep): boolean => {
