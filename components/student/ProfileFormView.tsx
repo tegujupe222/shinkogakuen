@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { StudentProfile, FormSetting } from '../../types';
+import { StudentProfile, FormSetting, StudentResult } from '../../types';
 
 type FormStep = 'personal' | 'commute' | 'art' | 'health';
 
@@ -13,6 +13,7 @@ const ProfileFormView: React.FC = () => {
     const [familyCount, setFamilyCount] = useState(1);
     const [formSettings, setFormSettings] = useState<FormSetting[]>([]);
     const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+    const [studentResult, setStudentResult] = useState<StudentResult | null>(null);
     
     const [profile, setProfile] = useState<Partial<StudentProfile>>({});
 
@@ -20,6 +21,7 @@ const ProfileFormView: React.FC = () => {
         if (user?.exam_no) {
             fetchProfile();
             fetchFormSettings();
+            fetchStudentResult();
         }
     }, [user?.exam_no]);
 
@@ -64,6 +66,22 @@ const ProfileFormView: React.FC = () => {
         }
     };
 
+    const fetchStudentResult = async () => {
+        if (!user?.exam_no) return;
+        
+        try {
+            const response = await fetch(`/api/results/${user.exam_no}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.result) {
+                    setStudentResult(data.result);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch student result:', error);
+        }
+    };
+
     const handleInputChange = (field: keyof StudentProfile, value: string | boolean) => {
         setProfile(prev => ({
             ...prev,
@@ -92,6 +110,13 @@ const ProfileFormView: React.FC = () => {
 
     const getFieldError = (fieldKey: string): string | undefined => {
         return validationErrors[fieldKey];
+    };
+
+    // 合格判定
+    const isAccepted = () => {
+        if (!studentResult) return false;
+        // accepted_courseが存在し、空でない場合は合格
+        return studentResult.accepted_course && studentResult.accepted_course.trim() !== '';
     };
 
     const validateStep = (step: FormStep): boolean => {
@@ -174,6 +199,23 @@ const ProfileFormView: React.FC = () => {
                 <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                     <p className="mt-4 text-gray-600">プロフィールを読み込み中...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // 不合格の場合は情報なしを表示
+    if (!isAccepted()) {
+        return (
+            <div className="p-6">
+                <div className="mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">プロフィール</h2>
+                    <p className="text-gray-600">個人情報を入力してください</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="text-center py-8">
+                        <p className="text-gray-500">情報がありません</p>
+                    </div>
                 </div>
             </div>
         );
