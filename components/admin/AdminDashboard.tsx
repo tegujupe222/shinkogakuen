@@ -67,6 +67,11 @@ const AdminDashboard: React.FC = () => {
     const [deleteUserLoading, setDeleteUserLoading] = useState(false);
     const [deleteUserMessage, setDeleteUserMessage] = useState('');
 
+    // 学生全削除用の状態
+    const [showDeleteAllStudentsModal, setShowDeleteAllStudentsModal] = useState(false);
+    const [deleteAllStudentsLoading, setDeleteAllStudentsLoading] = useState(false);
+    const [deleteAllStudentsMessage, setDeleteAllStudentsMessage] = useState('');
+
     useEffect(() => {
         fetchUsers();
         fetchPersonalResults();
@@ -561,6 +566,33 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    // 学生全削除処理
+    const handleDeleteAllStudents = async () => {
+        setDeleteAllStudentsLoading(true);
+        setDeleteAllStudentsMessage('');
+
+        try {
+            const response = await fetch('/api/users/delete-all-students', {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setDeleteAllStudentsMessage(`学生アカウントを${data.deletedCount}件削除しました`);
+                setShowDeleteAllStudentsModal(false);
+                fetchUsers(); // ユーザーリストを更新
+            } else {
+                setDeleteAllStudentsMessage(`エラー: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Failed to delete all students:', error);
+            setDeleteAllStudentsMessage('学生全削除中にエラーが発生しました');
+        } finally {
+            setDeleteAllStudentsLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="p-6">
@@ -698,7 +730,16 @@ const AdminDashboard: React.FC = () => {
 
                     {/* ユーザー一覧 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-4">ユーザー一覧</h4>
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-lg font-semibold text-gray-900">ユーザー一覧</h4>
+                            <button
+                                onClick={() => setShowDeleteAllStudentsModal(true)}
+                                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                <TrashIcon className="w-4 h-4 mr-2" />
+                                学生全削除
+                            </button>
+                        </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
@@ -1104,6 +1145,16 @@ const AdminDashboard: React.FC = () => {
                 loading={deleteUserLoading}
                 message={deleteUserMessage}
             />
+
+            {/* 学生全削除モーダル */}
+            <DeleteAllStudentsModal
+                isOpen={showDeleteAllStudentsModal}
+                onClose={() => setShowDeleteAllStudentsModal(false)}
+                onConfirm={handleDeleteAllStudents}
+                loading={deleteAllStudentsLoading}
+                message={deleteAllStudentsMessage}
+                studentCount={users.filter(user => user.role === 'student').length}
+            />
         </div>
     );
 };
@@ -1487,6 +1538,84 @@ const DeleteUserModal: React.FC<{
                         disabled={loading}
                     >
                         {loading ? '削除中...' : '削除'}
+                    </button>
+                </div>
+            </div>
+        </Modal>
+    );
+};
+
+// 学生全削除モーダル
+const DeleteAllStudentsModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    loading: boolean;
+    message: string;
+    studentCount: number;
+}> = ({ isOpen, onClose, onConfirm, loading, message, studentCount }) => {
+    if (!isOpen) return null;
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="学生全削除">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">学生全削除の確認</h3>
+                
+                <div className="space-y-4">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">
+                                    注意: この操作は取り消せません
+                                </h3>
+                                <div className="mt-2 text-sm text-red-700">
+                                    <p>以下の操作を実行します：</p>
+                                    <ul className="list-disc list-inside mt-1 space-y-1">
+                                        <li>学生アカウント {studentCount}件 を削除</li>
+                                        <li>関連するプロフィールデータを削除</li>
+                                        <li>関連する合格証書データを削除</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p className="text-sm text-gray-600">
+                        本当に全ての学生アカウントを削除しますか？この操作は取り消せません。
+                    </p>
+
+                    {message && (
+                        <div className={`p-3 rounded-lg border ${
+                            message.includes('エラー')
+                                ? 'bg-red-50 border-red-200 text-red-800'
+                                : 'bg-green-50 border-green-200 text-green-800'
+                        }`}>
+                            <p className="text-sm font-medium">{message}</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                        disabled={loading}
+                    >
+                        キャンセル
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onConfirm}
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={loading}
+                    >
+                        {loading ? '削除中...' : '全削除'}
                     </button>
                 </div>
             </div>
