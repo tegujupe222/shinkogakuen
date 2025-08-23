@@ -906,18 +906,6 @@ export async function getAllStudentExemptionAssignments() {
   }
   
   try {
-    // まずテーブルが存在するかチェック
-    const tableCheck = await sql`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_name = 'student_exemption_assignments'
-      );
-    `;
-    
-    if (!tableCheck.rows[0].exists) {
-      throw new Error('Table student_exemption_assignments does not exist');
-    }
-    
     const result = await sql`
       SELECT * FROM student_exemption_assignments
     `;

@@ -4,7 +4,7 @@ import { Announcement, User, Document, Certificate, StudentResult } from '../../
 import AdminAnnouncements from './AdminAnnouncements';
 import AdminCertificates from './AdminCertificates';
 import AdminDocuments from './AdminDocuments';
-import AdminProfiles from './AdminProfiles';
+
 import AdminStudentProfiles from './AdminStudentProfiles';
 import AdminFormSettings from './AdminFormSettings';
 import AdminAdmissionFees from './AdminAdmissionFees';
@@ -17,7 +17,7 @@ import DownloadIcon from '../icons/DownloadIcon';
 import Modal from '../shared/Modal';
 import * as XLSX from 'xlsx';
 
-type Tab = 'announcements' | 'certificates' | 'documents' | 'profiles' | 'personal-results' | 'student-profiles' | 'form-settings' | 'admission-fees';
+type Tab = 'announcements' | 'certificates' | 'documents' | 'personal-results' | 'student-profiles' | 'form-settings' | 'admission-fees';
 
 const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('announcements');
@@ -446,7 +446,6 @@ const AdminDashboard: React.FC = () => {
                         { id: 'announcements', name: 'お知らせ管理', icon: '📢' },
                         { id: 'certificates', name: '合格証書管理', icon: '🏆' },
                         { id: 'documents', name: '書類管理', icon: '📄' },
-                        { id: 'profiles', name: 'ユーザー管理', icon: '👥' },
                         { id: 'personal-results', name: '個人結果管理', icon: '📊' },
                         { id: 'student-profiles', name: '学生プロフィール管理', icon: '📝' },
                         { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' },
@@ -474,7 +473,6 @@ const AdminDashboard: React.FC = () => {
                     { id: 'announcements', name: 'お知らせ管理', icon: '📢' },
                     { id: 'certificates', name: '合格証書管理', icon: '🏆' },
                     { id: 'documents', name: '書類管理', icon: '📄' },
-                    { id: 'profiles', name: 'ユーザー管理', icon: '👥' },
                     { id: 'personal-results', name: '個人結果管理', icon: '📊' },
                     { id: 'student-profiles', name: '学生プロフィール管理', icon: '📝' },
                     { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' },
@@ -488,7 +486,6 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'announcements' && <AdminAnnouncements />}
             {activeTab === 'certificates' && <AdminCertificates />}
             {activeTab === 'documents' && <AdminDocuments />}
-            {activeTab === 'profiles' && <AdminProfiles />}
             {activeTab === 'student-profiles' && <AdminStudentProfiles />}
             {activeTab === 'form-settings' && <AdminFormSettings />}
             {activeTab === 'admission-fees' && <AdminAdmissionFees />}
