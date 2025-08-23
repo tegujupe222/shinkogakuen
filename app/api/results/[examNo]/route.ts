@@ -4,10 +4,10 @@ import { sql } from '@vercel/postgres';
 // 特定の受験番号の個人結果を取得
 export async function GET(
     request: NextRequest,
-    { params }: { params: { examNo: string } }
+    { params }: { params: Promise<{ examNo: string }> }
 ) {
     try {
-        const { examNo } = params;
+        const { examNo } = await params;
         
         const result = await sql`
             SELECT * FROM student_results 
@@ -37,10 +37,10 @@ export async function GET(
 // 特定の受験番号の個人結果を更新
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { examNo: string } }
+    { params }: { params: Promise<{ examNo: string }> }
 ) {
     try {
-        const { examNo } = params;
+        const { examNo } = await params;
         const body = await request.json();
         
         const result = await sql`
@@ -91,10 +91,10 @@ export async function PUT(
 // 特定の受験番号の個人結果を削除
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { examNo: string } }
+    { params }: { params: Promise<{ examNo: string }> }
 ) {
     try {
-        const { examNo } = params;
+        const { examNo } = await params;
         
         const result = await sql`
             DELETE FROM student_results 

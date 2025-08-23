@@ -763,6 +763,556 @@ const AdminDashboard: React.FC = () => {
                             )}
                         </div>
                     </div>
+                ) : activeTab === 'personal-results' ? (
+                    <div>
+                        {/* Excelファイルアップロード */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Excelファイルアップロード（個人結果）</h3>
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                                <h4 className="font-medium text-green-900 mb-2">Excelファイル形式</h4>
+                                <div className="text-sm text-green-800 space-y-1">
+                                    <p>• A列: 学生ID</p>
+                                    <p>• B列: 受験番号</p>
+                                    <p>• C列: 氏名</p>
+                                    <p>• E列: 性別</p>
+                                    <p>• G列: 出願時のコース</p>
+                                    <p>• H列: 出願種別（専願/併願）</p>
+                                    <p>• J列: 推薦</p>
+                                    <p>• M列: 中学校名</p>
+                                    <p>• O列: 3教科上位10%</p>
+                                    <p>• P列: 特進上位5名</p>
+                                    <p>• Q列: 進学上位5名</p>
+                                    <p>• R列: 部活動推薦入学金免除</p>
+                                    <p>• S列: 部活動推薦諸費用免除</p>
+                                    <p>• T列: 部活動推薦奨学金支給</p>
+                                    <p>• V列: 合格コース</p>
+                                    <p>• X列: 特待生</p>
+                                    <p>• Z列: 部活動推薦表記</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center space-x-4">
+                                <label className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
+                                    <input
+                                        type="file"
+                                        accept=".xlsx,.xls"
+                                        onChange={handleExcelUpload}
+                                        disabled={isExcelUploading}
+                                        className="hidden"
+                                    />
+                                    {isExcelUploading ? 'アップロード中...' : 'Excelファイルを選択'}
+                                </label>
+                                
+                                {isExcelUploading && (
+                                    <div className="flex items-center">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                                        <span className="ml-2 text-sm text-gray-600">処理中...</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {excelUploadStatus && (
+                            <div className={`mb-6 p-4 rounded-lg border ${
+                                excelUploadStatus.includes('エラー') 
+                                    ? 'bg-red-50 border-red-200 text-red-800' 
+                                    : 'bg-green-50 border-green-200 text-green-800'
+                            }`}>
+                                <p className="font-medium">{excelUploadStatus}</p>
+                                {excelUploadResults && (
+                                    <div className="mt-2">
+                                        <p>処理結果:</p>
+                                        <ul className="list-disc list-inside mt-1">
+                                            {excelUploadResults.results?.map((result: string, index: number) => (
+                                                <li key={index} className="text-sm">{result}</li>
+                                            ))}
+                                        </ul>
+                                        {excelUploadResults.errors?.length > 0 && (
+                                            <div className="mt-2">
+                                                <p className="font-medium text-red-700">エラー:</p>
+                                                <ul className="list-disc list-inside mt-1">
+                                                    {excelUploadResults.errors.map((error: string, index: number) => (
+                                                        <li key={index} className="text-sm text-red-600">{error}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 個人結果管理 */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">個人結果管理</h3>
+                                <button
+                                    onClick={deleteAllPersonalResults}
+                                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                                >
+                                    全削除
+                                </button>
+                            </div>
+
+                            {/* 検索・フィルター・ソート */}
+                            <div className="mb-6 space-y-4">
+                                {/* 検索バー */}
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex-1">
+                                        <input
+                                            type="text"
+                                            placeholder="学生ID、受験番号、氏名、中学校名、合格結果で検索..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                    >
+                                        クリア
+                                    </button>
+                                </div>
+
+                                {/* フィルター・ソート */}
+                                <div className="flex flex-wrap items-center gap-4">
+                                    {/* フィルター */}
+                                    <div className="flex items-center space-x-2">
+                                        <label className="text-sm font-medium text-gray-700">フィルター:</label>
+                                        <select
+                                            value={filterType}
+                                            onChange={(e) => setFilterType(e.target.value)}
+                                            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="all">全て</option>
+                                            <option value="senkan">専願のみ</option>
+                                            <option value="heikan">併願のみ</option>
+                                            <option value="accepted">合格者</option>
+                                            <option value="mawashi">廻し合格者</option>
+                                            <option value="rejected">不合格者</option>
+                                            <option value="no_result">結果未発表</option>
+                                        </select>
+                                    </div>
+
+                                    {/* ソート */}
+                                    <div className="flex items-center space-x-2">
+                                        <label className="text-sm font-medium text-gray-700">ソート:</label>
+                                        <select
+                                            value={sortBy}
+                                            onChange={(e) => setSortBy(e.target.value)}
+                                            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="student_id">学生ID</option>
+                                            <option value="exam_no">受験番号</option>
+                                            <option value="name">氏名</option>
+                                            <option value="application_type">出願種別</option>
+                                            <option value="application_course">出願時コース</option>
+                                            <option value="accepted_course">合格結果</option>
+                                            <option value="created_at">作成日時</option>
+                                        </select>
+                                        <button
+                                            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                                            className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                                        >
+                                            {sortOrder === 'asc' ? '↑' : '↓'}
+                                        </button>
+                                    </div>
+
+                                    {/* 結果件数 */}
+                                    <div className="text-sm text-gray-600">
+                                        表示: {filteredAndSortedPersonalResults().length} / {personalResults.length}件
+                                    </div>
+                                </div>
+                            </div>
+
+                            {deletePersonalResultStatus && (
+                                <div className={`mb-6 p-4 rounded-lg border ${
+                                    deletePersonalResultStatus.includes('エラー') 
+                                        ? 'bg-red-50 border-red-200 text-red-800' 
+                                        : 'bg-green-50 border-green-200 text-green-800'
+                                }`}>
+                                    <p className="font-medium">{deletePersonalResultStatus}</p>
+                                </div>
+                            )}
+
+                            {loadingPersonalResults ? (
+                                <div className="text-center py-8">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                                    <p className="mt-4 text-gray-600">個人結果一覧を読み込み中...</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th 
+                                                    scope="col" 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('student_id')}
+                                                >
+                                                    学生ID {sortBy === 'student_id' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th 
+                                                    scope="col" 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('exam_no')}
+                                                >
+                                                    受験番号 {sortBy === 'exam_no' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th 
+                                                    scope="col" 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('name')}
+                                                >
+                                                    氏名 {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th 
+                                                    scope="col" 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('application_type')}
+                                                >
+                                                    出願種別 {sortBy === 'application_type' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th 
+                                                    scope="col" 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('application_course')}
+                                                >
+                                                    出願時コース {sortBy === 'application_course' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    性別
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    中学校名
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    推薦
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    特待生
+                                                </th>
+                                                <th 
+                                                    scope="col" 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('accepted_course')}
+                                                >
+                                                    合格結果 {sortBy === 'accepted_course' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th 
+                                                    scope="col" 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('created_at')}
+                                                >
+                                                    作成日時 {sortBy === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    編集
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    削除
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {filteredAndSortedPersonalResults().map((result, index) => (
+                                                <tr key={result.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors duration-150`}>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-gray-50">
+                                                        {result.student_id || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-blue-50">
+                                                        {result.exam_no}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        {result.name || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {result.application_type ? (
+                                                            <span className={`inline-block px-2 py-1 rounded text-xs font-bold text-white ${
+                                                                result.application_type === '専願' 
+                                                                    ? 'bg-blue-600' 
+                                                                    : 'bg-red-600'
+                                                            }`}>
+                                                                {result.application_type}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-500">-</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {result.application_course || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {result.gender || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {result.middle_school || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {result.recommendation || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {result.scholarship_student || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {result.accepted_course ? (
+                                                            result.application_course && result.accepted_course !== result.application_course ? (
+                                                                <span className="text-orange-600 font-medium">廻し合格: {result.accepted_course}</span>
+                                                            ) : (
+                                                                <span className="text-green-600 font-medium">{result.accepted_course}</span>
+                                                            )
+                                                        ) : result.application_course ? (
+                                                            <span className="text-red-600 font-medium">不合格</span>
+                                                        ) : (
+                                                            <span className="text-gray-500">-</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {new Date(result.created_at).toLocaleDateString('ja-JP')}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        <button
+                                                            onClick={() => openEditModal(result)}
+                                                            className="text-blue-600 hover:text-blue-900 mr-2"
+                                                            title="編集"
+                                                        >
+                                                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                        </button>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        <button
+                                                            onClick={() => deletePersonalResult(result.exam_no)}
+                                                            className="text-red-600 hover:text-red-900"
+                                                            title="削除"
+                                                        >
+                                                            <TrashIcon className="h-5 w-5" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 個人結果編集モーダル */}
+                        {isEditModalOpen && editingResult && (
+                            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                                <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                                    <div className="mt-3">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-semibold text-gray-900">個人結果編集</h3>
+                                            <button
+                                                onClick={closeEditModal}
+                                                className="text-gray-400 hover:text-gray-600"
+                                            >
+                                                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                                            {/* 基本情報 */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">学生ID</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.student_id || ''}
+                                                        onChange={(e) => handleEditChange('student_id', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">受験番号</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.exam_no || ''}
+                                                        onChange={(e) => handleEditChange('exam_no', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">氏名</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.name || ''}
+                                                        onChange={(e) => handleEditChange('name', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
+                                                    <select
+                                                        value={editingResult.gender || ''}
+                                                        onChange={(e) => handleEditChange('gender', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    >
+                                                        <option value="">選択してください</option>
+                                                        <option value="男">男</option>
+                                                        <option value="女">女</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* 出願情報 */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">出願種別</label>
+                                                    <select
+                                                        value={editingResult.application_type || ''}
+                                                        onChange={(e) => handleEditChange('application_type', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    >
+                                                        <option value="">選択してください</option>
+                                                        <option value="専願">専願</option>
+                                                        <option value="併願">併願</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">出願時コース</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.application_course || ''}
+                                                        onChange={(e) => handleEditChange('application_course', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">合格コース</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.accepted_course || ''}
+                                                        onChange={(e) => handleEditChange('accepted_course', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">中学校名</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.middle_school || ''}
+                                                        onChange={(e) => handleEditChange('middle_school', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* 推薦・特典情報 */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">推薦</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.recommendation || ''}
+                                                        onChange={(e) => handleEditChange('recommendation', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">特待生</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.scholarship_student || ''}
+                                                        onChange={(e) => handleEditChange('scholarship_student', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">3教科上位10%</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.top_10_percent || ''}
+                                                        onChange={(e) => handleEditChange('top_10_percent', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">特進上位5名</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.special_advance_top5 || ''}
+                                                        onChange={(e) => handleEditChange('special_advance_top5', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">進学上位5名</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.advance_top5 || ''}
+                                                        onChange={(e) => handleEditChange('advance_top5', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦表記</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.club_recommendation || ''}
+                                                        onChange={(e) => handleEditChange('club_recommendation', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* 部活動推薦免除情報 */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦入学金免除</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.club_tuition_exemption || ''}
+                                                        onChange={(e) => handleEditChange('club_tuition_exemption', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦諸費用免除</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.club_fee_exemption || ''}
+                                                        onChange={(e) => handleEditChange('club_fee_exemption', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦奨学金支給</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingResult.club_scholarship || ''}
+                                                        onChange={(e) => handleEditChange('club_scholarship', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end space-x-3 mt-6">
+                                            <button
+                                                onClick={closeEditModal}
+                                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                                            >
+                                                キャンセル
+                                            </button>
+                                            <button
+                                                onClick={handleEditSubmit}
+                                                disabled={editLoading}
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                            >
+                                                {editLoading ? '更新中...' : '更新'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 ) : (
                     <ActiveComponent />
                 )}
