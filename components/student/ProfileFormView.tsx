@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { StudentProfile } from '../../types';
 
@@ -12,7 +12,64 @@ const ProfileFormView: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string>('');
-    const [profile, setProfile] = useState<Partial<StudentProfile>>({
+    // useReducerを使用した状態管理
+    const profileReducer = (state: Partial<StudentProfile>, action: { type: string; field?: keyof StudentProfile; value?: any; data?: Partial<StudentProfile> }) => {
+        switch (action.type) {
+            case 'UPDATE_FIELD':
+                if (action.field && action.value !== undefined) {
+                    console.log('Reducer: Updating field', action.field, action.value);
+                    return {
+                        ...state,
+                        [action.field]: action.value
+                    };
+                }
+                return state;
+            case 'LOAD_PROFILE':
+                if (action.data) {
+                    console.log('Reducer: Loading profile data', action.data);
+                    return {
+                        ...state,
+                        ...action.data
+                    };
+                }
+                return state;
+            case 'RESET_PROFILE':
+                return {
+                    student_last_name: '',
+                    student_first_name: '',
+                    student_last_name_kana: '',
+                    student_first_name_kana: '',
+                    gender: '',
+                    birth_date: '',
+                    registered_address: '',
+                    student_postal_code: '',
+                    student_address: '',
+                    student_address_detail: '',
+                    student_phone: '',
+                    middle_school_name: '',
+                    graduation_date: '',
+                    guardian1_last_name: '',
+                    guardian1_first_name: '',
+                    guardian1_last_name_kana: '',
+                    guardian1_first_name_kana: '',
+                    guardian1_postal_code: '',
+                    guardian1_address: '',
+                    guardian1_address_detail: '',
+                    guardian1_phone: '',
+                    guardian1_relationship: '',
+                    guardian1_relationship_other: '',
+                    guardian1_email: '',
+                    has_chronic_illness: false,
+                    accommodation_notes: '',
+                    family_communication: '',
+                    chronic_illness_details: ''
+                };
+            default:
+                return state;
+        }
+    };
+
+    const [profile, dispatch] = useReducer(profileReducer, {
         student_last_name: '',
         student_first_name: '',
         student_last_name_kana: '',
@@ -55,24 +112,17 @@ const ProfileFormView: React.FC = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Fetched profile data:', data); // デバッグ用
-                setProfile(prev => ({
-                    ...prev,
-                    ...data
-                }));
+                dispatch({ type: 'LOAD_PROFILE', data });
             }
         } catch (error) {
             console.error('Failed to fetch profile:', error);
         }
     };
 
-    // 直接的な状態更新（最もシンプルで確実）
+    // useReducerを使用した状態更新
     const updateField = (field: keyof StudentProfile, value: string | boolean) => {
-        console.log('Updating field:', field, value);
-        setProfile(prev => {
-            const newState = { ...prev, [field]: value };
-            console.log('New state:', newState);
-            return newState;
-        });
+        console.log('Dispatching update:', field, value);
+        dispatch({ type: 'UPDATE_FIELD', field, value });
     };
 
     const saveForm = async (step: FormStep, isComplete: boolean = false) => {
