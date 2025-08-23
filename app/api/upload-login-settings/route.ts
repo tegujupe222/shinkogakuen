@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
                 if (existingUser.rows.length === 0) {
                     // 新規ユーザーを作成
                     await sql`
-                        INSERT INTO users (exam_no, password_hash, phone_last4, created_at, updated_at)
-                        VALUES (${examNo}, ${crypto.createHash('sha256').update(password).digest('hex')}, ${password}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        INSERT INTO users (exam_no, password_hash, phone_last4, email, name, role, created_at, updated_at)
+                        VALUES (${examNo}, ${crypto.createHash('sha256').update(password).digest('hex')}, ${password}, ${examNo}@example.com, ${examNo}, 'student', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     `;
                 } else {
                     // 既存ユーザーのパスワードを更新
