@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { admission_fee, miscellaneous_fee, grade_fee, dedicated_deadline, combined_deadline } = await request.json();
+    const { admission_fee, miscellaneous_fee, grade_fee, dedicated_deadline, combined_deadline, notes } = await request.json();
 
     if (!admission_fee || !miscellaneous_fee || !grade_fee || !dedicated_deadline || !combined_deadline) {
       return NextResponse.json(
@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
       miscellaneous_fee,
       grade_fee,
       dedicated_deadline,
-      combined_deadline
+      combined_deadline,
+      notes
     );
 
     return NextResponse.json({ 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { id, admission_fee, miscellaneous_fee, grade_fee, dedicated_deadline, combined_deadline } = await request.json();
+    const { id, admission_fee, miscellaneous_fee, grade_fee, dedicated_deadline, combined_deadline, notes } = await request.json();
 
     if (!id || !admission_fee || !miscellaneous_fee || !grade_fee || !dedicated_deadline || !combined_deadline) {
       return NextResponse.json(
@@ -67,7 +68,8 @@ export async function PUT(request: NextRequest) {
       miscellaneous_fee,
       grade_fee,
       dedicated_deadline,
-      combined_deadline
+      combined_deadline,
+      notes
     );
 
     return NextResponse.json({ 

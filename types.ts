@@ -262,6 +262,7 @@ export interface AdmissionFeeSettings {
     grade_fee: number;
     dedicated_deadline: string;
     combined_deadline: string;
+    notes?: string;
     created_at: string;
     updated_at: string;
 }

@@ -249,9 +249,21 @@ export async function POST(request: NextRequest) {
                 grade_fee INTEGER DEFAULT 150000,
                 dedicated_deadline DATE DEFAULT '2026-02-19',
                 combined_deadline DATE DEFAULT '2026-03-24',
+                notes TEXT DEFAULT '• 振込期日までに指定口座にお振込みください
+• 振込手数料はご負担ください
+• 振込人名義は保護者名でお願いします
+• 振込完了後、振込控えを学校までご提出ください',
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
+        `;
+
+        // 既存のテーブルにnotesカラムを追加（存在しない場合）
+        await sql`
+            ALTER TABLE admission_fee_settings ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '• 振込期日までに指定口座にお振込みください
+• 振込手数料はご負担ください
+• 振込人名義は保護者名でお願いします
+• 振込完了後、振込控えを学校までご提出ください'
         `;
 
         // 入学手続金免除設定テーブルを作成

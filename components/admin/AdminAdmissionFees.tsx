@@ -218,6 +218,16 @@ const AdminAdmissionFees: React.FC = () => {
                         </button>
                     </div>
                 )}
+
+                {/* 注意事項表示 */}
+                {settings?.notes && (
+                    <div className="mt-6">
+                        <h4 className="font-medium text-gray-900 mb-3">注意事項</h4>
+                        <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-4">
+                            <pre className="text-sm text-yellow-800 whitespace-pre-wrap">{settings.notes}</pre>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* 免除設定 */}
@@ -335,7 +345,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, onClose
         miscellaneous_fee: settings?.miscellaneous_fee || 240000,
         grade_fee: settings?.grade_fee || 150000,
         dedicated_deadline: settings?.dedicated_deadline || '2026-02-19',
-        combined_deadline: settings?.combined_deadline || '2026-03-24'
+        combined_deadline: settings?.combined_deadline || '2026-03-24',
+        notes: settings?.notes || '• 振込期日までに指定口座にお振込みください\n• 振込手数料はご負担ください\n• 振込人名義は保護者名でお願いします\n• 振込完了後、振込控えを学校までご提出ください'
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -404,6 +415,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, onClose
                             required
                         />
                     </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">注意事項</label>
+                    <textarea
+                        value={formData.notes}
+                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={6}
+                        placeholder="注意事項を入力してください"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                        改行で区切って複数の注意事項を入力できます
+                    </p>
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">

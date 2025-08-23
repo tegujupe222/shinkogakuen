@@ -203,15 +203,32 @@ const AdmissionFeeView: React.FC = () => {
             {/* 注意事項 */}
             <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-6">
                 <h3 className="text-lg font-semibold text-yellow-900 mb-4">注意事項</h3>
-                <ul className="space-y-2 text-yellow-800">
-                    <li>• 振込期日までに指定口座にお振込みください</li>
-                    <li>• 振込手数料はご負担ください</li>
-                    <li>• 振込人名義は保護者名でお願いします</li>
-                    <li>• 振込完了後、振込控えを学校までご提出ください</li>
-                    {applicableExemptions.length > 0 && (
-                        <li>• 免除が適用されている場合は、免除後の金額をお振込みください</li>
-                    )}
-                </ul>
+                {settings?.notes ? (
+                    <div className="space-y-2 text-yellow-800">
+                        {settings.notes.split('\n').map((note, index) => (
+                            <div key={index} className="flex items-start">
+                                <span className="mr-2">•</span>
+                                <span>{note.trim()}</span>
+                            </div>
+                        ))}
+                        {applicableExemptions.length > 0 && (
+                            <div className="flex items-start">
+                                <span className="mr-2">•</span>
+                                <span>免除が適用されている場合は、免除後の金額をお振込みください</span>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <ul className="space-y-2 text-yellow-800">
+                        <li>• 振込期日までに指定口座にお振込みください</li>
+                        <li>• 振込手数料はご負担ください</li>
+                        <li>• 振込人名義は保護者名でお願いします</li>
+                        <li>• 振込完了後、振込控えを学校までご提出ください</li>
+                        {applicableExemptions.length > 0 && (
+                            <li>• 免除が適用されている場合は、免除後の金額をお振込みください</li>
+                        )}
+                    </ul>
+                )}
             </div>
         </div>
     );

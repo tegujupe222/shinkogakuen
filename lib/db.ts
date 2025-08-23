@@ -285,6 +285,10 @@ export async function initDatabase() {
         grade_fee INTEGER DEFAULT 150000,
         dedicated_deadline DATE DEFAULT '2026-02-19',
         combined_deadline DATE DEFAULT '2026-03-24',
+        notes TEXT DEFAULT '• 振込期日までに指定口座にお振込みください
+• 振込手数料はご負担ください
+• 振込人名義は保護者名でお願いします
+• 振込完了後、振込控えを学校までご提出ください',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
@@ -665,7 +669,8 @@ export async function createAdmissionFeeSettings(
   miscellaneousFee: number,
   gradeFee: number,
   dedicatedDeadline: string,
-  combinedDeadline: string
+  combinedDeadline: string,
+  notes?: string
 ) {
   noStore();
   const isConnected = await checkDatabaseConnection();
@@ -677,10 +682,10 @@ export async function createAdmissionFeeSettings(
     const result = await sql`
       INSERT INTO admission_fee_settings (
         admission_fee, miscellaneous_fee, grade_fee, 
-        dedicated_deadline, combined_deadline
+        dedicated_deadline, combined_deadline, notes
       ) VALUES (
         ${admissionFee}, ${miscellaneousFee}, ${gradeFee}, 
-        ${dedicatedDeadline}, ${combinedDeadline}
+        ${dedicatedDeadline}, ${combinedDeadline}, ${notes || null}
       )
       RETURNING *
     `;
@@ -697,7 +702,8 @@ export async function updateAdmissionFeeSettings(
   miscellaneousFee: number,
   gradeFee: number,
   dedicatedDeadline: string,
-  combinedDeadline: string
+  combinedDeadline: string,
+  notes?: string
 ) {
   noStore();
   const isConnected = await checkDatabaseConnection();
@@ -714,6 +720,7 @@ export async function updateAdmissionFeeSettings(
         grade_fee = ${gradeFee},
         dedicated_deadline = ${dedicatedDeadline},
         combined_deadline = ${combinedDeadline},
+        notes = ${notes || null},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *
