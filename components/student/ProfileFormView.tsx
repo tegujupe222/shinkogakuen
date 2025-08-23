@@ -66,7 +66,7 @@ const ProfileFormView: React.FC = () => {
     };
 
     // シンプルで確実な入力処理関数
-    const handleInput = (field: keyof StudentProfile, value: string) => {
+    const handleInput = (field: keyof StudentProfile, value: string | boolean) => {
         console.log('Input change:', field, value);
         setProfile(prev => ({
             ...prev,
