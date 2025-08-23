@@ -9,7 +9,7 @@ const AnnouncementsView: React.FC = () => {
     useEffect(() => {
         const fetchAnnouncements = async () => {
             try {
-                const response = await fetch('/api/announcements/student');
+                const response = await fetch('/api/announcements');
                 if (response.ok) {
                     const data = await response.json();
                     setAnnouncements(data);

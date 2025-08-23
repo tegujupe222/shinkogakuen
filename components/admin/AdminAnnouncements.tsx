@@ -9,17 +9,10 @@ import PlusIcon from '../icons/PlusIcon';
 const AnnouncementForm: React.FC<{ announcement: Partial<Announcement> | null, onSave: (ann: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt' | 'author'>) => void, onCancel: () => void }> = ({ announcement, onSave, onCancel }) => {
     const [title, setTitle] = useState(announcement?.title || '');
     const [content, setContent] = useState(announcement?.content || '');
-    const [isPublished, setIsPublished] = useState(announcement?.is_published || false);
-    const [scheduledPublishAt, setScheduledPublishAt] = useState(announcement?.scheduled_publish_at || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ 
-            title, 
-            content, 
-            is_published: isPublished,
-            scheduled_publish_at: scheduledPublishAt || undefined
-        });
+        onSave({ title, content });
     };
 
     return (
@@ -31,34 +24,6 @@ const AnnouncementForm: React.FC<{ announcement: Partial<Announcement> | null, o
             <div>
                 <label htmlFor="content" className="block text-sm font-medium text-gray-700">内容</label>
                 <textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} rows={5} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div className="space-y-4">
-                <div className="flex items-center">
-                    <input
-                        type="checkbox"
-                        id="isPublished"
-                        checked={isPublished}
-                        onChange={(e) => setIsPublished(e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="isPublished" className="ml-2 block text-sm text-gray-900">
-                        学生に公開する
-                    </label>
-                </div>
-                {isPublished && (
-                    <div>
-                        <label htmlFor="scheduledPublishAt" className="block text-sm font-medium text-gray-700">
-                            予約公開時刻（空欄で即座に公開）
-                        </label>
-                        <input
-                            type="datetime-local"
-                            id="scheduledPublishAt"
-                            value={scheduledPublishAt}
-                            onChange={(e) => setScheduledPublishAt(e.target.value)}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-                )}
             </div>
             <div className="flex justify-end space-x-3">
                 <button type="button" onClick={onCancel} className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">キャンセル</button>
@@ -73,7 +38,6 @@ const AdminAnnouncements: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
     const [loading, setLoading] = useState(true);
-    const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'unpublished'>('all');
 
     // お知らせ一覧を取得
     const fetchAnnouncements = async () => {
@@ -155,35 +119,7 @@ const AdminAnnouncements: React.FC = () => {
         }
     };
 
-    const handleTogglePublish = async (announcement: Announcement) => {
-        const newPublishStatus = !announcement.is_published;
-        const action = newPublishStatus ? '公開' : '非公開';
-        
-        if (window.confirm(`このお知らせを${action}にしますか？`)) {
-            try {
-                const response = await fetch(`/api/announcements/${announcement.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        title: announcement.title,
-                        content: announcement.content,
-                        is_published: newPublishStatus,
-                        scheduled_publish_at: announcement.scheduled_publish_at
-                    }),
-                });
 
-                if (response.ok) {
-                    await fetchAnnouncements();
-                    alert(`${action}にしました`);
-                }
-            } catch (error) {
-                console.error('Failed to toggle publish status:', error);
-                alert('公開状態の変更に失敗しました');
-            }
-        }
-    };
 
     if (loading) {
         return (
@@ -201,67 +137,23 @@ const AdminAnnouncements: React.FC = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-800">お知らせ管理</h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                        ✅ 公開中: 学生に表示される | ❌ 非公開: 学生に表示されない | ⏰ 予約公開: 指定時刻に自動公開
-                    </p>
-                </div>
+                <h2 className="text-2xl font-bold text-gray-800">お知らせ管理</h2>
                 <button onClick={() => handleOpenModal()} className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                     <PlusIcon className="w-5 h-5 mr-2" />
                     新規作成
                 </button>
             </div>
-            
-            {/* フィルター */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center space-x-4">
-                    <label className="text-sm font-medium text-gray-700">表示フィルター:</label>
-                    <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value as 'all' | 'published' | 'unpublished')}
-                        className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="all">すべて</option>
-                        <option value="published">公開中のみ</option>
-                        <option value="unpublished">非公開のみ</option>
-                    </select>
-                </div>
-            </div>
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
                 <ul role="list" className="divide-y divide-gray-200">
-                    {announcements
-                        .filter(ann => {
-                            if (filterStatus === 'published') return ann.is_published;
-                            if (filterStatus === 'unpublished') return !ann.is_published;
-                            return true;
-                        })
-                        .map((ann) => (
+                    {announcements.map((ann) => (
                         <li key={ann.id}>
                             <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <p className="text-lg font-medium text-blue-600 truncate">{ann.title}</p>
-                                        <button
-                                            onClick={() => handleTogglePublish(ann)}
-                                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                                ann.is_published 
-                                                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                            }`}
-                                        >
-                                            {ann.is_published ? '✅ 公開中' : '❌ 非公開'}
-                                        </button>
-                                        {ann.scheduled_publish_at && (
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                ⏰ 予約公開: {new Date(ann.scheduled_publish_at).toLocaleString('ja-JP')}
-                                            </span>
-                                        )}
-                                    </div>
+                                    <p className="text-lg font-medium text-blue-600 truncate">{ann.title}</p>
                                     <div className="ml-2 flex-shrink-0 flex items-center space-x-4">
                                         <span className="text-sm text-gray-500">{new Date(ann.createdAt).toLocaleDateString('ja-JP')}</span>
-                                        <button onClick={() => handleOpenModal(ann)} className="text-gray-400 hover:text-blue-600" title="編集"><PencilIcon className="w-5 h-5"/></button>
-                                        <button onClick={() => handleDelete(ann.id)} className="text-gray-400 hover:text-red-600" title="削除"><TrashIcon className="w-5 h-5"/></button>
+                                        <button onClick={() => handleOpenModal(ann)} className="text-gray-400 hover:text-blue-600"><PencilIcon className="w-5 h-5"/></button>
+                                        <button onClick={() => handleDelete(ann.id)} className="text-gray-400 hover:text-red-600"><TrashIcon className="w-5 h-5"/></button>
                                     </div>
                                 </div>
                                 <div className="mt-2 sm:flex sm:justify-between">

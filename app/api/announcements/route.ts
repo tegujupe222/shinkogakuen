@@ -34,7 +34,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, content, is_published, scheduled_publish_at } = await request.json()
+    const { title, content } = await request.json()
 
     if (!title || !content) {
       return NextResponse.json(
@@ -44,13 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const newAnnouncement = await createAnnouncement(
-        title, 
-        content, 
-        '管理者',
-        is_published || false,
-        scheduled_publish_at || null
-      )
+      const newAnnouncement = await createAnnouncement(title, content, '管理者')
       return NextResponse.json(newAnnouncement, { status: 201 })
     } catch (dbError) {
       console.log('Database connection failed, using fallback storage')
@@ -60,9 +54,6 @@ export async function POST(request: NextRequest) {
         title,
         content,
         author: '管理者',
-        is_published: is_published || false,
-        published_at: is_published ? new Date().toISOString() : null,
-        scheduled_publish_at: scheduled_publish_at || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }

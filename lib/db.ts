@@ -46,9 +46,6 @@ export async function initDatabase() {
         title VARCHAR(255) NOT NULL,
         content TEXT NOT NULL,
         author VARCHAR(100) NOT NULL,
-        is_published BOOLEAN DEFAULT FALSE,
-        published_at TIMESTAMP WITH TIME ZONE,
-        scheduled_publish_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
@@ -339,7 +336,7 @@ export async function initDatabase() {
 }
 
 // お知らせ関連の関数
-export async function getAnnouncements(forStudents: boolean = false) {
+export async function getAnnouncements() {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
@@ -347,24 +344,10 @@ export async function getAnnouncements(forStudents: boolean = false) {
   }
   
   try {
-    let query;
-    if (forStudents) {
-      // 学生向け: 公開済みかつ予約公開時刻が現在時刻以前のもののみ
-      query = sql`
-        SELECT * FROM announcements 
-        WHERE is_published = true 
-        AND (scheduled_publish_at IS NULL OR scheduled_publish_at <= CURRENT_TIMESTAMP)
-        ORDER BY created_at DESC
-      `;
-    } else {
-      // 管理者向け: 全て表示
-      query = sql`
-        SELECT * FROM announcements 
-        ORDER BY created_at DESC
-      `;
-    }
-    
-    const result = await query;
+    const result = await sql`
+      SELECT * FROM announcements 
+      ORDER BY created_at DESC
+    `;
     return result.rows;
   } catch (error) {
     console.error('Failed to fetch announcements:', error);
@@ -372,13 +355,7 @@ export async function getAnnouncements(forStudents: boolean = false) {
   }
 }
 
-export async function createAnnouncement(
-  title: string, 
-  content: string, 
-  author: string, 
-  is_published: boolean = false,
-  scheduled_publish_at: string | null = null
-) {
+export async function createAnnouncement(title: string, content: string, author: string) {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
@@ -386,10 +363,9 @@ export async function createAnnouncement(
   }
   
   try {
-    const published_at = is_published ? new Date().toISOString() : null;
     const result = await sql`
-      INSERT INTO announcements (title, content, author, is_published, published_at, scheduled_publish_at)
-      VALUES (${title}, ${content}, ${author}, ${is_published}, ${published_at}, ${scheduled_publish_at})
+      INSERT INTO announcements (title, content, author)
+      VALUES (${title}, ${content}, ${author})
       RETURNING *
     `;
     return result.rows[0];
@@ -399,13 +375,7 @@ export async function createAnnouncement(
   }
 }
 
-export async function updateAnnouncement(
-  id: number, 
-  title: string, 
-  content: string,
-  is_published?: boolean,
-  scheduled_publish_at?: string | null
-) {
+export async function updateAnnouncement(id: number, title: string, content: string) {
   noStore();
   const isConnected = await checkDatabaseConnection();
   if (!isConnected) {
@@ -413,27 +383,9 @@ export async function updateAnnouncement(
   }
   
   try {
-    let published_at = null;
-    if (is_published !== undefined) {
-      // 現在の公開状態を取得
-      const current = await sql`SELECT is_published FROM announcements WHERE id = ${id}`;
-      const wasPublished = current.rows[0]?.is_published;
-      
-      // 非公開から公開に変更された場合のみpublished_atを設定
-      if (is_published && !wasPublished) {
-        published_at = new Date().toISOString();
-      }
-    }
-
     const result = await sql`
       UPDATE announcements 
-      SET 
-        title = ${title}, 
-        content = ${content}, 
-        is_published = COALESCE(${is_published}, is_published),
-        published_at = COALESCE(${published_at}, published_at),
-        scheduled_publish_at = COALESCE(${scheduled_publish_at}, scheduled_publish_at),
-        updated_at = CURRENT_TIMESTAMP
+      SET title = ${title}, content = ${content}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *
     `;
