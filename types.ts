@@ -282,7 +282,5 @@ export interface StudentExemptionAssignment {
     exemption_id: string;
     exemption_name: string;
     exemption_amount: number;
-    student_name?: string;
-    exam_no?: string;
     assigned_at: string;
 }

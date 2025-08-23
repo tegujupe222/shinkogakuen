@@ -906,18 +906,20 @@ export async function getAllStudentExemptionAssignments() {
   }
   
   try {
+    // まずテーブルが存在するかチェック
+    const tableCheck = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'student_exemption_assignments'
+      );
+    `;
+    
+    if (!tableCheck.rows[0].exists) {
+      throw new Error('Table student_exemption_assignments does not exist');
+    }
+    
     const result = await sql`
-      SELECT 
-        sea.*,
-        afe.exemption_name,
-        afe.exemption_amount,
-        sr.student_name,
-        sr.exam_no
-      FROM student_exemption_assignments sea
-      JOIN admission_fee_exemptions afe ON sea.exemption_id = afe.id
-      LEFT JOIN student_results sr ON sea.student_id = sr.student_id
-      WHERE afe.is_active = TRUE
-      ORDER BY sea.assigned_at DESC
+      SELECT * FROM student_exemption_assignments
     `;
     return result.rows;
   } catch (error) {
