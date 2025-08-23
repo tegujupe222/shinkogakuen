@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { StudentProfile } from '../../types';
 
@@ -86,17 +86,30 @@ const ProfileFormView: React.FC = () => {
         }));
     }, []);
 
-    // 日本語入力対応の入力処理関数
-    const handleJapaneseInput = useCallback((field: keyof StudentProfile) => {
-        return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-            const value = (e.target as HTMLInputElement | HTMLTextAreaElement).value;
-            console.log('Japanese input change:', field, value);
-            setProfile(prev => ({
-                ...prev,
-                [field]: value
-            }));
+    // シンプルな入力処理関数（useCallbackを使用しない）
+    const handleSimpleInput = (field: keyof StudentProfile) => {
+        return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const value = e.target.value;
+            console.log('Simple input change:', field, value);
+            setProfile(prev => {
+                const newState = {
+                    ...prev,
+                    [field]: value
+                };
+                console.log('New profile state:', newState);
+                return newState;
+            });
         };
-    }, []);
+    };
+
+    // 最もシンプルな入力処理（直接的な状態更新）
+    const handleDirectInput = (field: keyof StudentProfile, value: string) => {
+        console.log('Direct input:', field, value);
+        setProfile(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
     const saveForm = async (step: FormStep, isComplete: boolean = false) => {
         if (!user?.exam_no) return;
@@ -153,8 +166,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name || ''}
-                            onChange={handleJapaneseInput('student_last_name')}
-                            onInput={handleJapaneseInput('student_last_name')}
+                            onChange={(e) => handleDirectInput('student_last_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -166,8 +178,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_first_name || ''}
-                            onChange={handleJapaneseInput('student_first_name')}
-                            onInput={handleJapaneseInput('student_first_name')}
+                            onChange={(e) => handleDirectInput('student_first_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -179,8 +190,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name_kana || ''}
-                            onChange={handleJapaneseInput('student_last_name_kana')}
-                            onInput={handleJapaneseInput('student_last_name_kana')}
+                            onChange={(e) => handleDirectInput('student_last_name_kana', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
