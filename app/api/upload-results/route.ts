@@ -99,6 +99,19 @@ export async function POST(request: NextRequest) {
             const scholarshipStudent = row[23]?.toString() || null; // X列: 特待生
             const clubRecommendation = row[25]?.toString() || null; // Z列: 部活動推薦表記
 
+            // デバッグ用ログ（最初の3行のみ）
+            if (j <= 3) {
+                console.log(`Row ${j}:`, {
+                    studentId,
+                    examNo,
+                    name,
+                    applicationCourse,
+                    recommendation,
+                    scholarshipStudent,
+                    rawRow: row.slice(0, 10) // 最初の10列のみ表示
+                });
+            }
+
             if (!examNo) {
                 continue; // 受験番号が空の行はスキップ
             }
