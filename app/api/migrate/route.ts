@@ -278,6 +278,17 @@ export async function POST(request: NextRequest) {
             )
         `;
 
+        // 学生免除割り当てテーブルを作成
+        await sql`
+            CREATE TABLE IF NOT EXISTS student_exemption_assignments (
+                id SERIAL PRIMARY KEY,
+                student_id VARCHAR(50) NOT NULL,
+                exemption_id INTEGER NOT NULL,
+                assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (exemption_id) REFERENCES admission_fee_exemptions(id) ON DELETE CASCADE
+            )
+        `;
+
         // フォーム設定の初期データを挿入
         const initialFormSettings = [
             // 生徒基本情報

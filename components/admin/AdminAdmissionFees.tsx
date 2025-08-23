@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AdmissionFeeSettings, AdmissionFeeExemption } from '../../types';
+import { AdmissionFeeSettings, AdmissionFeeExemption, StudentExemptionAssignment } from '../../types';
 import Modal from '../shared/Modal';
 import PencilIcon from '../icons/PencilIcon';
 import TrashIcon from '../icons/TrashIcon';
@@ -8,9 +8,11 @@ import PlusIcon from '../icons/PlusIcon';
 const AdminAdmissionFees: React.FC = () => {
     const [settings, setSettings] = useState<AdmissionFeeSettings | null>(null);
     const [exemptions, setExemptions] = useState<AdmissionFeeExemption[]>([]);
+    const [assignments, setAssignments] = useState<StudentExemptionAssignment[]>([]);
     const [loading, setLoading] = useState(true);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [showExemptionModal, setShowExemptionModal] = useState(false);
+    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
     const [editingExemption, setEditingExemption] = useState<AdmissionFeeExemption | null>(null);
 
     useEffect(() => {
@@ -20,9 +22,10 @@ const AdminAdmissionFees: React.FC = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [settingsResponse, exemptionsResponse] = await Promise.all([
+            const [settingsResponse, exemptionsResponse, assignmentsResponse] = await Promise.all([
                 fetch('/api/admission-fee-settings'),
-                fetch('/api/admission-fee-exemptions')
+                fetch('/api/admission-fee-exemptions'),
+                fetch('/api/student-exemption-assignments')
             ]);
 
             if (settingsResponse.ok) {
@@ -33,6 +36,11 @@ const AdminAdmissionFees: React.FC = () => {
             if (exemptionsResponse.ok) {
                 const exemptionsData = await exemptionsResponse.json();
                 setExemptions(exemptionsData.exemptions);
+            }
+
+            if (assignmentsResponse.ok) {
+                const assignmentsData = await assignmentsResponse.json();
+                setAssignments(assignmentsData.assignments);
             }
         } catch (error) {
             console.error('Failed to fetch data:', error);
@@ -117,6 +125,52 @@ const AdminAdmissionFees: React.FC = () => {
         } catch (error) {
             console.error('Failed to delete exemption:', error);
             alert('削除に失敗しました');
+        }
+    };
+
+    const handleAssignExemption = async (studentId: string, exemptionId: string) => {
+        try {
+            const response = await fetch('/api/student-exemption-assignments/assign', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ student_id: studentId, exemption_id: exemptionId })
+            });
+            
+            if (response.ok) {
+                fetchData();
+                alert('免除を学生に割り当てました');
+            } else {
+                alert('免除の割り当てに失敗しました');
+            }
+        } catch (error) {
+            console.error('Failed to assign exemption:', error);
+            alert('免除の割り当てに失敗しました');
+        }
+    };
+
+    const handleRemoveAssignment = async (studentId: string, exemptionId: string) => {
+        if (!confirm('この免除割り当てを削除しますか？')) return;
+        
+        try {
+            const response = await fetch('/api/student-exemption-assignments/remove', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ student_id: studentId, exemption_id: exemptionId })
+            });
+            
+            if (response.ok) {
+                fetchData();
+                alert('免除割り当てを削除しました');
+            } else {
+                alert('免除割り当ての削除に失敗しました');
+            }
+        } catch (error) {
+            console.error('Failed to remove assignment:', error);
+            alert('免除割り当ての削除に失敗しました');
         }
     };
 
@@ -234,13 +288,22 @@ const AdminAdmissionFees: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">免除設定</h3>
-                    <button
-                        onClick={() => openExemptionModal()}
-                        className="flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                    >
-                        <PlusIcon className="w-4 h-4 mr-2" />
-                        新規追加
-                    </button>
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={() => setShowAssignmentModal(true)}
+                            className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        >
+                            <PlusIcon className="w-4 h-4 mr-2" />
+                            免除割り当て
+                        </button>
+                        <button
+                            onClick={() => openExemptionModal()}
+                            className="flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                        >
+                            <PlusIcon className="w-4 h-4 mr-2" />
+                            新規追加
+                        </button>
+                    </div>
                 </div>
 
                 {exemptions.length > 0 ? (
@@ -326,6 +389,15 @@ const AdminAdmissionFees: React.FC = () => {
                         setShowExemptionModal(false);
                         setEditingExemption(null);
                     }}
+                />
+            )}
+
+            {/* 免除割り当てモーダル */}
+            {showAssignmentModal && (
+                <AssignmentModal
+                    exemptions={exemptions}
+                    onAssign={handleAssignExemption}
+                    onClose={() => setShowAssignmentModal(false)}
                 />
             )}
         </div>
@@ -525,6 +597,95 @@ const ExemptionModal: React.FC<ExemptionModalProps> = ({ exemption, onSave, onCl
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                     >
                         {exemption ? '更新' : '作成'}
+                    </button>
+                </div>
+            </form>
+        </Modal>
+    );
+};
+
+// 免除割り当てモーダル
+interface AssignmentModalProps {
+    exemptions: AdmissionFeeExemption[];
+    onAssign: (studentId: string, exemptionId: string) => void;
+    onClose: () => void;
+}
+
+const AssignmentModal: React.FC<AssignmentModalProps> = ({ exemptions, onAssign, onClose }) => {
+    const [studentId, setStudentId] = useState('');
+    const [exemptionId, setExemptionId] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!studentId || !exemptionId) {
+            alert('学生IDと免除を選択してください');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await onAssign(studentId, exemptionId);
+            onClose();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Modal 
+            isOpen={true}
+            onClose={onClose}
+            title="免除を学生に割り当て"
+        >
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">学生ID</label>
+                    <input
+                        type="text"
+                        value={studentId}
+                        onChange={(e) => setStudentId(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="学生IDを入力"
+                        required
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                        例: 4508, 4509 など
+                    </p>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">免除項目</label>
+                    <select
+                        value={exemptionId}
+                        onChange={(e) => setExemptionId(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                    >
+                        <option value="">免除を選択</option>
+                        {exemptions.filter(e => e.is_active).map((exemption) => (
+                            <option key={exemption.id} value={exemption.id}>
+                                {exemption.exemption_name} ({new Intl.NumberFormat('ja-JP').format(exemption.exemption_amount)}円)
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                        disabled={loading}
+                    >
+                        キャンセル
+                    </button>
+                    <button
+                        type="submit"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        disabled={loading}
+                    >
+                        {loading ? '割り当て中...' : '割り当て'}
                     </button>
                 </div>
             </form>

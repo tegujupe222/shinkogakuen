@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { AdmissionFeeSettings, AdmissionFeeExemption, StudentResult } from '../../types';
+import { AdmissionFeeSettings, AdmissionFeeExemption, StudentResult, StudentExemptionAssignment } from '../../types';
 
 const AdmissionFeeView: React.FC = () => {
     const { user } = useAuth();
     const [settings, setSettings] = useState<AdmissionFeeSettings | null>(null);
     const [exemptions, setExemptions] = useState<AdmissionFeeExemption[]>([]);
     const [studentResult, setStudentResult] = useState<StudentResult | null>(null);
+    const [studentAssignments, setStudentAssignments] = useState<StudentExemptionAssignment[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -18,10 +19,11 @@ const AdmissionFeeView: React.FC = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [settingsResponse, exemptionsResponse, resultResponse] = await Promise.all([
+            const [settingsResponse, exemptionsResponse, resultResponse, assignmentsResponse] = await Promise.all([
                 fetch('/api/admission-fee-settings'),
                 fetch('/api/admission-fee-exemptions'),
-                fetch(`/api/results/${user?.exam_no}`)
+                fetch(`/api/results/${user?.exam_no}`),
+                fetch(`/api/student-exemption-assignments/${user?.exam_no}`)
             ]);
 
             if (settingsResponse.ok) {
@@ -38,6 +40,13 @@ const AdmissionFeeView: React.FC = () => {
                 const resultData = await resultResponse.json();
                 if (resultData.success && resultData.result) {
                     setStudentResult(resultData.result);
+                }
+            }
+
+            if (assignmentsResponse.ok) {
+                const assignmentsData = await assignmentsResponse.json();
+                if (assignmentsData.success) {
+                    setStudentAssignments(assignmentsData.assignments);
                 }
             }
         } catch (error) {
@@ -77,25 +86,11 @@ const AdmissionFeeView: React.FC = () => {
     };
 
     const getApplicableExemptions = () => {
-        if (!studentResult) return [];
-        
-        // 学生の結果に基づいて適用可能な免除を判定
-        const applicableExemptions: AdmissionFeeExemption[] = [];
-        
-        exemptions.forEach(exemption => {
-            // 特待生の場合
-            if (exemption.exemption_name.includes('特待生') && studentResult.scholarship_student === '特待生') {
-                applicableExemptions.push(exemption);
-            }
-            // 部活動推薦の場合
-            if (exemption.exemption_name.includes('部活動推薦') && studentResult.club_recommendation) {
-                applicableExemptions.push(exemption);
-            }
-            // その他の免除条件に応じて判定
-            // ここに追加の判定ロジックを実装
-        });
-        
-        return applicableExemptions;
+        // 割り当て済みの免除を返す
+        return studentAssignments.map(assignment => ({
+            exemption_name: assignment.exemption_name,
+            exemption_amount: assignment.exemption_amount
+        }));
     };
 
     const getFinalAmount = () => {
@@ -167,8 +162,8 @@ const AdmissionFeeView: React.FC = () => {
                 <div className="bg-green-50 rounded-lg border border-green-200 p-6 mb-6">
                     <h3 className="text-lg font-semibold text-green-900 mb-4">適用免除</h3>
                     <div className="space-y-3">
-                        {applicableExemptions.map((exemption) => (
-                            <div key={exemption.id} className="flex justify-between">
+                        {applicableExemptions.map((exemption, index) => (
+                            <div key={index} className="flex justify-between">
                                 <span className="text-green-800">{exemption.exemption_name}</span>
                                 <span className="font-medium text-green-800">-{formatCurrency(exemption.exemption_amount)}円</span>
                             </div>

@@ -275,3 +275,14 @@ export interface AdmissionFeeExemption {
     created_at: string;
     updated_at: string;
 }
+
+export interface StudentExemptionAssignment {
+    id: string;
+    student_id: string;
+    exemption_id: string;
+    exemption_name: string;
+    exemption_amount: number;
+    student_name?: string;
+    exam_no?: string;
+    assigned_at: string;
+}

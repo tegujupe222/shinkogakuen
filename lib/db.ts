@@ -306,6 +306,17 @@ export async function initDatabase() {
       )
     `;
 
+    // 学生免除割り当てテーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS student_exemption_assignments (
+        id SERIAL PRIMARY KEY,
+        student_id VARCHAR(50) NOT NULL,
+        exemption_id INTEGER NOT NULL,
+        assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (exemption_id) REFERENCES admission_fee_exemptions(id) ON DELETE CASCADE
+      )
+    `;
+
     // 合格証書テーブル
     await sql`
       CREATE TABLE IF NOT EXISTS certificates (
@@ -811,6 +822,106 @@ export async function deleteAdmissionFeeExemption(id: number) {
     return result.rowCount > 0;
   } catch (error) {
     console.error('Failed to delete admission fee exemption:', error);
+    throw error;
+  }
+}
+
+// 学生免除割り当て関連の関数
+export async function getStudentExemptionAssignments(studentId: string) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      SELECT sea.*, afe.exemption_name, afe.exemption_amount
+      FROM student_exemption_assignments sea
+      JOIN admission_fee_exemptions afe ON sea.exemption_id = afe.id
+      WHERE sea.student_id = ${studentId} AND afe.is_active = TRUE
+      ORDER BY sea.assigned_at DESC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Failed to get student exemption assignments:', error);
+    throw error;
+  }
+}
+
+export async function assignExemptionToStudent(studentId: string, exemptionId: number) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    // 既存の割り当てをチェック
+    const existing = await sql`
+      SELECT id FROM student_exemption_assignments 
+      WHERE student_id = ${studentId} AND exemption_id = ${exemptionId}
+    `;
+    
+    if (existing.rows.length > 0) {
+      return existing.rows[0]; // 既に割り当て済み
+    }
+    
+    const result = await sql`
+      INSERT INTO student_exemption_assignments (student_id, exemption_id)
+      VALUES (${studentId}, ${exemptionId})
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to assign exemption to student:', error);
+    throw error;
+  }
+}
+
+export async function removeExemptionFromStudent(studentId: string, exemptionId: number) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    await sql`
+      DELETE FROM student_exemption_assignments 
+      WHERE student_id = ${studentId} AND exemption_id = ${exemptionId}
+    `;
+    return true;
+  } catch (error) {
+    console.error('Failed to remove exemption from student:', error);
+    throw error;
+  }
+}
+
+export async function getAllStudentExemptionAssignments() {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      SELECT 
+        sea.*,
+        afe.exemption_name,
+        afe.exemption_amount,
+        sr.student_name,
+        sr.exam_no
+      FROM student_exemption_assignments sea
+      JOIN admission_fee_exemptions afe ON sea.exemption_id = afe.id
+      LEFT JOIN student_results sr ON sea.student_id = sr.student_id
+      WHERE afe.is_active = TRUE
+      ORDER BY sea.assigned_at DESC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Failed to get all student exemption assignments:', error);
     throw error;
   }
 }
