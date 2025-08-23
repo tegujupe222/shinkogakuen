@@ -54,11 +54,16 @@ const ProfileFormView: React.FC = () => {
 
     const fetchFormSettings = async () => {
         try {
+            console.log('Student: Fetching form settings...');
             const response = await fetch('/api/form-settings');
+            console.log('Student: Form settings response status:', response.status);
+            
             if (response.ok) {
                 const data = await response.json();
+                console.log('Student: Form settings response data:', data);
                 if (data.success) {
                     setFormSettings(data.settings);
+                    console.log('Student: Form settings updated:', data.settings);
                 }
             }
         } catch (error) {
@@ -110,6 +115,94 @@ const ProfileFormView: React.FC = () => {
 
     const getFieldError = (fieldKey: string): string | undefined => {
         return validationErrors[fieldKey];
+    };
+
+    // 動的フィールド生成関数
+    const renderDynamicField = (setting: FormSetting) => {
+        const fieldValue = profile[setting.field_key as keyof StudentProfile];
+        const hasError = getFieldError(setting.field_key);
+        
+        // 文字列フィールド用の共通プロパティ
+        const commonProps = {
+            value: (fieldValue as string) || '',
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => 
+                handleInputChange(setting.field_key as keyof StudentProfile, e.target.value),
+            className: `w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                hasError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+            }`,
+            required: setting.is_required,
+            placeholder: setting.placeholder || undefined
+        };
+
+        switch (setting.field_type) {
+            case 'text':
+            case 'email':
+            case 'tel':
+            case 'date':
+                return (
+                    <input
+                        type={setting.field_type}
+                        {...commonProps}
+                    />
+                );
+            
+            case 'textarea':
+                return (
+                    <textarea
+                        {...commonProps}
+                        rows={3}
+                    />
+                );
+            
+            case 'select':
+                const options = setting.options ? setting.options.split(',').map(opt => opt.trim()) : [];
+                return (
+                    <select {...commonProps}>
+                        <option value="">選択してください</option>
+                        {options.map((option, index) => (
+                            <option key={index} value={option}>{option}</option>
+                        ))}
+                    </select>
+                );
+            
+            case 'checkbox':
+                return (
+                    <input
+                        type="checkbox"
+                        checked={fieldValue === true}
+                        onChange={(e) => handleInputChange(setting.field_key as keyof StudentProfile, e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                );
+            
+            case 'radio':
+                const radioOptions = setting.options ? setting.options.split(',').map(opt => opt.trim()) : [];
+                return (
+                    <div className="space-y-2">
+                        {radioOptions.map((option, index) => (
+                            <label key={index} className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name={setting.field_key}
+                                    value={option}
+                                    checked={fieldValue === option}
+                                    onChange={(e) => handleInputChange(setting.field_key as keyof StudentProfile, e.target.value)}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">{option}</span>
+                            </label>
+                        ))}
+                    </div>
+                );
+            
+            default:
+                return (
+                    <input
+                        type="text"
+                        {...commonProps}
+                    />
+                );
+        }
     };
 
     // 合格判定
@@ -1085,54 +1178,24 @@ const ProfileFormView: React.FC = () => {
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">芸術科目選択</h3>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    芸術選択第１希望科目
-                                    {isFieldRequired('art_first_choice') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <select
-                                    value={profile.art_first_choice || ''}
-                                    onChange={(e) => handleInputChange('art_first_choice', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('art_first_choice') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('art_first_choice')}
-                                >
-                                    <option value="">選択してください</option>
-                                    <option value="音楽">音楽</option>
-                                    <option value="美術">美術</option>
-                                    <option value="書道">書道</option>
-                                </select>
-                                {getFieldError('art_first_choice') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('art_first_choice')}</p>
-                                )}
-                            </div>
-                        <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    芸術選択第２希望科目
-                                    {isFieldRequired('art_second_choice') && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                <select
-                                    value={profile.art_second_choice || ''}
-                                    onChange={(e) => handleInputChange('art_second_choice', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                        getFieldError('art_second_choice') 
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300'
-                                    }`}
-                                    required={isFieldRequired('art_second_choice')}
-                                >
-                                    <option value="">選択してください</option>
-                                    <option value="音楽">音楽</option>
-                                    <option value="美術">美術</option>
-                                    <option value="書道">書道</option>
-                                </select>
-                                {getFieldError('art_second_choice') && (
-                                    <p className="mt-1 text-sm text-red-600">{getFieldError('art_second_choice')}</p>
-                                )}
-                            </div>
+                            {formSettings
+                                .filter(setting => setting.field_group === 'art')
+                                .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
                         </div>
                     </div>
 
