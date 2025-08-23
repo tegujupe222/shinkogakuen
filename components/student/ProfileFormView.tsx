@@ -122,11 +122,28 @@ const ProfileFormView: React.FC = () => {
         const fieldValue = profile[setting.field_key as keyof StudentProfile];
         const hasError = getFieldError(setting.field_key);
         
+        // boolean型フィールドの特別処理
+        const isBooleanField = setting.field_key === 'has_chronic_illness' || setting.field_key === 'has_siblings_at_school';
+        
         // 文字列フィールド用の共通プロパティ
         const commonProps = {
-            value: (fieldValue as string) || '',
-            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => 
-                handleInputChange(setting.field_key as keyof StudentProfile, e.target.value),
+            value: isBooleanField 
+                ? (fieldValue === true ? 'あり' : fieldValue === false ? 'なし' : '')
+                : (fieldValue as string) || '',
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                let value: string | boolean = e.target.value;
+                
+                // boolean型フィールドの場合、適切な変換を行う
+                if (isBooleanField) {
+                    if (value === 'あり' || value === 'true') {
+                        value = true;
+                    } else if (value === 'なし' || value === 'false') {
+                        value = false;
+                    }
+                }
+                
+                handleInputChange(setting.field_key as keyof StudentProfile, value);
+            },
             className: `w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 hasError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
             }`,
