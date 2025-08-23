@@ -8,7 +8,7 @@ import ProfileFormView from './ProfileFormView';
 import PersonalResultsView from './PersonalResultsView';
 import MobileMenu from '../shared/MobileMenu';
 
-type Tab = 'announcements' | 'certificate' | 'documents' | 'profile' | 'personal-results';
+type Tab = 'announcements' | 'personal-results' | 'certificate' | 'documents' | 'profile';
 
 const StudentDashboard: React.FC = () => {
     const { user } = useAuth();

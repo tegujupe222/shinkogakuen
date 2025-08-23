@@ -244,38 +244,14 @@ export async function initDatabase() {
       )
     `;
 
-    // フォーム設定管理テーブル
-    await sql`
-      CREATE TABLE IF NOT EXISTS form_settings (
-        id SERIAL PRIMARY KEY,
-        field_key VARCHAR(100) UNIQUE NOT NULL,
-        field_label VARCHAR(200) NOT NULL,
-        field_type VARCHAR(50) NOT NULL,
-        field_group VARCHAR(100) NOT NULL,
-        field_order INTEGER NOT NULL,
-        is_required BOOLEAN DEFAULT FALSE,
-        is_visible BOOLEAN DEFAULT TRUE,
-        is_editable BOOLEAN DEFAULT TRUE,
-        validation_rules TEXT,
-        options TEXT,
-        placeholder TEXT,
-        help_text TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-
     // 書類テーブル
     await sql`
       CREATE TABLE IF NOT EXISTS documents (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        file_name VARCHAR(255) NOT NULL,
-        file_url TEXT NOT NULL,
-        description TEXT,
-        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        file_name VARCHAR(255),
+        file_url TEXT,
+        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
@@ -283,10 +259,33 @@ export async function initDatabase() {
     await sql`
       CREATE TABLE IF NOT EXISTS certificates (
         id SERIAL PRIMARY KEY,
-        student_id VARCHAR(50) NOT NULL,
-        file_name VARCHAR(255) NOT NULL,
-        file_url TEXT NOT NULL,
-        issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        student_id VARCHAR(50) UNIQUE NOT NULL,
+        file_name VARCHAR(255),
+        file_url TEXT,
+        issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // フォーム設定テーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS form_settings (
+        id SERIAL PRIMARY KEY,
+        field_key VARCHAR(100) UNIQUE NOT NULL,
+        field_label VARCHAR(255) NOT NULL,
+        field_type VARCHAR(50) NOT NULL,
+        field_group VARCHAR(100) NOT NULL,
+        field_order INTEGER NOT NULL,
+        is_required BOOLEAN DEFAULT false,
+        is_visible BOOLEAN DEFAULT true,
+        is_editable BOOLEAN DEFAULT true,
+        validation_rules TEXT,
+        options TEXT,
+        placeholder VARCHAR(255),
+        help_text TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `;
 

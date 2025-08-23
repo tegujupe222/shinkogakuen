@@ -1,77 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-
-interface StudentResult {
-    id: string;
-    exam_no: string;
-    student_id?: string;
-    name?: string;
-    gender?: string;
-    application_course?: string;
-    application_type?: string;
-    recommendation?: string;
-    middle_school?: string;
-    top_10_percent?: string;
-    special_advance_top5?: string;
-    advance_top5?: string;
-    club_tuition_exemption?: string;
-    club_fee_exemption?: string;
-    club_scholarship?: string;
-    accepted_course?: string;
-    scholarship_student?: string;
-    club_recommendation?: string;
-    created_at: string;
-    updated_at: string;
-}
+import { StudentResult } from '../../types';
 
 const PersonalResultsView: React.FC = () => {
     const { user } = useAuth();
-    const [result, setResult] = useState<StudentResult | null>(null);
+    const [personalResult, setPersonalResult] = useState<StudentResult | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchPersonalResult = async () => {
-        if (!user?.exam_no) {
-            setLoading(false);
-            setError('ログイン情報が見つかりません');
-            return;
+    useEffect(() => {
+        if (user?.exam_no) {
+            fetchPersonalResult();
         }
+    }, [user]);
 
+    const fetchPersonalResult = async () => {
         try {
-            const response = await fetch(`/api/results/${user.exam_no}`);
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Fetched personal result:', data); // デバッグ用
-                setResult(data);
-            } else if (response.status === 404) {
-                setError('個人結果が見つかりません');
+            setLoading(true);
+            const response = await fetch(`/api/results/${user?.exam_no}`);
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setPersonalResult(data.result);
             } else {
-                setError('個人結果の取得に失敗しました');
+                setError('個人結果が見つかりません');
             }
         } catch (error) {
-            console.error('Failed to fetch personal result:', error);
-            setError('個人結果の取得中にエラーが発生しました');
+            setError('個人結果の取得に失敗しました');
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchPersonalResult();
-
-        // 定期的にデータを更新（30秒ごと）
-        const interval = setInterval(fetchPersonalResult, 30000);
-
-        return () => clearInterval(interval);
-    }, [user?.exam_no]);
-
     if (loading) {
         return (
-            <div className="p-4 sm:p-6">
-                <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <span className="ml-3 text-gray-600">読み込み中...</span>
+            <div className="p-6">
+                <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">個人結果を読み込み中...</p>
                 </div>
             </div>
         );
@@ -79,211 +45,173 @@ const PersonalResultsView: React.FC = () => {
 
     if (error) {
         return (
-            <div className="p-4 sm:p-6">
-                <div className="text-center py-12">
-                    <div className="text-gray-400 text-6xl mb-4">📋</div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">個別お知らせが見つかりません</h3>
-                    <p className="text-gray-600 mb-4">
-                        {error}
-                    </p>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p className="text-blue-800 text-sm">
-                            個別お知らせは後日アップロードされます。しばらくお待ちください。
-                        </p>
-                    </div>
+            <div className="p-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-yellow-800">{error}</p>
                 </div>
             </div>
         );
     }
 
-    if (!result) {
+    if (!personalResult) {
         return (
-            <div className="p-4 sm:p-6">
-                <div className="text-center py-12">
-                    <div className="text-gray-400 text-6xl mb-4">📋</div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">個別お知らせが見つかりません</h3>
-                    <p className="text-gray-600 mb-4">
-                        あなたの個別お知らせはまだ準備中です。
-                    </p>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p className="text-blue-800 text-sm">
-                            個別お知らせは後日アップロードされます。しばらくお待ちください。
-                        </p>
-                    </div>
+            <div className="p-6">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-gray-600">個人結果はまだ公開されていません。</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="p-4 sm:p-6">
-            <div className="mb-6 flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">個別お知らせ</h2>
-                    <p className="mt-1 text-sm text-gray-600">あなたの合格結果と特典情報</p>
-                </div>
-                <button
-                    onClick={() => {
-                        setLoading(true);
-                        fetchPersonalResult();
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                    更新
-                </button>
+        <div className="p-6">
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">個人結果</h2>
+                <p className="text-gray-600">あなたの受験結果をお知らせします</p>
             </div>
-            
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                <div className="p-4 sm:p-6">
-                    {/* 出願種別 */}
-                    {result.application_type && (
-                        <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">出願種別</h3>
-                            <div className={`inline-block px-4 py-2 rounded-lg font-bold text-white ${
-                                result.application_type === '専願' 
-                                    ? 'bg-blue-600' 
-                                    : 'bg-red-600'
-                            }`}>
-                                {result.application_type}
-                            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                {/* 基本情報 */}
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">基本情報</h3>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">学生ID</label>
+                            <p className="text-gray-900">{personalResult.student_id || '-'}</p>
                         </div>
-                    )}
-
-                    {/* 出願時コース */}
-                    {result.application_course && (
-                        <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">出願時コース</h3>
-                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                                <p className="text-orange-800 font-medium">{result.application_course}</p>
-                            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">受験番号</label>
+                            <p className="text-gray-900">{personalResult.exam_no}</p>
                         </div>
-                    )}
-
-                    {/* 基本情報 */}
-                    <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">基本情報</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {result.student_id && (
-                                <div>
-                                    <p className="text-sm text-gray-600">学生ID</p>
-                                    <p className="font-medium">{result.student_id}</p>
-                                </div>
-                            )}
-                            <div>
-                                <p className="text-sm text-gray-600">受験番号</p>
-                                <p className="font-medium">{result.exam_no}</p>
-                            </div>
-                            {result.gender && (
-                                <div>
-                                    <p className="text-sm text-gray-600">性別</p>
-                                    <p className="font-medium">{result.gender}</p>
-                                </div>
-                            )}
-                            {result.middle_school && (
-                                <div>
-                                    <p className="text-sm text-gray-600">中学校名</p>
-                                    <p className="font-medium">{result.middle_school}</p>
-                                </div>
-                            )}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">氏名</label>
+                            <p className="text-gray-900">{personalResult.name || '-'}</p>
                         </div>
-                    </div>
-
-                    {/* 合格コース */}
-                    <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">合格結果</h3>
-                        {result.accepted_course ? (
-                            result.application_course && result.accepted_course !== result.application_course ? (
-                                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                                    <p className="text-orange-800 font-medium">廻し合格: {result.accepted_course}</p>
-                                    <p className="text-orange-700 text-sm mt-1">出願コース: {result.application_course}</p>
-                                </div>
-                            ) : (
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <p className="text-green-800 font-medium">合格: {result.accepted_course}</p>
-                                </div>
-                            )
-                        ) : result.application_course ? (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                <p className="text-red-800 font-medium">不合格</p>
-                                <p className="text-red-700 text-sm mt-1">出願コース: {result.application_course}</p>
-                            </div>
-                        ) : (
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                <p className="text-gray-600">結果未発表</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 推薦・特典情報 */}
-                    <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">推薦・特典情報</h3>
-                        <div className="space-y-3">
-                            {result.recommendation && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                    <p className="text-blue-800 text-sm font-medium">推薦</p>
-                                    <p className="text-blue-700">{result.recommendation}</p>
-                                </div>
-                            )}
-                            {result.scholarship_student && (
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                    <p className="text-green-800 text-sm font-medium">特待生</p>
-                                    <p className="text-green-700">{result.scholarship_student}</p>
-                                </div>
-                            )}
-                            {result.top_10_percent && (
-                                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                                    <p className="text-purple-800 text-sm font-medium">3教科上位10%</p>
-                                    <p className="text-purple-700">{result.top_10_percent}</p>
-                                </div>
-                            )}
-                            {result.special_advance_top5 && (
-                                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-                                    <p className="text-indigo-800 text-sm font-medium">特進上位5名</p>
-                                    <p className="text-indigo-700">{result.special_advance_top5}</p>
-                                </div>
-                            )}
-                            {result.advance_top5 && (
-                                <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                                    <p className="text-teal-800 text-sm font-medium">進学上位5名</p>
-                                    <p className="text-teal-700">{result.advance_top5}</p>
-                                </div>
-                            )}
-                            {result.club_tuition_exemption && (
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                    <p className="text-yellow-800 text-sm font-medium">部活動推薦入学金免除</p>
-                                    <p className="text-yellow-700">{result.club_tuition_exemption}</p>
-                                </div>
-                            )}
-                            {result.club_fee_exemption && (
-                                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                                    <p className="text-orange-800 text-sm font-medium">部活動推薦諸費用免除</p>
-                                    <p className="text-orange-700">{result.club_fee_exemption}</p>
-                                </div>
-                            )}
-                            {result.club_scholarship && (
-                                <div className="bg-pink-50 border border-pink-200 rounded-lg p-3">
-                                    <p className="text-pink-800 text-sm font-medium">部活動推薦奨学金支給</p>
-                                    <p className="text-pink-700">{result.club_scholarship}</p>
-                                </div>
-                            )}
-                            {result.club_recommendation && (
-                                <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3">
-                                    <p className="text-cyan-800 text-sm font-medium">部活動推薦表記</p>
-                                    <p className="text-cyan-700">{result.club_recommendation}</p>
-                                </div>
-                            )}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
+                            <p className="text-gray-900">{personalResult.gender || '-'}</p>
                         </div>
-                    </div>
-
-
-
-                    {/* 更新日時 */}
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                        <p className="text-xs text-gray-500">
-                            最終更新: {new Date(result.updated_at).toLocaleString('ja-JP')}
-                        </p>
                     </div>
                 </div>
+
+                {/* 出願情報 */}
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">出願情報</h3>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">出願種別</label>
+                            <p className="text-gray-900">
+                                {personalResult.application_type ? (
+                                    <span className={`inline-block px-2 py-1 rounded text-xs font-bold text-white ${
+                                        personalResult.application_type === '専願' 
+                                            ? 'bg-blue-600' 
+                                            : 'bg-red-600'
+                                    }`}>
+                                        {personalResult.application_type}
+                                    </span>
+                                ) : '-'}
+                            </p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">出願時コース</label>
+                            <p className="text-gray-900">{personalResult.application_course || '-'}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">中学校名</label>
+                            <p className="text-gray-900">{personalResult.middle_school || '-'}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">推薦</label>
+                            <p className="text-gray-900">{personalResult.recommendation || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 合格結果 */}
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">合格結果</h3>
+                </div>
+                <div className="p-6">
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">合格コース</label>
+                        <div className="text-lg">
+                            {personalResult.accepted_course ? (
+                                personalResult.application_course && personalResult.accepted_course !== personalResult.application_course ? (
+                                    <span className="text-orange-600 font-medium">廻し合格: {personalResult.accepted_course}</span>
+                                ) : (
+                                    <span className="text-green-600 font-medium">{personalResult.accepted_course}</span>
+                                )
+                            ) : personalResult.application_course ? (
+                                <span className="text-red-600 font-medium">不合格</span>
+                            ) : (
+                                <span className="text-gray-500">結果未発表</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 特典・奨学金情報 */}
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">特典・奨学金情報</h3>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">特待生</label>
+                            <p className="text-gray-900">{personalResult.scholarship_student || '-'}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">3教科上位10%</label>
+                            <p className="text-gray-900">{personalResult.top_10_percent || '-'}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">特進上位5名</label>
+                            <p className="text-gray-900">{personalResult.special_advance_top5 || '-'}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">進学上位5名</label>
+                            <p className="text-gray-900">{personalResult.advance_top5 || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 部活動推薦情報 */}
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">部活動推薦情報</h3>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦表記</label>
+                            <p className="text-gray-900">{personalResult.club_recommendation || '-'}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦入学金免除</label>
+                            <p className="text-gray-900">{personalResult.club_tuition_exemption || '-'}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦諸費用免除</label>
+                            <p className="text-gray-900">{personalResult.club_fee_exemption || '-'}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">部活動推薦奨学金支給</label>
+                            <p className="text-gray-900">{personalResult.club_scholarship || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-6 text-center">
+                <button
+                    onClick={fetchPersonalResult}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                    最新情報に更新
+                </button>
             </div>
         </div>
     );
