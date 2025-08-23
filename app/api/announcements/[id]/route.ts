@@ -33,7 +33,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { title, content } = await request.json()
+    const { title, content, is_published, scheduled_publish_at } = await request.json()
 
     if (!title || !content) {
       return NextResponse.json(
@@ -42,7 +42,13 @@ export async function PUT(
       )
     }
 
-    const updatedAnnouncement = await updateAnnouncement(parseInt(id), title, content)
+    const updatedAnnouncement = await updateAnnouncement(
+      parseInt(id), 
+      title, 
+      content,
+      is_published,
+      scheduled_publish_at
+    )
 
     if (!updatedAnnouncement) {
       return NextResponse.json(

@@ -9,10 +9,17 @@ import PlusIcon from '../icons/PlusIcon';
 const AnnouncementForm: React.FC<{ announcement: Partial<Announcement> | null, onSave: (ann: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt' | 'author'>) => void, onCancel: () => void }> = ({ announcement, onSave, onCancel }) => {
     const [title, setTitle] = useState(announcement?.title || '');
     const [content, setContent] = useState(announcement?.content || '');
+    const [isPublished, setIsPublished] = useState(announcement?.is_published || false);
+    const [scheduledPublishAt, setScheduledPublishAt] = useState(announcement?.scheduled_publish_at || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ title, content });
+        onSave({ 
+            title, 
+            content, 
+            is_published: isPublished,
+            scheduled_publish_at: scheduledPublishAt || undefined
+        });
     };
 
     return (
@@ -24,6 +31,34 @@ const AnnouncementForm: React.FC<{ announcement: Partial<Announcement> | null, o
             <div>
                 <label htmlFor="content" className="block text-sm font-medium text-gray-700">内容</label>
                 <textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} rows={5} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required />
+            </div>
+            <div className="space-y-4">
+                <div className="flex items-center">
+                    <input
+                        type="checkbox"
+                        id="isPublished"
+                        checked={isPublished}
+                        onChange={(e) => setIsPublished(e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="isPublished" className="ml-2 block text-sm text-gray-900">
+                        学生に公開する
+                    </label>
+                </div>
+                {isPublished && (
+                    <div>
+                        <label htmlFor="scheduledPublishAt" className="block text-sm font-medium text-gray-700">
+                            予約公開時刻（空欄で即座に公開）
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="scheduledPublishAt"
+                            value={scheduledPublishAt}
+                            onChange={(e) => setScheduledPublishAt(e.target.value)}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                )}
             </div>
             <div className="flex justify-end space-x-3">
                 <button type="button" onClick={onCancel} className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">キャンセル</button>
@@ -147,7 +182,21 @@ const AdminAnnouncements: React.FC = () => {
                         <li key={ann.id}>
                             <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-lg font-medium text-blue-600 truncate">{ann.title}</p>
+                                    <div className="flex items-center space-x-3">
+                                        <p className="text-lg font-medium text-blue-600 truncate">{ann.title}</p>
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                            ann.is_published 
+                                                ? 'bg-green-100 text-green-800' 
+                                                : 'bg-gray-100 text-gray-800'
+                                        }`}>
+                                            {ann.is_published ? '公開' : '非公開'}
+                                        </span>
+                                        {ann.scheduled_publish_at && (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                予約公開: {new Date(ann.scheduled_publish_at).toLocaleString('ja-JP')}
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="ml-2 flex-shrink-0 flex items-center space-x-4">
                                         <span className="text-sm text-gray-500">{new Date(ann.createdAt).toLocaleDateString('ja-JP')}</span>
                                         <button onClick={() => handleOpenModal(ann)} className="text-gray-400 hover:text-blue-600"><PencilIcon className="w-5 h-5"/></button>

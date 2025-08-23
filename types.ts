@@ -21,6 +21,9 @@ export interface Announcement {
     createdAt: string;
     updatedAt: string;
     author: string;
+    is_published: boolean;
+    published_at?: string;
+    scheduled_publish_at?: string;
 }
 
 export interface Document {
