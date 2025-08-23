@@ -8,6 +8,13 @@ const AdminStudentProfiles: React.FC = () => {
     const [sortField, setSortField] = useState<keyof StudentProfile>('created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [filterCompleted, setFilterCompleted] = useState<string>('all');
+    const [filterGender, setFilterGender] = useState<string>('all');
+    const [filterMiddleSchool, setFilterMiddleSchool] = useState<string>('all');
+    const [filterDateRange, setFilterDateRange] = useState<{
+        start: string;
+        end: string;
+    }>({ start: '', end: '' });
+    const [filterSection, setFilterSection] = useState<string>('all');
 
     useEffect(() => {
         fetchProfiles();
@@ -41,28 +48,63 @@ const AdminStudentProfiles: React.FC = () => {
 
     const filteredAndSortedProfiles = profiles
         .filter(profile => {
+            // 検索フィルター
             const matchesSearch = 
                 profile.student_last_name?.includes(searchTerm) ||
                 profile.student_first_name?.includes(searchTerm) ||
                 profile.student_id?.includes(searchTerm) ||
                 profile.middle_school_name?.includes(searchTerm);
             
-            if (filterCompleted === 'all') return matchesSearch;
-            if (filterCompleted === 'completed') {
-                return matchesSearch && 
-                    profile.personal_info_completed && 
-                    profile.commute_info_completed && 
-                    profile.art_selection_completed && 
-                    profile.health_info_completed;
+            if (!matchesSearch) return false;
+            
+            // 完了状況フィルター
+            if (filterCompleted !== 'all') {
+                if (filterCompleted === 'completed') {
+                    if (!(profile.personal_info_completed && 
+                          profile.commute_info_completed && 
+                          profile.art_selection_completed && 
+                          profile.health_info_completed)) return false;
+                } else if (filterCompleted === 'incomplete') {
+                    if (!(!profile.personal_info_completed || 
+                          !profile.commute_info_completed || 
+                          !profile.art_selection_completed || 
+                          !profile.health_info_completed)) return false;
+                }
             }
-            if (filterCompleted === 'incomplete') {
-                return matchesSearch && 
-                    (!profile.personal_info_completed || 
-                     !profile.commute_info_completed || 
-                     !profile.art_selection_completed || 
-                     !profile.health_info_completed);
+            
+            // 性別フィルター
+            if (filterGender !== 'all') {
+                if (profile.gender !== filterGender) return false;
             }
-            return matchesSearch;
+            
+            // 出身中学校フィルター
+            if (filterMiddleSchool !== 'all') {
+                if (profile.middle_school_name !== filterMiddleSchool) return false;
+            }
+            
+            // セクション別フィルター
+            if (filterSection !== 'all') {
+                if (filterSection === 'personal' && !profile.personal_info_completed) return false;
+                if (filterSection === 'commute' && !profile.commute_info_completed) return false;
+                if (filterSection === 'art' && !profile.art_selection_completed) return false;
+                if (filterSection === 'health' && !profile.health_info_completed) return false;
+            }
+            
+            // 日付範囲フィルター
+            if (filterDateRange.start || filterDateRange.end) {
+                const profileDate = new Date(profile.created_at);
+                if (filterDateRange.start) {
+                    const startDate = new Date(filterDateRange.start);
+                    if (profileDate < startDate) return false;
+                }
+                if (filterDateRange.end) {
+                    const endDate = new Date(filterDateRange.end);
+                    endDate.setHours(23, 59, 59, 999); // 終了日の23:59:59まで
+                    if (profileDate > endDate) return false;
+                }
+            }
+            
+            return true;
         })
         .sort((a, b) => {
             const aValue = a[sortField];
@@ -244,7 +286,7 @@ const AdminStudentProfiles: React.FC = () => {
 
             {/* 検索・フィルター・エクスポート */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">検索</label>
                         <input
@@ -266,6 +308,86 @@ const AdminStudentProfiles: React.FC = () => {
                             <option value="completed">完了済み</option>
                             <option value="incomplete">未完了</option>
                         </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
+                        <select
+                            value={filterGender}
+                            onChange={(e) => setFilterGender(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">すべて</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">セクション別</label>
+                        <select
+                            value={filterSection}
+                            onChange={(e) => setFilterSection(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">すべて</option>
+                            <option value="personal">個人情報完了</option>
+                            <option value="commute">通学方法完了</option>
+                            <option value="art">芸術科目完了</option>
+                            <option value="health">健康情報完了</option>
+                        </select>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">出身中学校</label>
+                        <select
+                            value={filterMiddleSchool}
+                            onChange={(e) => setFilterMiddleSchool(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">すべて</option>
+                            {Array.from(new Set(profiles.map(p => p.middle_school_name).filter(Boolean))).map(school => (
+                                <option key={school} value={school}>{school}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">登録日（開始）</label>
+                        <input
+                            type="date"
+                            value={filterDateRange.start}
+                            onChange={(e) => setFilterDateRange(prev => ({
+                                ...prev,
+                                start: e.target.value
+                            }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">登録日（終了）</label>
+                        <input
+                            type="date"
+                            value={filterDateRange.end}
+                            onChange={(e) => setFilterDateRange(prev => ({
+                                ...prev,
+                                end: e.target.value
+                            }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div className="flex items-end">
+                        <button
+                            onClick={() => {
+                                setSearchTerm('');
+                                setFilterCompleted('all');
+                                setFilterGender('all');
+                                setFilterMiddleSchool('all');
+                                setFilterDateRange({ start: '', end: '' });
+                                setFilterSection('all');
+                            }}
+                            className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                        >
+                            フィルターリセット
+                        </button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <button
