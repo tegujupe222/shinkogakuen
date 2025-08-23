@@ -50,6 +50,16 @@ const AdminDashboard: React.FC = () => {
     const [loginSettingsUploadFile, setLoginSettingsUploadFile] = useState<File | null>(null);
     const [loginSettingsUploading, setLoginSettingsUploading] = useState(false);
     const [loginSettingsUploadMessage, setLoginSettingsUploadMessage] = useState('');
+    
+    // 手動ユーザー追加用の状態
+    const [showManualUserModal, setShowManualUserModal] = useState(false);
+    const [manualUserData, setManualUserData] = useState({
+        examNo: '',
+        password: '',
+        role: 'student'
+    });
+    const [manualUserMessage, setManualUserMessage] = useState('');
+    const [manualUserLoading, setManualUserLoading] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -460,6 +470,61 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    // 手動ユーザー追加処理
+    const handleManualUserAdd = async () => {
+        if (!manualUserData.examNo || !manualUserData.password) {
+            setManualUserMessage('受験番号とパスワードを入力してください');
+            return;
+        }
+
+        if (!/^\d{4}$/.test(manualUserData.examNo)) {
+            setManualUserMessage('受験番号は4桁の数字で入力してください');
+            return;
+        }
+
+        if (!/^\d{4}$/.test(manualUserData.password)) {
+            setManualUserMessage('パスワードは4桁の数字で入力してください');
+            return;
+        }
+
+        setManualUserLoading(true);
+        setManualUserMessage('');
+
+        try {
+            const response = await fetch('/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    exam_no: manualUserData.examNo,
+                    password: manualUserData.password,
+                    role: manualUserData.role
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setManualUserMessage('ユーザーを追加しました');
+                setManualUserData({
+                    examNo: '',
+                    password: '',
+                    role: 'student'
+                });
+                setShowManualUserModal(false);
+                fetchUsers(); // ユーザーリストを更新
+            } else {
+                setManualUserMessage(`エラー: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Failed to add manual user:', error);
+            setManualUserMessage('ユーザー追加中にエラーが発生しました');
+        } finally {
+            setManualUserLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="p-6">
@@ -576,6 +641,23 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* 手動ユーザー追加 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-lg font-semibold text-gray-900">手動ユーザー追加</h4>
+                            <button
+                                onClick={() => setShowManualUserModal(true)}
+                                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                                <PlusIcon className="w-4 h-4 mr-2" />
+                                ユーザー追加
+                            </button>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                            受験番号（4桁）とパスワード（4桁）を手動で入力してユーザーを追加できます。
+                        </p>
                     </div>
                 </div>
             )}
@@ -901,6 +983,17 @@ const AdminDashboard: React.FC = () => {
                     />
                 </Modal>
             )}
+
+            {/* 手動ユーザー追加モーダル */}
+            <ManualUserModal
+                isOpen={showManualUserModal}
+                onClose={() => setShowManualUserModal(false)}
+                onSubmit={handleManualUserAdd}
+                data={manualUserData}
+                setData={setManualUserData}
+                loading={manualUserLoading}
+                message={manualUserMessage}
+            />
         </div>
     );
 };
@@ -1107,6 +1200,108 @@ const PersonalResultEditModal: React.FC<PersonalResultEditModalProps> = ({ resul
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                         >
                             更新
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+    );
+};
+
+// 手動ユーザー追加モーダル
+const ManualUserModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: () => void;
+    data: {
+        examNo: string;
+        password: string;
+        role: string;
+    };
+    setData: (data: any) => void;
+    loading: boolean;
+    message: string;
+}> = ({ isOpen, onClose, onSubmit, data, setData, loading, message }) => {
+    if (!isOpen) return null;
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="ユーザー追加">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">ユーザー追加</h3>
+                
+                <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                受験番号 <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={data.examNo}
+                                onChange={(e) => setData({...data, examNo: e.target.value})}
+                                placeholder="4桁の数字"
+                                maxLength={4}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                パスワード <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={data.password}
+                                onChange={(e) => setData({...data, password: e.target.value})}
+                                placeholder="4桁の数字"
+                                maxLength={4}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                ロール <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={data.role}
+                                onChange={(e) => setData({...data, role: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            >
+                                <option value="student">学生</option>
+                                <option value="admin">管理者</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {message && (
+                        <div className={`mt-4 p-3 rounded-lg border ${
+                            message.includes('エラー')
+                                ? 'bg-red-50 border-red-200 text-red-800'
+                                : 'bg-green-50 border-green-200 text-green-800'
+                        }`}>
+                            <p className="text-sm font-medium">{message}</p>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end space-x-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                            disabled={loading}
+                        >
+                            キャンセル
+                        </button>
+                        <button
+                            type="submit"
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled={loading}
+                        >
+                            {loading ? '追加中...' : '追加'}
                         </button>
                     </div>
                 </form>
