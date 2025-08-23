@@ -240,6 +240,32 @@ export async function POST(request: NextRequest) {
             )
         `;
 
+        // 入学手続金設定テーブルを作成
+        await sql`
+            CREATE TABLE IF NOT EXISTS admission_fee_settings (
+                id SERIAL PRIMARY KEY,
+                admission_fee INTEGER DEFAULT 200000,
+                miscellaneous_fee INTEGER DEFAULT 240000,
+                grade_fee INTEGER DEFAULT 150000,
+                dedicated_deadline DATE DEFAULT '2026-02-19',
+                combined_deadline DATE DEFAULT '2026-03-24',
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+
+        // 入学手続金免除設定テーブルを作成
+        await sql`
+            CREATE TABLE IF NOT EXISTS admission_fee_exemptions (
+                id SERIAL PRIMARY KEY,
+                exemption_name VARCHAR(255) NOT NULL,
+                exemption_amount INTEGER NOT NULL,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+
         // フォーム設定の初期データを挿入
         const initialFormSettings = [
             // 生徒基本情報

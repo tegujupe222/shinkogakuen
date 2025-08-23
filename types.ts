@@ -254,3 +254,23 @@ export interface FormSetting {
     created_at: string;
     updated_at: string;
 }
+
+export interface AdmissionFeeSettings {
+    id: string;
+    admission_fee: number;
+    miscellaneous_fee: number;
+    grade_fee: number;
+    dedicated_deadline: string;
+    combined_deadline: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface AdmissionFeeExemption {
+    id: string;
+    exemption_name: string;
+    exemption_amount: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}

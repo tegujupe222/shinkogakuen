@@ -7,6 +7,7 @@ import AdminDocuments from './AdminDocuments';
 import AdminProfiles from './AdminProfiles';
 import AdminStudentProfiles from './AdminStudentProfiles';
 import AdminFormSettings from './AdminFormSettings';
+import AdminAdmissionFees from './AdminAdmissionFees';
 import AdminMobileMenu from './AdminMobileMenu';
 import TrashIcon from '../icons/TrashIcon';
 import PencilIcon from '../icons/PencilIcon';
@@ -16,7 +17,7 @@ import DownloadIcon from '../icons/DownloadIcon';
 import Modal from '../shared/Modal';
 import * as XLSX from 'xlsx';
 
-type Tab = 'announcements' | 'certificates' | 'documents' | 'profiles' | 'personal-results' | 'student-profiles' | 'form-settings';
+type Tab = 'announcements' | 'certificates' | 'documents' | 'profiles' | 'personal-results' | 'student-profiles' | 'form-settings' | 'admission-fees';
 
 const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('announcements');
@@ -448,7 +449,8 @@ const AdminDashboard: React.FC = () => {
                         { id: 'profiles', name: 'ユーザー管理', icon: '👥' },
                         { id: 'personal-results', name: '個人結果管理', icon: '📊' },
                         { id: 'student-profiles', name: '学生プロフィール管理', icon: '📝' },
-                        { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' }
+                        { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' },
+                        { id: 'admission-fees', name: '入学手続金管理', icon: '💰' }
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -475,7 +477,8 @@ const AdminDashboard: React.FC = () => {
                     { id: 'profiles', name: 'ユーザー管理', icon: '👥' },
                     { id: 'personal-results', name: '個人結果管理', icon: '📊' },
                     { id: 'student-profiles', name: '学生プロフィール管理', icon: '📝' },
-                    { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' }
+                    { id: 'form-settings', name: 'フォーム設定管理', icon: '⚙️' },
+                    { id: 'admission-fees', name: '入学手続金管理', icon: '💰' }
                 ]}
                 activeTab={activeTab}
                 onTabChange={(tabId) => setActiveTab(tabId as Tab)}
@@ -488,6 +491,7 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'profiles' && <AdminProfiles />}
             {activeTab === 'student-profiles' && <AdminStudentProfiles />}
             {activeTab === 'form-settings' && <AdminFormSettings />}
+            {activeTab === 'admission-fees' && <AdminAdmissionFees />}
 
             {/* 個人結果管理タブ */}
             {activeTab === 'personal-results' && (

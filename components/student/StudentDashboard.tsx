@@ -7,9 +7,10 @@ import DocumentsView from './DocumentsView';
 
 import PersonalResultsView from './PersonalResultsView';
 import ProfileFormView from './ProfileFormView';
+import AdmissionFeeView from './AdmissionFeeView';
 import MobileMenu from '../shared/MobileMenu';
 
-type Tab = 'announcements' | 'personal-results' | 'certificate' | 'documents' | 'profile';
+type Tab = 'announcements' | 'personal-results' | 'certificate' | 'documents' | 'profile' | 'admission-fees';
 
 const StudentDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -46,7 +47,12 @@ const StudentDashboard: React.FC = () => {
             icon: '👤',
             component: ProfileFormView 
         },
-
+        { 
+            id: 'admission-fees', 
+            name: '入学手続金', 
+            icon: '💰',
+            component: AdmissionFeeView 
+        }
     ];
 
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || AnnouncementsView;

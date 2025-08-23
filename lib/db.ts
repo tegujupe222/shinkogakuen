@@ -276,6 +276,32 @@ export async function initDatabase() {
       )
     `;
 
+    // 入学手続金設定テーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS admission_fee_settings (
+        id SERIAL PRIMARY KEY,
+        admission_fee INTEGER DEFAULT 200000,
+        miscellaneous_fee INTEGER DEFAULT 240000,
+        grade_fee INTEGER DEFAULT 150000,
+        dedicated_deadline DATE DEFAULT '2026-02-19',
+        combined_deadline DATE DEFAULT '2026-03-24',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // 入学手続金免除設定テーブル
+    await sql`
+      CREATE TABLE IF NOT EXISTS admission_fee_exemptions (
+        id SERIAL PRIMARY KEY,
+        exemption_name VARCHAR(255) NOT NULL,
+        exemption_amount INTEGER NOT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     // 合格証書テーブル
     await sql`
       CREATE TABLE IF NOT EXISTS certificates (
@@ -611,6 +637,173 @@ export async function createCertificate(studentId: string, fileName: string, fil
     return result.rows[0];
   } catch (error) {
     console.error('Failed to create certificate:', error);
+    throw error;
+  }
+}
+
+// 入学手続金設定関連の関数
+export async function getAdmissionFeeSettings() {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      SELECT * FROM admission_fee_settings ORDER BY id DESC LIMIT 1
+    `;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Failed to fetch admission fee settings:', error);
+    throw error;
+  }
+}
+
+export async function createAdmissionFeeSettings(
+  admissionFee: number,
+  miscellaneousFee: number,
+  gradeFee: number,
+  dedicatedDeadline: string,
+  combinedDeadline: string
+) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      INSERT INTO admission_fee_settings (
+        admission_fee, miscellaneous_fee, grade_fee, 
+        dedicated_deadline, combined_deadline
+      ) VALUES (
+        ${admissionFee}, ${miscellaneousFee}, ${gradeFee}, 
+        ${dedicatedDeadline}, ${combinedDeadline}
+      )
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to create admission fee settings:', error);
+    throw error;
+  }
+}
+
+export async function updateAdmissionFeeSettings(
+  id: number,
+  admissionFee: number,
+  miscellaneousFee: number,
+  gradeFee: number,
+  dedicatedDeadline: string,
+  combinedDeadline: string
+) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      UPDATE admission_fee_settings 
+      SET 
+        admission_fee = ${admissionFee},
+        miscellaneous_fee = ${miscellaneousFee},
+        grade_fee = ${gradeFee},
+        dedicated_deadline = ${dedicatedDeadline},
+        combined_deadline = ${combinedDeadline},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to update admission fee settings:', error);
+    throw error;
+  }
+}
+
+export async function getAdmissionFeeExemptions() {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      SELECT * FROM admission_fee_exemptions 
+      WHERE is_active = true 
+      ORDER BY created_at DESC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Failed to fetch admission fee exemptions:', error);
+    throw error;
+  }
+}
+
+export async function createAdmissionFeeExemption(name: string, amount: number) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      INSERT INTO admission_fee_exemptions (exemption_name, exemption_amount)
+      VALUES (${name}, ${amount})
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to create admission fee exemption:', error);
+    throw error;
+  }
+}
+
+export async function updateAdmissionFeeExemption(id: number, name: string, amount: number, isActive: boolean) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      UPDATE admission_fee_exemptions 
+      SET 
+        exemption_name = ${name},
+        exemption_amount = ${amount},
+        is_active = ${isActive},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to update admission fee exemption:', error);
+    throw error;
+  }
+}
+
+export async function deleteAdmissionFeeExemption(id: number) {
+  noStore();
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('Database connection failed: POSTGRES_URL environment variable is not set or database is not accessible');
+  }
+  
+  try {
+    const result = await sql`
+      DELETE FROM admission_fee_exemptions WHERE id = ${id}
+    `;
+    return result.rowCount > 0;
+  } catch (error) {
+    console.error('Failed to delete admission fee exemption:', error);
     throw error;
   }
 }
