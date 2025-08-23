@@ -306,6 +306,7 @@ const AdminDashboard: React.FC = () => {
 
         setEditLoading(true);
         try {
+            console.log('Sending update data:', editingResult); // デバッグ用
             const response = await fetch(`/api/results/${editingResult.exam_no}`, {
                 method: 'PUT',
                 headers: {
@@ -315,11 +316,15 @@ const AdminDashboard: React.FC = () => {
             });
 
             if (response.ok) {
+                const responseData = await response.json();
+                console.log('Update response:', responseData); // デバッグ用
                 // 個人結果一覧を再取得
                 await fetchPersonalResults();
                 closeEditModal();
+                alert('個人結果を更新しました。学生画面に反映されます。');
             } else {
                 const data = await response.json();
+                console.error('Update failed:', data); // デバッグ用
                 alert(`更新に失敗しました: ${data.error}`);
             }
         } catch (error) {

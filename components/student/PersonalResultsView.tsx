@@ -30,34 +30,40 @@ const PersonalResultsView: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const fetchPersonalResult = async () => {
+        if (!user?.exam_no) {
+            setLoading(false);
+            setError('ログイン情報が見つかりません');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/results/${user.exam_no}`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Fetched personal result:', data); // デバッグ用
+                setResult(data);
+            } else if (response.status === 404) {
+                setError('個人結果が見つかりません');
+            } else {
+                setError('個人結果の取得に失敗しました');
+            }
+        } catch (error) {
+            console.error('Failed to fetch personal result:', error);
+            setError('個人結果の取得中にエラーが発生しました');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchPersonalResult = async () => {
-            if (!user?.exam_no) {
-                setLoading(false);
-                setError('ログイン情報が見つかりません');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/results/${user.exam_no}`);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    setResult(data);
-                } else if (response.status === 404) {
-                    setError('個人結果が見つかりません');
-                } else {
-                    setError('個人結果の取得に失敗しました');
-                }
-            } catch (error) {
-                console.error('Failed to fetch personal result:', error);
-                setError('個人結果の取得中にエラーが発生しました');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchPersonalResult();
+
+        // 定期的にデータを更新（30秒ごと）
+        const interval = setInterval(fetchPersonalResult, 30000);
+
+        return () => clearInterval(interval);
     }, [user?.exam_no]);
 
     if (loading) {
@@ -111,9 +117,20 @@ const PersonalResultsView: React.FC = () => {
 
     return (
         <div className="p-4 sm:p-6">
-            <div className="mb-6">
-                <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">個別お知らせ</h2>
-                <p className="mt-1 text-sm text-gray-600">あなたの合格結果と特典情報</p>
+            <div className="mb-6 flex justify-between items-center">
+                <div>
+                    <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">個別お知らせ</h2>
+                    <p className="mt-1 text-sm text-gray-600">あなたの合格結果と特典情報</p>
+                </div>
+                <button
+                    onClick={() => {
+                        setLoading(true);
+                        fetchPersonalResult();
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                    更新
+                </button>
             </div>
             
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
