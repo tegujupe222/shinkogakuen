@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
             const row = data[j] as any[];
             if (!row || row.length === 0) continue;
 
-            // 実際のエクセルファイルの列順序に合わせて修正
-            // A列: 学生ID, B列: 受験番号, C列: 氏名, E列: 性別, G列: 出願時のコース, H列: 出願種別, J列: 推薦, M列: 中学校名, O列: 3教科上位10%, P列: 特進上位5名, Q列: 進学上位5名, R列: 部活動推薦入学金免除, S列: 部活動推薦諸費用免除, T列: 部活動推薦奨学金支給, V列: 合格コース, X列: 特待生, Z列: 部活動推薦表記
+            // 実際のエクセルファイルの列順序に合わせて修正（ログから確認した実際の構造）
+            // A列: 学生ID, B列: 受験番号, C列: 氏名, D列: ふりがな, E列: 性別, F列: 中学校コード, G列: 出願時のコース, H列: 出願種別, I列: 不明, J列: 推薦
             const studentId = row[0]?.toString() || null; // A列: 学生ID
             const examNo = row[1]?.toString() || ''; // B列: 受験番号
             const name = row[2]?.toString() || ''; // C列: 氏名
@@ -88,16 +88,18 @@ export async function POST(request: NextRequest) {
             const applicationCourse = row[6]?.toString() || null; // G列: 出願時のコース
             const applicationType = row[7]?.toString() || null; // H列: 出願種別（専願/併願）
             const recommendation = row[9]?.toString() || null; // J列: 推薦
-            const middleSchool = row[12]?.toString() || null; // M列: 中学校名
-            const top10Percent = row[14]?.toString() || null; // O列: 3教科上位10%
-            const specialAdvanceTop5 = row[15]?.toString() || null; // P列: 特進上位5名
-            const advanceTop5 = row[16]?.toString() || null; // Q列: 進学上位5名
-            const clubTuitionExemption = row[17]?.toString() || null; // R列: 部活動推薦入学金免除
-            const clubFeeExemption = row[18]?.toString() || null; // S列: 部活動推薦諸費用免除
-            const clubScholarship = row[19]?.toString() || null; // T列: 部活動推薦奨学金支給
-            const acceptedCourse = row[21]?.toString() || null; // V列: 合格コース
-            const scholarshipStudent = row[23]?.toString() || null; // X列: 特待生
-            const clubRecommendation = row[25]?.toString() || null; // Z列: 部活動推薦表記
+            
+            // 以下の列は現在のエクセルファイルには含まれていないため、nullに設定
+            const middleSchool = null; // M列: 中学校名（現在のファイルには含まれていない）
+            const top10Percent = null; // O列: 3教科上位10%（現在のファイルには含まれていない）
+            const specialAdvanceTop5 = null; // P列: 特進上位5名（現在のファイルには含まれていない）
+            const advanceTop5 = null; // Q列: 進学上位5名（現在のファイルには含まれていない）
+            const clubTuitionExemption = null; // R列: 部活動推薦入学金免除（現在のファイルには含まれていない）
+            const clubFeeExemption = null; // S列: 部活動推薦諸費用免除（現在のファイルには含まれていない）
+            const clubScholarship = null; // T列: 部活動推薦奨学金支給（現在のファイルには含まれていない）
+            const acceptedCourse = null; // V列: 合格コース（現在のファイルには含まれていない）
+            const scholarshipStudent = null; // X列: 特待生（現在のファイルには含まれていない）
+            const clubRecommendation = null; // Z列: 部活動推薦表記（現在のファイルには含まれていない）
 
             // デバッグ用ログ（最初の3行のみ）
             if (j <= 3) {
@@ -105,9 +107,10 @@ export async function POST(request: NextRequest) {
                     studentId,
                     examNo,
                     name,
+                    gender,
                     applicationCourse,
+                    applicationType,
                     recommendation,
-                    scholarshipStudent,
                     rawRow: row.slice(0, 10) // 最初の10列のみ表示
                 });
             }
