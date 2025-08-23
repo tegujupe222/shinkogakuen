@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { StudentProfile } from '../../types';
+import { StudentProfile, FormSetting } from '../../types';
 
 type FormStep = 'personal' | 'commute' | 'art' | 'health';
 
@@ -11,12 +11,15 @@ const ProfileFormView: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string>('');
     const [familyCount, setFamilyCount] = useState(1);
+    const [formSettings, setFormSettings] = useState<FormSetting[]>([]);
+    const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
     
     const [profile, setProfile] = useState<Partial<StudentProfile>>({});
 
     useEffect(() => {
         if (user?.exam_no) {
             fetchProfile();
+            fetchFormSettings();
         }
     }, [user?.exam_no]);
 
@@ -47,6 +50,20 @@ const ProfileFormView: React.FC = () => {
         }
     };
 
+    const fetchFormSettings = async () => {
+        try {
+            const response = await fetch('/api/form-settings');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setFormSettings(data.settings);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch form settings:', error);
+        }
+    };
+
     const handleInputChange = (field: keyof StudentProfile, value: string | boolean) => {
         setProfile(prev => ({
             ...prev,
@@ -68,11 +85,53 @@ const ProfileFormView: React.FC = () => {
         }
     };
 
+    const isFieldRequired = (fieldKey: string): boolean => {
+        const setting = formSettings.find(s => s.field_key === fieldKey);
+        return setting?.is_required || false;
+    };
+
+    const getFieldError = (fieldKey: string): string | undefined => {
+        return validationErrors[fieldKey];
+    };
+
+    const validateStep = (step: FormStep): boolean => {
+        const errors: {[key: string]: string} = {};
+        
+        // 現在のステップの必須フィールドを取得
+        const stepSettings = formSettings.filter(setting => {
+            if (step === 'personal') return setting.field_group === 'personal';
+            if (step === 'commute') return setting.field_group === 'commute';
+            if (step === 'art') return setting.field_group === 'art';
+            if (step === 'health') return setting.field_group === 'health';
+            return false;
+        });
+
+        // 必須フィールドのバリデーション
+        stepSettings.forEach(setting => {
+            if (setting.is_required) {
+                const fieldValue = profile[setting.field_key as keyof StudentProfile];
+                if (!fieldValue || (typeof fieldValue === 'string' && fieldValue.trim() === '')) {
+                    errors[setting.field_key] = `${setting.field_label}は必須項目です`;
+                }
+            }
+        });
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const saveForm = async (step: FormStep, isComplete: boolean = false) => {
         if (!user?.exam_no) return;
 
+        // 完了提出時はバリデーションを実行
+        if (isComplete && !validateStep(step)) {
+            setMessage('必須項目が未入力です。すべての必須項目を入力してください。');
+            return;
+        }
+
         setSaving(true);
         setMessage('');
+        setValidationErrors({});
         
         try {
             const formData = {
@@ -161,11 +220,23 @@ const ProfileFormView: React.FC = () => {
 
             {message && (
                 <div className={`mb-6 p-4 rounded-lg border ${
-                    message.includes('エラー') 
+                    message.includes('エラー') || message.includes('必須項目')
                         ? 'bg-red-50 border-red-200 text-red-800' 
                         : 'bg-green-50 border-green-200 text-green-800'
                 }`}>
                     <p className="font-medium">{message}</p>
+                </div>
+            )}
+
+            {/* バリデーションエラー表示 */}
+            {Object.keys(validationErrors).length > 0 && (
+                <div className="mb-6 p-4 rounded-lg border bg-red-50 border-red-200 text-red-800">
+                    <p className="font-medium mb-2">以下の項目が未入力です：</p>
+                    <ul className="list-disc list-inside space-y-1">
+                        {Object.values(validationErrors).map((error, index) => (
+                            <li key={index} className="text-sm">{error}</li>
+                        ))}
+                    </ul>
                 </div>
             )}
 
@@ -177,24 +248,44 @@ const ProfileFormView: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">生徒基本情報</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">生徒名前(姓)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    生徒名前(姓)
+                                    {isFieldRequired('student_last_name') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.student_last_name || ''}
                                     onChange={(e) => handleInputChange('student_last_name', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('student_last_name') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('student_last_name')}
                                 />
+                                {getFieldError('student_last_name') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_last_name')}</p>
+                                )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">生徒名前(名)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    生徒名前(名)
+                                    {isFieldRequired('student_first_name') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.student_first_name || ''}
                                     onChange={(e) => handleInputChange('student_first_name', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('student_first_name') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('student_first_name')}
                                 />
+                                {getFieldError('student_first_name') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_first_name')}</p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">生徒名前(ふりがな)(せい)</label>
@@ -217,27 +308,47 @@ const ProfileFormView: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    性別
+                                    {isFieldRequired('gender') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <select
                                     value={profile.gender || ''}
                                     onChange={(e) => handleInputChange('gender', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('gender') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('gender')}
                                 >
                                     <option value="">選択してください</option>
                                     <option value="男">男</option>
                                     <option value="女">女</option>
                                 </select>
+                                {getFieldError('gender') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('gender')}</p>
+                                )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    生年月日
+                                    {isFieldRequired('birth_date') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="date"
                                     value={profile.birth_date || ''}
                                     onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('birth_date') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('birth_date')}
                                 />
+                                {getFieldError('birth_date') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('birth_date')}</p>
+                                )}
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">本籍地</label>
@@ -256,36 +367,66 @@ const ProfileFormView: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">生徒現在住所</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">生徒の現在住所(郵便番号)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    生徒の現在住所(郵便番号)
+                                    {isFieldRequired('student_postal_code') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.student_postal_code || ''}
                                     onChange={(e) => handleInputChange('student_postal_code', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('student_postal_code') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
                                     placeholder="123-4567"
-                                    required
+                                    required={isFieldRequired('student_postal_code')}
                                 />
+                                {getFieldError('student_postal_code') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_postal_code')}</p>
+                                )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    電話番号
+                                    {isFieldRequired('student_phone') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="tel"
                                     value={profile.student_phone || ''}
                                     onChange={(e) => handleInputChange('student_phone', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('student_phone') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
                                     placeholder="090-1234-5678"
-                                    required
+                                    required={isFieldRequired('student_phone')}
                                 />
+                                {getFieldError('student_phone') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_phone')}</p>
+                                )}
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">生徒の現在住所</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    生徒の現在住所
+                                    {isFieldRequired('student_address') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.student_address || ''}
                                     onChange={(e) => handleInputChange('student_address', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('student_address') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('student_address')}
                                 />
+                                {getFieldError('student_address') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('student_address')}</p>
+                                )}
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">生徒の現在住所(番地部屋番号)</label>
@@ -304,24 +445,44 @@ const ProfileFormView: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">出身校情報</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">出身中学校名</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    出身中学校名
+                                    {isFieldRequired('middle_school_name') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={profile.middle_school_name || ''}
                                     onChange={(e) => handleInputChange('middle_school_name', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('middle_school_name') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('middle_school_name')}
                                 />
+                                {getFieldError('middle_school_name') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('middle_school_name')}</p>
+                                )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">卒業年月日</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    卒業年月日
+                                    {isFieldRequired('graduation_date') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="date"
                                     value={profile.graduation_date || ''}
                                     onChange={(e) => handleInputChange('graduation_date', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('graduation_date') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('graduation_date')}
                                 />
+                                {getFieldError('graduation_date') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('graduation_date')}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -354,18 +515,28 @@ const ProfileFormView: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">通学方法</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">通学方法</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    通学方法
+                                    {isFieldRequired('commute_method') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <select
                                     value={profile.commute_method || ''}
                                     onChange={(e) => handleInputChange('commute_method', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('commute_method') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('commute_method')}
                                 >
                                     <option value="">選択してください</option>
                                     <option value="交通機関利用">交通機関利用</option>
                                     <option value="自転車">自転車</option>
                                     <option value="徒歩">徒歩</option>
                                 </select>
+                                {getFieldError('commute_method') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('commute_method')}</p>
+                                )}
                             </div>
 
                             {/* JR */}
@@ -699,32 +870,52 @@ const ProfileFormView: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">芸術科目選択</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">芸術選択第１希望科目</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    芸術選択第１希望科目
+                                    {isFieldRequired('art_first_choice') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <select
                                     value={profile.art_first_choice || ''}
                                     onChange={(e) => handleInputChange('art_first_choice', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('art_first_choice') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('art_first_choice')}
                                 >
                                     <option value="">選択してください</option>
                                     <option value="音楽">音楽</option>
                                     <option value="美術">美術</option>
                                     <option value="書道">書道</option>
                                 </select>
+                                {getFieldError('art_first_choice') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('art_first_choice')}</p>
+                                )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">芸術選択第２希望科目</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    芸術選択第２希望科目
+                                    {isFieldRequired('art_second_choice') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <select
                                     value={profile.art_second_choice || ''}
                                     onChange={(e) => handleInputChange('art_second_choice', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('art_second_choice') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('art_second_choice')}
                                 >
                                     <option value="">選択してください</option>
                                     <option value="音楽">音楽</option>
                                     <option value="美術">美術</option>
                                     <option value="書道">書道</option>
                                 </select>
+                                {getFieldError('art_second_choice') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('art_second_choice')}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -766,17 +957,27 @@ const ProfileFormView: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">持病について</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">持病</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    持病
+                                    {isFieldRequired('has_chronic_illness') && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <select
                                     value={profile.has_chronic_illness ? 'あり' : 'なし'}
                                     onChange={(e) => handleInputChange('has_chronic_illness', e.target.value === 'あり')}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        getFieldError('has_chronic_illness') 
+                                            ? 'border-red-500 focus:ring-red-500' 
+                                            : 'border-gray-300'
+                                    }`}
+                                    required={isFieldRequired('has_chronic_illness')}
                                 >
                                     <option value="">選択してください</option>
                                     <option value="あり">あり</option>
                                     <option value="なし">なし</option>
                                 </select>
+                                {getFieldError('has_chronic_illness') && (
+                                    <p className="mt-1 text-sm text-red-600">{getFieldError('has_chronic_illness')}</p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">宿泊行事について学校へ伝えたいこと</label>
