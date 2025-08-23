@@ -86,6 +86,18 @@ const ProfileFormView: React.FC = () => {
         }));
     }, []);
 
+    // 日本語入力対応の入力処理関数
+    const handleJapaneseInput = useCallback((field: keyof StudentProfile) => {
+        return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const value = (e.target as HTMLInputElement | HTMLTextAreaElement).value;
+            console.log('Japanese input change:', field, value);
+            setProfile(prev => ({
+                ...prev,
+                [field]: value
+            }));
+        };
+    }, []);
+
     const saveForm = async (step: FormStep, isComplete: boolean = false) => {
         if (!user?.exam_no) return;
 
@@ -141,7 +153,8 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name || ''}
-                            onChange={(e) => handleDirectInputChange('student_last_name', e.target.value)}
+                            onChange={handleJapaneseInput('student_last_name')}
+                            onInput={handleJapaneseInput('student_last_name')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -153,7 +166,8 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_first_name || ''}
-                            onChange={(e) => handleDirectInputChange('student_first_name', e.target.value)}
+                            onChange={handleJapaneseInput('student_first_name')}
+                            onInput={handleJapaneseInput('student_first_name')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -165,7 +179,8 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name_kana || ''}
-                            onChange={(e) => handleDirectInputChange('student_last_name_kana', e.target.value)}
+                            onChange={handleJapaneseInput('student_last_name_kana')}
+                            onInput={handleJapaneseInput('student_last_name_kana')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
