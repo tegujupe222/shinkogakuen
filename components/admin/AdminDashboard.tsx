@@ -497,9 +497,9 @@ const AdminDashboard: React.FC = () => {
                         <p className="text-gray-600">学生の個人結果を管理します</p>
                     </div>
 
-                    {/* 検索・フィルター・アップロード・エクスポート */}
+                    {/* 検索・フィルター */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">検索</label>
                                 <input
@@ -523,38 +523,40 @@ const AdminDashboard: React.FC = () => {
                                     <option value="course_change">廻し合格</option>
                                 </select>
                             </div>
-                            <div className="flex items-end space-x-2">
-                                <button
-                                    onClick={() => setShowPersonalResultsUploadModal(true)}
-                                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                >
-                                    <UploadIcon className="w-4 h-4 mr-2" />
-                                    Excelアップロード
-                                </button>
-                                <button
-                                    onClick={exportPersonalResultsToCSV}
-                                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                >
-                                    <DownloadIcon className="w-4 h-4 mr-2" />
-                                    CSV出力
-                                </button>
-                                <button
-                                    onClick={exportPersonalResultsToExcel}
-                                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                >
-                                    <DownloadIcon className="w-4 h-4 mr-2" />
-                                    Excel出力
-                                </button>
-                            </div>
-                            <div className="flex items-end">
-                                <button
-                                    onClick={deleteAllPersonalResults}
-                                    className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                                >
-                                    <TrashIcon className="w-4 h-4 mr-2" />
-                                    全削除
-                                </button>
-                            </div>
+                        </div>
+                    </div>
+
+                    {/* アクションボタン */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                        <div className="flex flex-wrap gap-4">
+                            <button
+                                onClick={() => setShowPersonalResultsUploadModal(true)}
+                                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                                <UploadIcon className="w-4 h-4 mr-2" />
+                                Excelアップロード
+                            </button>
+                            <button
+                                onClick={exportPersonalResultsToCSV}
+                                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                <DownloadIcon className="w-4 h-4 mr-2" />
+                                CSV出力
+                            </button>
+                            <button
+                                onClick={exportPersonalResultsToExcel}
+                                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                                <DownloadIcon className="w-4 h-4 mr-2" />
+                                Excel出力
+                            </button>
+                            <button
+                                onClick={deleteAllPersonalResults}
+                                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                <TrashIcon className="w-4 h-4 mr-2" />
+                                全削除
+                            </button>
                         </div>
                     </div>
 
