@@ -89,17 +89,17 @@ export async function POST(request: NextRequest) {
             const applicationType = row[7]?.toString() || null; // H列: 出願種別（専願/併願）
             const recommendation = row[9]?.toString() || null; // J列: 推薦
             
-            // 以下の列は現在のエクセルファイルには含まれていないため、nullに設定
-            const middleSchool = null; // M列: 中学校名（現在のファイルには含まれていない）
-            const top10Percent = null; // O列: 3教科上位10%（現在のファイルには含まれていない）
-            const specialAdvanceTop5 = null; // P列: 特進上位5名（現在のファイルには含まれていない）
-            const advanceTop5 = null; // Q列: 進学上位5名（現在のファイルには含まれていない）
-            const clubTuitionExemption = null; // R列: 部活動推薦入学金免除（現在のファイルには含まれていない）
-            const clubFeeExemption = null; // S列: 部活動推薦諸費用免除（現在のファイルには含まれていない）
-            const clubScholarship = null; // T列: 部活動推薦奨学金支給（現在のファイルには含まれていない）
-            const acceptedCourse = null; // V列: 合格コース（現在のファイルには含まれていない）
-            const scholarshipStudent = null; // X列: 特待生（現在のファイルには含まれていない）
-            const clubRecommendation = null; // Z列: 部活動推薦表記（現在のファイルには含まれていない）
+            // 以下の列は成績の良い生徒のみにデータがあるため、存在する場合は取得、ない場合はnull
+            const middleSchool = row[12]?.toString() || null; // M列: 中学校名（全員に入っているはず）
+            const top10Percent = row[14]?.toString() || null; // O列: 3教科上位10%（成績の良い生徒のみ）
+            const specialAdvanceTop5 = row[15]?.toString() || null; // P列: 特進上位5名（成績の良い生徒のみ）
+            const advanceTop5 = row[16]?.toString() || null; // Q列: 進学上位5名（成績の良い生徒のみ）
+            const clubTuitionExemption = row[17]?.toString() || null; // R列: 部活動推薦入学金免除（成績の良い生徒のみ）
+            const clubFeeExemption = row[18]?.toString() || null; // S列: 部活動推薦諸費用免除（成績の良い生徒のみ）
+            const clubScholarship = row[19]?.toString() || null; // T列: 部活動推薦奨学金支給（成績の良い生徒のみ）
+            const acceptedCourse = row[21]?.toString() || null; // V列: 合格コース（成績の良い生徒のみ）
+            const scholarshipStudent = row[23]?.toString() || null; // X列: 特待生（成績の良い生徒のみ）
+            const clubRecommendation = row[25]?.toString() || null; // Z列: 部活動推薦表記（成績の良い生徒のみ）
 
             // デバッグ用ログ（最初の3行のみ）
             if (j <= 3) {
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
                     applicationCourse,
                     applicationType,
                     recommendation,
-                    rawRow: row.slice(0, 10) // 最初の10列のみ表示
+                    rawRow: row // 全列を表示して実際の構造を確認
                 });
             }
 
