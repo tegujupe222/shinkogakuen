@@ -327,7 +327,11 @@ const AdminDashboard: React.FC = () => {
             ].join(','))
         ].join('\n');
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        // BOM（Byte Order Mark）を追加してUTF-8エンコーディングを明示
+        const BOM = '\uFEFF';
+        const csvWithBOM = BOM + csvContent;
+        
+        const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
@@ -336,6 +340,61 @@ const AdminDashboard: React.FC = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const exportPersonalResultsToExcel = () => {
+        const headers = [
+            '受験番号',
+            '学生ID',
+            '氏名',
+            '性別',
+            '出願時のコース',
+            '出願種別',
+            '推薦',
+            '中学校名',
+            '3教科上位10%',
+            '特進上位5名',
+            '進学上位5名',
+            '部活動推薦入学金免除',
+            '部活動推薦諸費用免除',
+            '部活動推薦奨学金支給',
+            '合格コース',
+            '特待生',
+            '部活動推薦表記',
+            '作成日時',
+            '更新日時'
+        ];
+
+        const data = filteredAndSortedPersonalResults.map(result => [
+            result.exam_no,
+            result.student_id || '',
+            result.name || '',
+            result.gender || '',
+            result.application_course || '',
+            result.application_type || '',
+            result.recommendation || '',
+            result.middle_school || '',
+            result.top_10_percent || '',
+            result.special_advance_top5 || '',
+            result.advance_top5 || '',
+            result.club_tuition_exemption || '',
+            result.club_fee_exemption || '',
+            result.club_scholarship || '',
+            result.accepted_course || '',
+            result.scholarship_student || '',
+            result.club_recommendation || '',
+            result.created_at,
+            result.updated_at
+        ]);
+
+        // xlsxライブラリを使用してExcelファイルを作成
+        const XLSX = require('xlsx');
+        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, '個人結果');
+        
+        // Excelファイルをダウンロード
+        XLSX.writeFile(workbook, `個人結果_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const getStatusLabel = (result: StudentResult) => {
@@ -462,6 +521,13 @@ const AdminDashboard: React.FC = () => {
                                 >
                                     <DownloadIcon className="w-4 h-4 mr-2" />
                                     CSV出力
+                                </button>
+                                <button
+                                    onClick={exportPersonalResultsToExcel}
+                                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                    <DownloadIcon className="w-4 h-4 mr-2" />
+                                    Excel出力
                                 </button>
                             </div>
                             <div className="flex items-end">

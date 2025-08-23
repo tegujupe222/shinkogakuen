@@ -136,7 +136,11 @@ const AdminStudentProfiles: React.FC = () => {
             ].join(','))
         ].join('\n');
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        // BOM（Byte Order Mark）を追加してUTF-8エンコーディングを明示
+        const BOM = '\uFEFF';
+        const csvWithBOM = BOM + csvContent;
+        
+        const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
@@ -148,8 +152,60 @@ const AdminStudentProfiles: React.FC = () => {
     };
 
     const exportToExcel = () => {
-        // 簡易的なExcel出力（実際の実装ではxlsxライブラリを使用）
-        exportToCSV(); // 現在はCSVとして出力
+        const headers = [
+            '学生ID',
+            '姓',
+            '名',
+            '姓（ふりがな）',
+            '名（ふりがな）',
+            '性別',
+            '生年月日',
+            '本籍地',
+            '郵便番号',
+            '住所',
+            '番地・部屋番号',
+            '電話番号',
+            '中学校名',
+            '卒業年月日',
+            '個人情報完了',
+            '通学方法完了',
+            '芸術科目完了',
+            '健康情報完了',
+            '作成日時',
+            '更新日時'
+        ];
+
+        const data = filteredAndSortedProfiles.map(profile => [
+            profile.student_id,
+            profile.student_last_name || '',
+            profile.student_first_name || '',
+            profile.student_last_name_kana || '',
+            profile.student_first_name_kana || '',
+            profile.gender || '',
+            profile.birth_date || '',
+            profile.registered_address || '',
+            profile.student_postal_code || '',
+            profile.student_address || '',
+            profile.student_address_detail || '',
+            profile.student_phone || '',
+            profile.middle_school_name || '',
+            profile.graduation_date || '',
+            profile.personal_info_completed ? '完了' : '未完了',
+            profile.commute_info_completed ? '完了' : '未完了',
+            profile.art_selection_completed ? '完了' : '未完了',
+            profile.health_info_completed ? '完了' : '未完了',
+            profile.created_at,
+            profile.updated_at
+        ]);
+
+        // xlsxライブラリを使用してExcelファイルを作成
+        const XLSX = require('xlsx');
+        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, '学生プロフィール');
+        
+        // Excelファイルをダウンロード
+        XLSX.writeFile(workbook, `学生プロフィール_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const deleteProfile = async (studentId: string) => {
