@@ -65,46 +65,9 @@ const ProfileFormView: React.FC = () => {
         }
     };
 
-    const handleInputChange = (field: keyof StudentProfile, value: string | boolean) => {
-        console.log('handleInputChange called:', field, value); // デバッグ用
-        setProfile(prev => {
-            const newProfile = {
-                ...prev,
-                [field]: value
-            };
-            console.log('New profile state:', newProfile); // デバッグ用
-            return newProfile;
-        });
-    };
-
-    // 直接的な入力処理関数
-    const handleDirectInputChange = useCallback((field: keyof StudentProfile, value: string) => {
-        console.log('Direct input change:', field, value);
-        setProfile(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    }, []);
-
-    // シンプルな入力処理関数（useCallbackを使用しない）
-    const handleSimpleInput = (field: keyof StudentProfile) => {
-        return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-            const value = e.target.value;
-            console.log('Simple input change:', field, value);
-            setProfile(prev => {
-                const newState = {
-                    ...prev,
-                    [field]: value
-                };
-                console.log('New profile state:', newState);
-                return newState;
-            });
-        };
-    };
-
-    // 最もシンプルな入力処理（直接的な状態更新）
-    const handleDirectInput = (field: keyof StudentProfile, value: string) => {
-        console.log('Direct input:', field, value);
+    // シンプルで確実な入力処理関数
+    const handleInput = (field: keyof StudentProfile, value: string) => {
+        console.log('Input change:', field, value);
         setProfile(prev => ({
             ...prev,
             [field]: value
@@ -166,7 +129,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name || ''}
-                            onChange={(e) => handleDirectInput('student_last_name', e.target.value)}
+                            onChange={(e) => handleInput('student_last_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -178,7 +141,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_first_name || ''}
-                            onChange={(e) => handleDirectInput('student_first_name', e.target.value)}
+                            onChange={(e) => handleInput('student_first_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -190,7 +153,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_last_name_kana || ''}
-                            onChange={(e) => handleDirectInput('student_last_name_kana', e.target.value)}
+                            onChange={(e) => handleInput('student_last_name_kana', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -201,7 +164,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_first_name_kana || ''}
-                            onChange={(e) => handleInputChange('student_first_name_kana', e.target.value || '')}
+                            onChange={(e) => handleInput('student_first_name_kana', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -209,7 +172,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
                         <select
                             value={profile.gender || ''}
-                            onChange={(e) => handleInputChange('gender', e.target.value || '')}
+                            onChange={(e) => handleInput('gender', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">選択してください</option>
@@ -222,7 +185,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="date"
                             value={profile.birth_date || ''}
-                            onChange={(e) => handleInputChange('birth_date', e.target.value || '')}
+                            onChange={(e) => handleInput('birth_date', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -238,7 +201,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_postal_code || ''}
-                            onChange={(e) => handleInputChange('student_postal_code', e.target.value || '')}
+                            onChange={(e) => handleInput('student_postal_code', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="123-4567"
                         />
@@ -248,7 +211,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_address || ''}
-                            onChange={(e) => handleInputChange('student_address', e.target.value || '')}
+                            onChange={(e) => handleInput('student_address', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -257,7 +220,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.student_address_detail || ''}
-                            onChange={(e) => handleInputChange('student_address_detail', e.target.value || '')}
+                            onChange={(e) => handleInput('student_address_detail', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -266,7 +229,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="tel"
                             value={profile.student_phone || ''}
-                            onChange={(e) => handleInputChange('student_phone', e.target.value || '')}
+                            onChange={(e) => handleInput('student_phone', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -282,7 +245,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.middle_school_name || ''}
-                            onChange={(e) => handleInputChange('middle_school_name', e.target.value || '')}
+                            onChange={(e) => handleInput('middle_school_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -291,7 +254,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="date"
                             value={profile.graduation_date || ''}
-                            onChange={(e) => handleInputChange('graduation_date', e.target.value || '')}
+                            onChange={(e) => handleInput('graduation_date', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -307,7 +270,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.guardian1_last_name || ''}
-                            onChange={(e) => handleInputChange('guardian1_last_name', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_last_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -316,7 +279,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.guardian1_first_name || ''}
-                            onChange={(e) => handleInputChange('guardian1_first_name', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_first_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -325,7 +288,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.guardian1_last_name_kana || ''}
-                            onChange={(e) => handleInputChange('guardian1_last_name_kana', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_last_name_kana', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -334,7 +297,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.guardian1_first_name_kana || ''}
-                            onChange={(e) => handleInputChange('guardian1_first_name_kana', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_first_name_kana', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -343,7 +306,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.guardian1_postal_code || ''}
-                            onChange={(e) => handleInputChange('guardian1_postal_code', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_postal_code', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -352,7 +315,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.guardian1_address || ''}
-                            onChange={(e) => handleInputChange('guardian1_address', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_address', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -361,7 +324,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.guardian1_address_detail || ''}
-                            onChange={(e) => handleInputChange('guardian1_address_detail', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_address_detail', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -370,7 +333,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="tel"
                             value={profile.guardian1_phone || ''}
-                            onChange={(e) => handleInputChange('guardian1_phone', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_phone', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -378,7 +341,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">保護者1と生徒本人との関係</label>
                         <select
                             value={profile.guardian1_relationship || ''}
-                            onChange={(e) => handleInputChange('guardian1_relationship', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_relationship', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">選択してください</option>
@@ -395,7 +358,7 @@ const ProfileFormView: React.FC = () => {
                             <input
                                 type="text"
                                 value={profile.guardian1_relationship_other || ''}
-                                onChange={(e) => handleInputChange('guardian1_relationship_other', e.target.value || '')}
+                                onChange={(e) => handleInput('guardian1_relationship_other', e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -405,7 +368,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="email"
                             value={profile.guardian1_email || ''}
-                            onChange={(e) => handleInputChange('guardian1_email', e.target.value || '')}
+                            onChange={(e) => handleInput('guardian1_email', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -441,7 +404,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">通学方法</label>
                         <select
                             value={profile.commute_method || ''}
-                            onChange={(e) => handleInputChange('commute_method', e.target.value || '')}
+                            onChange={(e) => handleInput('commute_method', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">選択してください</option>
@@ -459,7 +422,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.jr_start || ''}
-                            onChange={(e) => handleInputChange('jr_start', e.target.value || '')}
+                            onChange={(e) => handleInput('jr_start', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -468,7 +431,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.jr_end || ''}
-                            onChange={(e) => handleInputChange('jr_end', e.target.value || '')}
+                            onChange={(e) => handleInput('jr_end', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -481,7 +444,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.subway_nishin_start || ''}
-                            onChange={(e) => handleInputChange('subway_nishin_start', e.target.value || '')}
+                            onChange={(e) => handleInput('subway_nishin_start', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -490,7 +453,7 @@ const ProfileFormView: React.FC = () => {
                         <input
                             type="text"
                             value={profile.subway_nishin_end || ''}
-                            onChange={(e) => handleInputChange('subway_nishin_end', e.target.value || '')}
+                            onChange={(e) => handleInput('subway_nishin_end', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -501,7 +464,7 @@ const ProfileFormView: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">経由地</label>
                     <textarea
                         value={profile.via_station || ''}
-                        onChange={(e) => handleInputChange('via_station', e.target.value || '')}
+                        onChange={(e) => handleInput('via_station', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
                     />
@@ -545,7 +508,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">芸術選択第１希望科目</label>
                         <select
                             value={profile.art_first_choice || ''}
-                            onChange={(e) => handleInputChange('art_first_choice', e.target.value || '')}
+                            onChange={(e) => handleInput('art_first_choice', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">選択してください</option>
@@ -558,7 +521,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">芸術選択第２希望科目</label>
                         <select
                             value={profile.art_second_choice || ''}
-                            onChange={(e) => handleInputChange('art_second_choice', e.target.value || '')}
+                            onChange={(e) => handleInput('art_second_choice', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">選択してください</option>
@@ -607,7 +570,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">持病</label>
                         <select
                             value={profile.has_chronic_illness ? 'true' : 'false'}
-                            onChange={(e) => handleInputChange('has_chronic_illness', e.target.value === 'true')}
+                            onChange={(e) => handleInput('has_chronic_illness', e.target.value === 'true')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">選択してください</option>
@@ -620,7 +583,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">宿泊行事について学校へ伝えたいこと</label>
                         <textarea
                             value={profile.accommodation_notes || ''}
-                            onChange={(e) => handleInputChange('accommodation_notes', e.target.value || '')}
+                            onChange={(e) => handleInput('accommodation_notes', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             rows={3}
                         />
@@ -630,7 +593,7 @@ const ProfileFormView: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">学校生活について家庭からの連絡</label>
                         <textarea
                             value={profile.family_communication || ''}
-                            onChange={(e) => handleInputChange('family_communication', e.target.value || '')}
+                            onChange={(e) => handleInput('family_communication', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             rows={3}
                         />
@@ -641,7 +604,7 @@ const ProfileFormView: React.FC = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">持病に当てはまるもの</label>
                             <textarea
                                 value={profile.chronic_illness_details || ''}
-                                onChange={(e) => handleInputChange('chronic_illness_details', e.target.value || '')}
+                                onChange={(e) => handleInput('chronic_illness_details', e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 rows={4}
                                 placeholder="心疾患、川崎病、リウマチ熱、腎臓疾患、肝臓疾患、糖尿病、てんかん、喘息、難聴、弱視、側湾症、色覚異常、アトピー性皮膚炎、発達障害、身体障害、食物アレルギー、薬剤アレルギー、怪我、その他"
