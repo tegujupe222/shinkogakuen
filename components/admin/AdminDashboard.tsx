@@ -368,7 +368,7 @@ const AdminDashboard: React.FC = () => {
                         return item.phone_last4 && item.phone_last4.trim() !== '';
                     case 'no_phone':
                         return !item.phone_last4 || item.phone_last4.trim() === '';
-                    default:
+            default:
                         return true;
                 }
             });
@@ -1046,13 +1046,13 @@ const AdminDashboard: React.FC = () => {
                                                 {filteredAndSortedData().map((result, index) => (
                                                     <tr key={result.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors duration-150`}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-gray-50">
-                                                            {result.student_id || '-'}
+                                                            {result.student_id ? result.student_id : '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-blue-50">
                                                             {result.exam_no}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                            {result.name || '-'}
+                                                            {result.name ? result.name : '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                             {result.application_type ? (
@@ -1068,19 +1068,19 @@ const AdminDashboard: React.FC = () => {
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.application_course || '-'}
+                                                            {result.application_course ? result.application_course : '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.gender || '-'}
+                                                            {result.gender ? result.gender : '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.middle_school || '-'}
+                                                            {result.middle_school ? result.middle_school : '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.recommendation || '-'}
+                                                            {result.recommendation ? result.recommendation : '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {result.scholarship_student || '-'}
+                                                            {result.scholarship_student ? result.scholarship_student : '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                             {result.accepted_course ? (
@@ -1508,7 +1508,7 @@ const AdminDashboard: React.FC = () => {
                             >
                                 {editLoading ? '更新中...' : '更新'}
                             </button>
-                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
