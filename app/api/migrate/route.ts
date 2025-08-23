@@ -39,6 +39,24 @@ export async function POST(request: NextRequest) {
             ON CONFLICT (exam_no) DO NOTHING
         `;
 
+        // announcementsテーブルに公開関連のカラムを追加
+        await sql`
+            ALTER TABLE announcements ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT FALSE
+        `;
+        await sql`
+            ALTER TABLE announcements ADD COLUMN IF NOT EXISTS published_at TIMESTAMP WITH TIME ZONE
+        `;
+        await sql`
+            ALTER TABLE announcements ADD COLUMN IF NOT EXISTS scheduled_publish_at TIMESTAMP WITH TIME ZONE
+        `;
+
+        // 既存のお知らせを公開状態に設定（後方互換性のため）
+        await sql`
+            UPDATE announcements 
+            SET is_published = true, published_at = created_at 
+            WHERE is_published IS NULL
+        `;
+
         // 新しい学生プロフィールテーブルを作成
         await sql`
             CREATE TABLE IF NOT EXISTS student_profiles (
