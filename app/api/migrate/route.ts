@@ -25,9 +25,23 @@ export async function POST(request: NextRequest) {
         `;
 
         // usersテーブルのemailカラムをNULL許可に変更
-        await sql`
-            ALTER TABLE users ALTER COLUMN email DROP NOT NULL
-        `;
+        try {
+            await sql`
+                ALTER TABLE users ALTER COLUMN email DROP NOT NULL
+            `;
+        } catch (error) {
+            console.log('emailカラムのNOT NULL制約解除に失敗（既にNULL許可の可能性）:', error);
+        }
+
+        // emailカラムを削除（オプション）
+        try {
+            await sql`
+                ALTER TABLE users DROP COLUMN email
+            `;
+            console.log('emailカラムを削除しました');
+        } catch (error) {
+            console.log('emailカラムの削除に失敗（既に存在しない可能性）:', error);
+        }
 
         // 既存の管理者アカウントにexam_noを設定
         await sql`
