@@ -313,19 +313,55 @@ interface FormSettingModalProps {
 
 const FormSettingModal: React.FC<FormSettingModalProps> = ({ setting, onSave, onClose }) => {
     const [formData, setFormData] = useState({
-        field_key: setting?.field_key || '',
-        field_label: setting?.field_label || '',
-        field_type: setting?.field_type || 'text',
-        field_group: setting?.field_group || 'personal',
-        field_order: setting?.field_order || 0,
-        is_required: setting?.is_required || false,
-        is_visible: setting?.is_visible !== false,
-        is_editable: setting?.is_editable !== false,
-        validation_rules: setting?.validation_rules || '',
-        field_options: setting?.options || '',
-        placeholder: setting?.placeholder || '',
-        help_text: setting?.help_text || ''
+        field_key: '',
+        field_label: '',
+        field_type: 'text' as const,
+        field_group: 'personal',
+        field_order: 0,
+        is_required: false,
+        is_visible: true,
+        is_editable: true,
+        validation_rules: '',
+        field_options: '',
+        placeholder: '',
+        help_text: ''
     });
+
+    // 編集時にsettingの値でformDataを更新
+    useEffect(() => {
+        if (setting) {
+            setFormData({
+                field_key: setting.field_key || '',
+                field_label: setting.field_label || '',
+                field_type: (setting.field_type || 'text') as any,
+                field_group: setting.field_group || 'personal',
+                field_order: setting.field_order || 0,
+                is_required: setting.is_required || false,
+                is_visible: setting.is_visible !== false,
+                is_editable: setting.is_editable !== false,
+                validation_rules: setting.validation_rules || '',
+                field_options: setting.options || '',
+                placeholder: setting.placeholder || '',
+                help_text: setting.help_text || ''
+            });
+        } else {
+            // 新規作成時はデフォルト値にリセット
+            setFormData({
+                field_key: '',
+                field_label: '',
+                field_type: 'text' as const,
+                field_group: 'personal',
+                field_order: 0,
+                is_required: false,
+                is_visible: true,
+                is_editable: true,
+                validation_rules: '',
+                field_options: '',
+                placeholder: '',
+                help_text: ''
+            });
+        }
+    }, [setting]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
