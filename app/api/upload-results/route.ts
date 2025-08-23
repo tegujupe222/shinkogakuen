@@ -111,6 +111,16 @@ export async function POST(request: NextRequest) {
                     applicationCourse,
                     applicationType,
                     recommendation,
+                    middleSchool,
+                    top10Percent,
+                    specialAdvanceTop5,
+                    advanceTop5,
+                    clubTuitionExemption,
+                    clubFeeExemption,
+                    clubScholarship,
+                    acceptedCourse,
+                    scholarshipStudent,
+                    clubRecommendation,
                     rawRow: row // 全列を表示して実際の構造を確認
                 });
             }
