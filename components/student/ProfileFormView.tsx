@@ -358,7 +358,7 @@ const ProfileFormView: React.FC = () => {
 
             {/* ステップインジケーター */}
             <div className="mb-6">
-                <div className="flex items-center justify-center space-x-4">
+                <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4">
                     {[
                         { id: 'personal', name: '個人情報', icon: '👤' },
                         { id: 'family', name: '家庭情報', icon: '🏠' },
@@ -367,22 +367,22 @@ const ProfileFormView: React.FC = () => {
                         { id: 'health', name: '健康情報', icon: '🏥' }
                     ].map((step, index) => (
                         <div key={step.id} className="flex items-center">
-                            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                            <div className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-2 ${
                                 currentStep === step.id 
                                     ? 'bg-blue-600 border-blue-600 text-white' 
-                                    : index < ['personal', 'commute', 'art', 'health'].indexOf(currentStep)
+                                    : index < ['personal', 'family', 'commute', 'art', 'health'].indexOf(currentStep)
                                     ? 'bg-green-500 border-green-500 text-white'
                                     : 'bg-gray-200 border-gray-300 text-gray-500'
                             }`}>
-                                <span className="text-sm">{step.icon}</span>
+                                <span className="text-xs md:text-sm">{step.icon}</span>
                             </div>
-                            <span className={`ml-2 text-sm font-medium ${
+                            <span className={`ml-1 md:ml-2 text-xs md:text-sm font-medium hidden sm:inline ${
                                 currentStep === step.id ? 'text-blue-600' : 'text-gray-500'
                             }`}>
                                 {step.name}
                             </span>
                             {index < 4 && (
-                                <div className="ml-4 w-8 h-0.5 bg-gray-300"></div>
+                                <div className="ml-2 md:ml-4 w-4 md:w-8 h-0.5 bg-gray-300 hidden sm:block"></div>
                             )}
                         </div>
                     ))}
@@ -417,7 +417,7 @@ const ProfileFormView: React.FC = () => {
                     {/* 生徒基本情報 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">生徒基本情報</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {formSettings
                                 .filter(setting => setting.field_group === 'personal')
                                 .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
@@ -466,7 +466,7 @@ const ProfileFormView: React.FC = () => {
                     {/* 保護者1情報 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">保護者1情報</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {formSettings
                                 .filter(setting => setting.field_key.startsWith('guardian1_'))
                                 .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
@@ -491,7 +491,7 @@ const ProfileFormView: React.FC = () => {
                     {/* 保護者2情報 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">保護者2情報</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {formSettings
                                 .filter(setting => setting.field_key.startsWith('guardian2_'))
                                 .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
@@ -516,7 +516,7 @@ const ProfileFormView: React.FC = () => {
                     {/* 書類送付先 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">書類送付先</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {formSettings
                                 .filter(setting => setting.field_key.startsWith('document_recipient_'))
                                 .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
@@ -541,7 +541,7 @@ const ProfileFormView: React.FC = () => {
                     {/* 緊急連絡先 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">緊急連絡先</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {formSettings
                                 .filter(setting => setting.field_key.startsWith('emergency'))
                                 .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
@@ -566,7 +566,7 @@ const ProfileFormView: React.FC = () => {
                     {/* 兄弟姉妹情報 */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">兄弟姉妹情報</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {formSettings
                                 .filter(setting => setting.field_key === 'has_siblings_at_school')
                                 .map(setting => (
@@ -593,7 +593,7 @@ const ProfileFormView: React.FC = () => {
                         {[1, 2, 3, 4, 5, 6].map(familyIndex => (
                             <div key={familyIndex} className="mb-6 p-4 border border-gray-200 rounded-lg">
                                 <h4 className="text-md font-medium text-gray-800 mb-3">家族{familyIndex}</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     {formSettings
                                         .filter(setting => setting.field_key.startsWith(`family${familyIndex}_`))
                                         .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
@@ -673,7 +673,7 @@ const ProfileFormView: React.FC = () => {
                                 ))}
 
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         JR区間(始)
@@ -717,7 +717,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 神戸市営地下鉄（西神線） */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         神戸市営地下鉄（西神線）区間(始)
@@ -761,7 +761,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 神戸市営地下鉄（海岸線） */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         神戸市営地下鉄（海岸線）区間（始）
@@ -805,7 +805,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 阪急 */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         阪急区間(始)
@@ -849,7 +849,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 神戸電鉄 */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         神戸電鉄区間(始)
@@ -893,7 +893,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 阪神 */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         阪神区間(始)
@@ -937,7 +937,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 山陽 */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">山陽区間(始)</label>
                                     <input
@@ -959,7 +959,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 神戸市営バス */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">神戸市営バス区間(始)</label>
                                     <input
@@ -981,7 +981,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 山陽バス */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">山陽バス区間(始)</label>
                                     <input
@@ -1003,7 +1003,7 @@ const ProfileFormView: React.FC = () => {
                             </div>
 
                             {/* 神姫バス */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">神姫バス区間(始)</label>
                                     <input

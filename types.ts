@@ -231,6 +231,7 @@ export interface StudentProfile {
     
     // フォーム進捗状況
     personal_info_completed?: boolean;
+    family_info_completed?: boolean;
     commute_info_completed?: boolean;
     art_selection_completed?: boolean;
     health_info_completed?: boolean;
