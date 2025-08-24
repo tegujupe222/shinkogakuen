@@ -87,6 +87,9 @@ export interface StudentProfile {
     middle_school_name?: string;
     graduation_date?: string;
     
+    // 出願情報
+    application_type?: string; // 専願/併願
+    
     // 保護者1情報
     guardian1_last_name?: string;
     guardian1_first_name?: string;

@@ -15,6 +15,7 @@ const AdminStudentProfiles: React.FC = () => {
         end: string;
     }>({ start: '', end: '' });
     const [filterSection, setFilterSection] = useState<string>('all');
+    const [filterApplicationType, setFilterApplicationType] = useState<string>('all');
 
     useEffect(() => {
         fetchProfiles();
@@ -85,9 +86,15 @@ const AdminStudentProfiles: React.FC = () => {
             // セクション別フィルター
             if (filterSection !== 'all') {
                 if (filterSection === 'personal' && !profile.personal_info_completed) return false;
+                if (filterSection === 'family' && !profile.family_info_completed) return false;
                 if (filterSection === 'commute' && !profile.commute_info_completed) return false;
                 if (filterSection === 'art' && !profile.art_selection_completed) return false;
                 if (filterSection === 'health' && !profile.health_info_completed) return false;
+            }
+            
+            // 専願/併願フィルター
+            if (filterApplicationType !== 'all') {
+                if (profile.application_type !== filterApplicationType) return false;
             }
             
             // 日付範囲フィルター
@@ -678,13 +685,14 @@ const AdminStudentProfiles: React.FC = () => {
                         >
                             <option value="all">すべて</option>
                             <option value="personal">個人情報完了</option>
+                            <option value="family">家庭情報完了</option>
                             <option value="commute">通学方法完了</option>
                             <option value="art">芸術科目完了</option>
                             <option value="health">健康情報完了</option>
                         </select>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">出身中学校</label>
                         <select
@@ -696,6 +704,18 @@ const AdminStudentProfiles: React.FC = () => {
                             {Array.from(new Set(profiles.map(p => p.middle_school_name).filter(Boolean))).map(school => (
                                 <option key={school} value={school}>{school}</option>
                             ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">専願/併願</label>
+                        <select
+                            value={filterApplicationType}
+                            onChange={(e) => setFilterApplicationType(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">すべて</option>
+                            <option value="専願">専願</option>
+                            <option value="併願">併願</option>
                         </select>
                     </div>
                     <div>
@@ -729,6 +749,7 @@ const AdminStudentProfiles: React.FC = () => {
                                 setFilterCompleted('all');
                                 setFilterGender('all');
                                 setFilterMiddleSchool('all');
+                                setFilterApplicationType('all');
                                 setFilterDateRange({ start: '', end: '' });
                                 setFilterSection('all');
                             }}
