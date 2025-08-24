@@ -308,6 +308,17 @@ export async function POST(request: NextRequest) {
             )
         `;
 
+        // 学生プロフィールテーブルにapplication_typeカラムを追加
+        try {
+            await sql`
+                ALTER TABLE student_profiles 
+                ADD COLUMN IF NOT EXISTS application_type VARCHAR(100)
+            `;
+            console.log('Added application_type column to student_profiles table');
+        } catch (error) {
+            console.log('application_type column already exists or error occurred:', error);
+        }
+
         // フォーム設定の初期データを挿入
         const initialFormSettings = [
             // 生徒基本情報

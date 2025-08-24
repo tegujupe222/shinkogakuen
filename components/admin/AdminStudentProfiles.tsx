@@ -263,6 +263,7 @@ const AdminStudentProfiles: React.FC = () => {
                 profile.student_phone || '',
                 profile.middle_school_name || '',
                 profile.graduation_date || '',
+                profile.application_type || '',
                 // 保護者1情報
                 profile.guardian1_last_name || '',
                 profile.guardian1_first_name || '',
@@ -500,6 +501,7 @@ const AdminStudentProfiles: React.FC = () => {
             profile.student_phone || '',
             profile.middle_school_name || '',
             profile.graduation_date || '',
+            profile.application_type || '',
             // 保護者1情報
             profile.guardian1_last_name || '',
             profile.guardian1_first_name || '',
@@ -854,6 +856,13 @@ const AdminStudentProfiles: React.FC = () => {
                                                     : 'bg-red-100 text-red-800'
                                             }`}>
                                                 個人
+                                            </span>
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                profile.family_info_completed 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-red-100 text-red-800'
+                                            }`}>
+                                                家庭
                                             </span>
                                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                                 profile.commute_info_completed 

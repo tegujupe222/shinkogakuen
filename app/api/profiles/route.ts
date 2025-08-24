@@ -159,6 +159,7 @@ export async function POST(request: NextRequest) {
                     commute_info_completed = ${profileData.commute_info_completed || false},
                     art_selection_completed = ${profileData.art_selection_completed || false},
                     health_info_completed = ${profileData.health_info_completed || false},
+                    application_type = ${profileData.application_type || null},
                     updated_at = NOW()
                 WHERE student_id = ${student_id}
                 RETURNING *
@@ -308,7 +309,8 @@ export async function POST(request: NextRequest) {
                     personal_info_completed,
                     commute_info_completed,
                     art_selection_completed,
-                    health_info_completed
+                    health_info_completed,
+                    application_type
                 ) VALUES (
                     ${student_id},
                     ${profileData.student_last_name || null},
@@ -446,7 +448,8 @@ export async function POST(request: NextRequest) {
                     ${profileData.personal_info_completed || false},
                     ${profileData.commute_info_completed || false},
                     ${profileData.art_selection_completed || false},
-                    ${profileData.health_info_completed || false}
+                    ${profileData.health_info_completed || false},
+                    ${profileData.application_type || null}
                 )
                 RETURNING *
             `;
@@ -468,8 +471,12 @@ export async function POST(request: NextRequest) {
 export async function GET() {
     try {
         const result = await sql`
-            SELECT * FROM student_profiles 
-            ORDER BY created_at DESC
+            SELECT 
+                sp.*,
+                sr.application_type
+            FROM student_profiles sp
+            LEFT JOIN student_results sr ON sp.student_id = sr.student_id
+            ORDER BY sp.created_at DESC
         `;
         return NextResponse.json({ 
             success: true, 
