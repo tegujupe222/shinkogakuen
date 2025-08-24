@@ -58,7 +58,6 @@ export async function initDatabase() {
         exam_no VARCHAR(4) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         phone_last4 VARCHAR(4),
-        email VARCHAR(255),
         name VARCHAR(100),
         role VARCHAR(20) NOT NULL DEFAULT 'student',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
