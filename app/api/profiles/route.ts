@@ -483,7 +483,7 @@ export async function GET() {
                     sp.*,
                     COALESCE(sr.application_type, '未設定') as application_type
                 FROM student_profiles sp
-                LEFT JOIN student_results sr ON sp.student_id = sr.student_id
+                LEFT JOIN student_results sr ON sp.student_id = sr.exam_no
                 ORDER BY sp.created_at DESC
             `;
         } else {
@@ -493,7 +493,7 @@ export async function GET() {
                     sp.*,
                     COALESCE(sr.application_type, '未設定') as application_type
                 FROM student_profiles sp
-                LEFT JOIN student_results sr ON sp.student_id = sr.student_id
+                LEFT JOIN student_results sr ON sp.student_id = sr.exam_no
                 ORDER BY sp.created_at DESC
             `;
         }
