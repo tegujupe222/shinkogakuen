@@ -718,6 +718,7 @@ const AdminStudentProfiles: React.FC = () => {
                             <option value="all">すべて</option>
                             <option value="専願">専願</option>
                             <option value="併願">併願</option>
+                            <option value="未設定">未設定</option>
                         </select>
                     </div>
                     <div>
