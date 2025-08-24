@@ -172,6 +172,7 @@ const AdminFormSettings: React.FC = () => {
                         >
                             <option value="all">すべて</option>
                             <option value="personal">個人情報</option>
+                            <option value="family">家庭情報</option>
                             <option value="commute">通学方法</option>
                             <option value="art">芸術科目</option>
                             <option value="health">健康情報</option>
@@ -429,6 +430,7 @@ const FormSettingModal: React.FC<FormSettingModalProps> = ({ setting, onSave, on
                                 required
                             >
                                 <option value="personal">個人情報</option>
+                                <option value="family">家庭情報</option>
                                 <option value="commute">通学方法</option>
                                 <option value="art">芸術科目</option>
                                 <option value="health">健康情報</option>

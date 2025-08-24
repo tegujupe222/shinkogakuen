@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { StudentProfile, FormSetting, StudentResult } from '../../types';
 
-type FormStep = 'personal' | 'commute' | 'art' | 'health';
+type FormStep = 'personal' | 'family' | 'commute' | 'art' | 'health';
 
 const ProfileFormView: React.FC = () => {
     const { user } = useAuth();
@@ -304,7 +304,7 @@ const ProfileFormView: React.FC = () => {
             if (response.ok) {
                 setMessage('保存しました');
                 if (isComplete && step !== 'health') {
-                    const steps: FormStep[] = ['personal', 'commute', 'art', 'health'];
+                    const steps: FormStep[] = ['personal', 'family', 'commute', 'art', 'health'];
                     const currentIndex = steps.indexOf(step);
                     if (currentIndex < steps.length - 1) {
                         setCurrentStep(steps[currentIndex + 1]);
@@ -361,6 +361,7 @@ const ProfileFormView: React.FC = () => {
                 <div className="flex items-center justify-center space-x-4">
                     {[
                         { id: 'personal', name: '個人情報', icon: '👤' },
+                        { id: 'family', name: '家庭情報', icon: '🏠' },
                         { id: 'commute', name: '通学方法', icon: '🚇' },
                         { id: 'art', name: '芸術科目', icon: '🎨' },
                         { id: 'health', name: '健康情報', icon: '🏥' }
@@ -380,7 +381,7 @@ const ProfileFormView: React.FC = () => {
                             }`}>
                                 {step.name}
                             </span>
-                            {index < 3 && (
+                            {index < 4 && (
                                 <div className="ml-4 w-8 h-0.5 bg-gray-300"></div>
                             )}
                         </div>
@@ -455,6 +456,193 @@ const ProfileFormView: React.FC = () => {
                         >
                             {saving ? '保存中...' : '提出する'}
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 家庭情報フォーム */}
+            {currentStep === 'family' && (
+                <div className="space-y-6">
+                    {/* 保護者1情報 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">保護者1情報</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {formSettings
+                                .filter(setting => setting.field_key.startsWith('guardian1_'))
+                                .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+
+                    {/* 保護者2情報 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">保護者2情報</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {formSettings
+                                .filter(setting => setting.field_key.startsWith('guardian2_'))
+                                .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+
+                    {/* 書類送付先 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">書類送付先</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {formSettings
+                                .filter(setting => setting.field_key.startsWith('document_recipient_'))
+                                .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+
+                    {/* 緊急連絡先 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">緊急連絡先</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {formSettings
+                                .filter(setting => setting.field_key.startsWith('emergency'))
+                                .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+
+                    {/* 兄弟姉妹情報 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">兄弟姉妹情報</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {formSettings
+                                .filter(setting => setting.field_key === 'has_siblings_at_school')
+                                .map(setting => (
+                                    <div key={setting.field_key}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {setting.field_label}
+                                            {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderDynamicField(setting)}
+                                        {getFieldError(setting.field_key) && (
+                                            <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                        )}
+                                        {setting.help_text && (
+                                            <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                        )}
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+
+                    {/* 家族情報 */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">家族情報</h3>
+                        {[1, 2, 3, 4, 5, 6].map(familyIndex => (
+                            <div key={familyIndex} className="mb-6 p-4 border border-gray-200 rounded-lg">
+                                <h4 className="text-md font-medium text-gray-800 mb-3">家族{familyIndex}</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {formSettings
+                                        .filter(setting => setting.field_key.startsWith(`family${familyIndex}_`))
+                                        .sort((a, b) => (a.field_order || 0) - (b.field_order || 0))
+                                        .map(setting => (
+                                            <div key={setting.field_key}>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    {setting.field_label}
+                                                    {setting.is_required && <span className="text-red-500 ml-1">*</span>}
+                                                </label>
+                                                {renderDynamicField(setting)}
+                                                {getFieldError(setting.field_key) && (
+                                                    <p className="mt-1 text-sm text-red-600">{getFieldError(setting.field_key)}</p>
+                                                )}
+                                                {setting.help_text && (
+                                                    <p className="mt-1 text-sm text-gray-500">{setting.help_text}</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="flex justify-between">
+                        <button
+                            type="button"
+                            onClick={() => setCurrentStep('personal')}
+                            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                        >
+                            前へ
+                        </button>
+                        <div className="flex space-x-4">
+                            <button
+                                type="button"
+                                onClick={() => saveForm('family', false)}
+                                disabled={saving}
+                                className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                            >
+                                {saving ? '保存中...' : '一時保存'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => saveForm('family', true)}
+                                disabled={saving}
+                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            >
+                                {saving ? '保存中...' : '次へ'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -913,7 +1101,7 @@ const ProfileFormView: React.FC = () => {
                     <div className="flex justify-between">
                         <button
                             type="button"
-                            onClick={() => setCurrentStep('personal')}
+                            onClick={() => setCurrentStep('family')}
                             className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
                         >
                             前へ
