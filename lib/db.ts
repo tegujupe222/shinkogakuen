@@ -463,13 +463,14 @@ export async function getUserByEmail(email: string) {
   }
   
   try {
+    // emailカラムが存在しない場合はnullを返す
     const result = await sql`
       SELECT * FROM users WHERE email = ${email}
     `;
     return result.rows[0];
   } catch (error) {
-    console.error('Failed to fetch user:', error);
-    throw error;
+    console.error('Failed to fetch user by email (email column may not exist):', error);
+    return null;
   }
 }
 

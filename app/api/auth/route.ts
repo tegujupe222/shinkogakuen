@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
       user: {
         id: user.id.toString(),
         exam_no: user.exam_no,
-        email: user.email,
         role: user.role,
         name: user.name
       },
