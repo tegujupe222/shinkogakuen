@@ -159,7 +159,6 @@ export async function POST(request: NextRequest) {
                     commute_info_completed = ${profileData.commute_info_completed || false},
                     art_selection_completed = ${profileData.art_selection_completed || false},
                     health_info_completed = ${profileData.health_info_completed || false},
-                    application_type = ${profileData.application_type || null},
                     updated_at = NOW()
                 WHERE student_id = ${student_id}
                 RETURNING *
@@ -309,8 +308,7 @@ export async function POST(request: NextRequest) {
                     personal_info_completed,
                     commute_info_completed,
                     art_selection_completed,
-                    health_info_completed,
-                    application_type
+                    health_info_completed
                 ) VALUES (
                     ${student_id},
                     ${profileData.student_last_name || null},
@@ -448,8 +446,7 @@ export async function POST(request: NextRequest) {
                     ${profileData.personal_info_completed || false},
                     ${profileData.commute_info_completed || false},
                     ${profileData.art_selection_completed || false},
-                    ${profileData.health_info_completed || false},
-                    ${profileData.application_type || null}
+                    ${profileData.health_info_completed || false}
                 )
                 RETURNING *
             `;
@@ -470,14 +467,37 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
     try {
-        const result = await sql`
-            SELECT 
-                sp.*,
-                sr.application_type
-            FROM student_profiles sp
-            LEFT JOIN student_results sr ON sp.student_id = sr.student_id
-            ORDER BY sp.created_at DESC
+        // まずapplication_typeカラムが存在するかチェック
+        const columnCheck = await sql`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'student_profiles' 
+            AND column_name = 'application_type'
         `;
+        
+        let result;
+        if (columnCheck.rows.length > 0) {
+            // application_typeカラムが存在する場合
+            result = await sql`
+                SELECT 
+                    sp.*,
+                    sr.application_type
+                FROM student_profiles sp
+                LEFT JOIN student_results sr ON sp.student_id = sr.student_id
+                ORDER BY sp.created_at DESC
+            `;
+        } else {
+            // application_typeカラムが存在しない場合
+            result = await sql`
+                SELECT 
+                    sp.*,
+                    sr.application_type
+                FROM student_profiles sp
+                LEFT JOIN student_results sr ON sp.student_id = sr.student_id
+                ORDER BY sp.created_at DESC
+            `;
+        }
+        
         return NextResponse.json({ 
             success: true, 
             profiles: result.rows 
