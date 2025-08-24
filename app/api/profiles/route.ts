@@ -481,7 +481,7 @@ export async function GET() {
             result = await sql`
                 SELECT 
                     sp.*,
-                    sr.application_type
+                    COALESCE(sr.application_type, '未設定') as application_type
                 FROM student_profiles sp
                 LEFT JOIN student_results sr ON sp.student_id = sr.student_id
                 ORDER BY sp.created_at DESC
@@ -491,7 +491,7 @@ export async function GET() {
             result = await sql`
                 SELECT 
                     sp.*,
-                    sr.application_type
+                    COALESCE(sr.application_type, '未設定') as application_type
                 FROM student_profiles sp
                 LEFT JOIN student_results sr ON sp.student_id = sr.student_id
                 ORDER BY sp.created_at DESC
