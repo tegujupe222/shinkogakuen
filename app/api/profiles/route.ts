@@ -475,6 +475,12 @@ export async function GET() {
             AND column_name = 'application_type'
         `;
         
+        // デバッグ用：個人結果データの受験番号を確認
+        const examNumbers = await sql`
+            SELECT exam_no, application_type FROM student_results LIMIT 5
+        `;
+        console.log('Debug - Exam numbers from student_results:', examNumbers.rows);
+        
         let result;
         if (columnCheck.rows.length > 0) {
             // application_typeカラムが存在する場合
@@ -497,6 +503,8 @@ export async function GET() {
                 ORDER BY sp.created_at DESC
             `;
         }
+        
+        console.log('Debug - Profiles with application_type:', result.rows.map(p => ({ student_id: p.student_id, application_type: p.application_type })));
         
         return NextResponse.json({ 
             success: true, 
