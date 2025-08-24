@@ -907,7 +907,10 @@ export async function getAllStudentExemptionAssignments() {
   
   try {
     const result = await sql`
-      SELECT * FROM student_exemption_assignments
+      SELECT sea.*, afe.exemption_name, afe.exemption_amount
+      FROM student_exemption_assignments sea
+      JOIN admission_fee_exemptions afe ON sea.exemption_id = afe.id
+      ORDER BY sea.assigned_at DESC
     `;
     return result.rows;
   } catch (error) {
