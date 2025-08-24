@@ -311,8 +311,16 @@ export async function POST(request: NextRequest) {
         // 学生プロフィールテーブルにapplication_typeカラムを追加
         try {
             await sql`
-                ALTER TABLE student_profiles 
-                ADD COLUMN IF NOT EXISTS application_type VARCHAR(100)
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'student_profiles' 
+                        AND column_name = 'application_type'
+                    ) THEN
+                        ALTER TABLE student_profiles ADD COLUMN application_type VARCHAR(100);
+                    END IF;
+                END $$;
             `;
             console.log('Added application_type column to student_profiles table');
         } catch (error) {
